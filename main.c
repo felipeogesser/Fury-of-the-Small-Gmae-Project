@@ -65,7 +65,7 @@ int main(void) {
     float const speed = 150.0f;
     float const runSpeed = 2.4f;
     const float invSqrt2 = 0.70710678f;
-    float vx = 0.0f, vy = 0.0f, vz = 0.0f;
+    float vx = 0.0f, vy = 0.0f, va = 0.0f, vb = 0.0f;
 
     float hitBoxPlayer[4][2] = {
         {PlayerPositionX, PlayerPositionY},
@@ -124,7 +124,8 @@ int main(void) {
 
         vx = DirLeft  + DirRight;
         vy = DirUp    + DirDown;
-        vz = vx + vy;
+        va = vx + vy;
+        vb = vx * vy;
         const Uint8 *keys = SDL_GetKeyboardState(NULL);
         
         if (keys[SDL_SCANCODE_LSHIFT] && PlayerCurrentStamina > 0) {
@@ -138,13 +139,14 @@ int main(void) {
             }
         }
         else if (PlayerCurrentStamina < get_ply->max_st) {
-            if (!keys[SDL_SCANCODE_LSHIFT] || vz == 0) {
+            if (!keys[SDL_SCANCODE_LSHIFT] || va == 0 && vb == 0) {
                 PlayerCurrentStamina ++;
             }
         }
 
         get_ply->current_st = PlayerCurrentStamina;
 
+        // diagonal movement
         if (vy != 0 && vx != 0) {
             vx = vx * invSqrt2;
             vy = vy * invSqrt2;
