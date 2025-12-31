@@ -69,7 +69,7 @@ int main(void) {
     float WallDimensionX = get_obj->dimensionX;
     float WallDimensionY = get_obj->dimensionY;
    
-
+    float LX, LY;
     float ZX, ZY;
 
     // Z* moves player spawn to screen center and all objects relatively to player's position
@@ -177,15 +177,34 @@ int main(void) {
         vydt = vy * dt;
         
 
+        // verifies if player hits corner so to stop object from moving
+        PlayerPositionHitCornerX += vxdt;
+        PlayerPositionHitCornerY += vydt;
+
+        if (PlayerPositionHitCornerX <= 0 ) {
+            LX = PlayerPositionHitCornerX -= vxdt;
+            PlayerPositionHitCornerX = 0;
+            vxdt = 0;
+            
+        }
+
+        if (PlayerPositionHitCornerX >= PlayerLimitPositionX) {
+            PlayerPositionHitCornerX = PlayerLimitPositionX; vx = 0;
+        }
+
+        if (PlayerPositionHitCornerY <= 0 ) {
+            LY = PlayerPositionHitCornerY -= vydt;
+            PlayerPositionHitCornerY = 0;
+            vydt = 0;
+        }
+
+        if (PlayerPositionHitCornerY >= PlayerLimitPositionY) {
+            PlayerPositionHitCornerY = PlayerLimitPositionY; vy = 0;
+        }
 
 
-        if ((PlayerPositionX) <= 0 ) PlayerPositionX = 0;
-        if ((PlayerPositionX) >= PlayerLimitPositionX) PlayerPositionX = PlayerLimitPositionX;
-        if ((PlayerPositionY) <= 0 ) PlayerPositionY = 0;
-        if ((PlayerPositionY) >= PlayerLimitPositionY) PlayerPositionY = PlayerLimitPositionY;
-
-        WallPositionX -= vxdt;
-        WallPositionY -= vydt;
+        WallPositionX -= vxdt - LX;
+        WallPositionY -= vydt - LY;
 
 
         hitBoxWall[0][0] = WallPositionX;
