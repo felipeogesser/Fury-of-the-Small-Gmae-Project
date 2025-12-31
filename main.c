@@ -6,11 +6,16 @@
 #include "player.h"
 
 int main(void) {
+    
+    float MapSizeX, MapSizeY;
+    float WindowSizeX = 800.0f, WindowSizeY = 600.0f;
+    MapSizeX = 4096.0f;
+    MapSizeY = 4096.0f;
+    
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         SDL_Log("SDL_Init error: %s", SDL_GetError());
         return 1;
     }
-    float WindowSizeX = 800.0f, WindowSizeY = 600.0f;
     SDL_Window *win = SDL_CreateWindow(
         "C Game",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -52,20 +57,35 @@ int main(void) {
     float PlayerPositionY = get_ply->spawnY;
     float PlayerDimensionX = get_ply->dimensionX;
     float PlayerDimensionY = get_ply->dimensionY;
-    float PlayerLimitPositionX = WindowSizeX - PlayerDimensionX;
-    float PlayerLimitPositionY = WindowSizeY - PlayerDimensionY;
+    float PlayerLimitPositionX = MapSizeX - PlayerDimensionX;
+    float PlayerLimitPositionY = MapSizeY - PlayerDimensionY;
+    float PlayerWindowPositionX = WindowSizeX / 2 - PlayerDimensionX / 2;
+    float PlayerWindowPositionY = WindowSizeY / 2 - PlayerDimensionY / 2;
+    float PlayerPositionHitCornerX = PlayerWindowPositionX;
+    float PlayerPositionHitCornerY = PlayerWindowPositionY;
 
     float WallPositionX = get_obj->pointX;
     float WallPositionY = get_obj->pointY;
     float WallDimensionX = get_obj->dimensionX;
     float WallDimensionY = get_obj->dimensionY;
    
+
+    float ZX, ZY;
+
+    // Z* moves player spawn to screen center and all objects relatively to player's position
+    ZX = PlayerPositionX - WindowSizeX / 2 + PlayerDimensionX / 2;
+    ZY = PlayerPositionY - WindowSizeY / 2 + PlayerDimensionY / 2;
+
+    PlayerPositionX -= ZX;
+    PlayerPositionY -= ZY;
+    WallPositionX -= ZX;
+    WallPositionY -= ZY;
    
     float DirUp = 0.0f, DirDown = 0.0f, DirLeft = 0.0f, DirRight = 0.0f;
     float const speed = 150.0f;
     float const runSpeed = 2.4f;
     const float invSqrt2 = 0.70710678f;
-    float vx = 0.0f, vy = 0.0f, va = 0.0f, vb = 0.0f;
+    float vx = 0.0f, vy = 0.0f, va = 0.0f, vb = 0.0f, vxdt = 0.0f, vydt = 0.0f;
 
     float hitBoxPlayer[4][2] = {
         {PlayerPositionX, PlayerPositionY},
@@ -122,6 +142,7 @@ int main(void) {
             }
         }
 
+        // this part checks for whether player can still sprint
         vx = DirLeft  + DirRight;
         vy = DirUp    + DirDown;
         va = vx + vy;
@@ -152,9 +173,10 @@ int main(void) {
             vy = vy * invSqrt2;
         }
 
+        vxdt = vx * dt;
+        vydt = vy * dt;
+        
 
-        PlayerPositionX += vx * dt;
-        PlayerPositionY += vy * dt;
 
 
         if ((PlayerPositionX) <= 0 ) PlayerPositionX = 0;
@@ -162,34 +184,37 @@ int main(void) {
         if ((PlayerPositionY) <= 0 ) PlayerPositionY = 0;
         if ((PlayerPositionY) >= PlayerLimitPositionY) PlayerPositionY = PlayerLimitPositionY;
 
-        hitBoxPlayer[0][0] = PlayerPositionX;
-        hitBoxPlayer[0][1] = PlayerPositionY;
-        hitBoxPlayer[1][0] = PlayerPositionX + PlayerDimensionX;
-        hitBoxPlayer[1][1] = PlayerPositionY;
-        hitBoxPlayer[2][0] = PlayerPositionX;
-        hitBoxPlayer[2][1] = PlayerPositionY + PlayerDimensionY;
-        hitBoxPlayer[3][0] = PlayerPositionX + PlayerDimensionX;
-        hitBoxPlayer[3][1] = PlayerPositionY + PlayerDimensionY;
+        WallPositionX -= vxdt;
+        WallPositionY -= vydt;
 
 
+        hitBoxWall[0][0] = WallPositionX;
+        hitBoxWall[0][1] = WallPositionY;
+        hitBoxWall[1][0] = WallPositionX + WallDimensionX;
+        hitBoxWall[1][1] = WallPositionY;
+        hitBoxWall[2][0] = WallPositionX;
+        hitBoxWall[2][1] = WallPositionY + WallDimensionY;
+        hitBoxWall[3][0] = WallPositionX + WallDimensionX;
+        hitBoxWall[3][1] = WallPositionY + WallDimensionY;
+                
         if (vx > 0) {
             if (hitBoxPlayer[3][1] <  hitBoxWall[0][1] ||
                 hitBoxPlayer[1][1] >  hitBoxWall[2][1]) {
             } else
             if (hitBoxPlayer[1][0] >= hitBoxWall[0][0] &&
-                hitBoxPlayer[1][0] <  hitBoxWall[0][0] + vx * dt + 1) {
-                PlayerPositionX = hitBoxWall[0][0] - PlayerDimensionX -1;
-            }
+                hitBoxPlayer[1][0] <  hitBoxWall[0][0] + vxdt + 1) {
+                WallPositionX = hitBoxPlayer[1][0] + 1;
+            }            
         }
 
         if (vx < 0) {
             if (hitBoxPlayer[2][1] <  hitBoxWall[1][1] ||
                 hitBoxPlayer[0][1] >  hitBoxWall[3][1]) {
-                } else
-                if (hitBoxPlayer[0][0] <= hitBoxWall[1][0] &&
-                    hitBoxPlayer[0][0] >  hitBoxWall[1][0] + vx * dt - 1) {
-                    PlayerPositionX = hitBoxWall[1][0] + 1;
-                }
+            } else
+            if (hitBoxPlayer[0][0] <= hitBoxWall[1][0] &&
+                hitBoxPlayer[0][0] >  hitBoxWall[1][0] + vxdt - 1) {
+                WallPositionX = hitBoxPlayer[0][0] - WallDimensionX - 1;
+            }
         }
 
         if (vy > 0) {
@@ -197,8 +222,8 @@ int main(void) {
                 hitBoxPlayer[2][0] >  hitBoxWall[1][0]) {
             } else
             if (hitBoxPlayer[2][1] >= hitBoxWall[0][1] &&
-                hitBoxPlayer[2][1] <  hitBoxWall[0][1] + vy * dt + 1) {
-                    PlayerPositionY = hitBoxWall[0][1] - PlayerDimensionY - 1;
+                hitBoxPlayer[2][1] <  hitBoxWall[0][1] + vydt + 1) {
+                WallPositionY = hitBoxPlayer[2][1] + 1;
             }
         }
 
@@ -207,12 +232,12 @@ int main(void) {
                 hitBoxPlayer[0][0] >  hitBoxWall[3][0]) {
             } else
             if (hitBoxPlayer[0][1] <= hitBoxWall[2][1] &&
-                hitBoxPlayer[0][1] >  hitBoxWall[2][1] + vy * dt - 1) {
-                    PlayerPositionY = hitBoxWall[2][1] + 1;
+                hitBoxPlayer[0][1] >  hitBoxWall[2][1] + vydt - 1) {
+                WallPositionY = hitBoxPlayer[1][1] - WallDimensionY - 1;
             }
         }
 
-
+        
         
 
         
