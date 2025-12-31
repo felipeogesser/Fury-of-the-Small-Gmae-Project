@@ -215,7 +215,22 @@ int main(void) {
         hitBoxWall[2][1] = WallPositionY + WallDimensionY;
         hitBoxWall[3][0] = WallPositionX + WallDimensionX;
         hitBoxWall[3][1] = WallPositionY + WallDimensionY;
-                
+
+        if (vb != 0) {
+            if ((hitBoxPlayer[3][1] <  hitBoxWall[0][1] ||
+                hitBoxPlayer[1][1] >  hitBoxWall[2][1]) &&
+                (hitBoxPlayer[3][0] <  hitBoxWall[0][0] ||
+                hitBoxPlayer[2][0] >  hitBoxWall[1][0])) {
+            } else
+            if ((hitBoxPlayer[1][0] >= hitBoxWall[0][0] &&
+                hitBoxPlayer[1][0] <  hitBoxWall[0][0] + vxdt + 1) &&
+                (hitBoxPlayer[2][1] >= hitBoxWall[0][1] &&
+                hitBoxPlayer[2][1] <  hitBoxWall[0][1] + vydt + 1)) {
+                WallPositionY = hitBoxPlayer[2][1] - 2;
+                hitBoxPlayer[2][1] -= 2;
+            }
+        }
+
         if (vx > 0) {
             if (hitBoxPlayer[3][1] <  hitBoxWall[0][1] ||
                 hitBoxPlayer[1][1] >  hitBoxWall[2][1]) {
@@ -270,7 +285,7 @@ int main(void) {
 
         SDL_RenderClear(ren);
 
-        SDL_Rect PlayerRender = { PlayerPositionX, PlayerPositionY, PlayerDimensionX, PlayerDimensionY };
+        SDL_Rect PlayerRender = { PlayerWindowPositionX, PlayerWindowPositionY, PlayerDimensionX, PlayerDimensionY };
         SDL_SetRenderDrawColor(ren, 255, 104, 230, 255);
         SDL_RenderFillRect(ren, &PlayerRender);
         
