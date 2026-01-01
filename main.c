@@ -10,8 +10,8 @@ int main(void) {
     float MapSizeX, MapSizeY;
     float MapLeftLimit, MapRightLimit, MapTopLimit, MapBottomLimit;
     float WindowSizeX = 800.0f, WindowSizeY = 600.0f;
-    MapSizeX = 1024.0f;
-    MapSizeY = 1024.0f;
+    MapSizeX = 850.0f;
+    MapSizeY = 550.0f;
     
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         SDL_Log("SDL_Init error: %s", SDL_GetError());
@@ -256,6 +256,7 @@ int main(void) {
             if (hitBoxPlayer[1][0] >= hitBoxWall[0][0] &&
                 hitBoxPlayer[1][0] <  hitBoxWall[0][0] + vxdt + 1) {
                 WallPositionX = hitBoxPlayer[1][0] + 1;
+                MapLeftLimit += hitBoxPlayer[1][0] - hitBoxWall[0][0] + 1;
             }            
         }
 
@@ -266,6 +267,7 @@ int main(void) {
             if (hitBoxPlayer[0][0] <= hitBoxWall[1][0] &&
                 hitBoxPlayer[0][0] >  hitBoxWall[1][0] + vxdt - 1) {
                 WallPositionX = hitBoxPlayer[0][0] - WallDimensionX - 1;
+                MapLeftLimit += hitBoxPlayer[0][0] - hitBoxWall[1][0] - 1;
             }
         }
 
@@ -276,6 +278,7 @@ int main(void) {
             if (hitBoxPlayer[2][1] >= hitBoxWall[0][1] &&
                 hitBoxPlayer[2][1] <  hitBoxWall[0][1] + vydt + 1) {
                 WallPositionY = hitBoxPlayer[2][1] + 1;
+                MapTopLimit += hitBoxPlayer[2][1] - hitBoxWall[0][1] + 1;
             }
         }
 
@@ -286,6 +289,8 @@ int main(void) {
             if (hitBoxPlayer[0][1] <= hitBoxWall[2][1] &&
                 hitBoxPlayer[0][1] >  hitBoxWall[2][1] + vydt - 1) {
                 WallPositionY = hitBoxPlayer[1][1] - WallDimensionY - 1;
+                MapTopLimit += hitBoxPlayer[0][1] - hitBoxWall[2][1] - 1;
+
             }
         }
 
@@ -348,12 +353,10 @@ int main(void) {
                 hitBoxWall[3][1] += 2;
             }
         }
-          
 
-        
-        
 
-        
+
+
         // Render
 
 
