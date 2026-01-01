@@ -8,9 +8,10 @@
 int main(void) {
     
     float MapSizeX, MapSizeY;
+    float MapLeftLimit, MapRightLimit, MapTopLimit, MapBottomLimit;
     float WindowSizeX = 800.0f, WindowSizeY = 600.0f;
-    MapSizeX = 4096.0f;
-    MapSizeY = 4096.0f;
+    MapSizeX = 1024.0f;
+    MapSizeY = 1024.0f;
     
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         SDL_Log("SDL_Init error: %s", SDL_GetError());
@@ -72,6 +73,13 @@ int main(void) {
     float LX, LY;
     float ZX, ZY;
 
+    MapLeftLimit = 0.0f;
+    MapRightLimit = MapSizeX;
+    MapTopLimit = 0.0f;
+    MapBottomLimit = MapSizeY;
+    
+    
+    
     // Z* moves player spawn to screen center and all objects relatively to player's position
     ZX = PlayerPositionX - WindowSizeX / 2 + PlayerDimensionX / 2;
     ZY = PlayerPositionY - WindowSizeY / 2 + PlayerDimensionY / 2;
@@ -80,6 +88,11 @@ int main(void) {
     PlayerPositionY -= ZY;
     WallPositionX -= ZX;
     WallPositionY -= ZY;
+    MapLeftLimit -= ZX;
+    MapRightLimit -= ZX;
+    MapTopLimit -= ZY;
+    MapBottomLimit -= ZY;
+
    
     float DirUp = 0.0f, DirDown = 0.0f, DirLeft = 0.0f, DirRight = 0.0f;
     float const speed = 150.0f;
@@ -178,35 +191,54 @@ int main(void) {
         
 
         // verifies if player hits corner so to stop object from moving
-        PlayerPositionHitCornerX += vxdt;
-        PlayerPositionHitCornerY += vydt;
 
-        if (PlayerPositionHitCornerX <= 0 ) {
-            LX = PlayerPositionHitCornerX -= vxdt;
-            PlayerPositionHitCornerX = 0;
+        MapLeftLimit -= vxdt;
+        MapRightLimit = MapLeftLimit + MapSizeX;
+        MapTopLimit -= vydt;
+        MapBottomLimit = MapTopLimit + MapSizeY;
+
+        if (PlayerPositionHitCornerX <= MapLeftLimit) {
+            LX = vxdt + MapLeftLimit - PlayerPositionHitCornerX - 1;
+            MapLeftLimit = PlayerPositionHitCornerX - 1;
             vxdt = 0;
-            
+            if (LX < 1) {
+                LX = 0;
+            }
         }
 
-        if (PlayerPositionHitCornerX >= PlayerLimitPositionX) {
-            PlayerPositionHitCornerX = PlayerLimitPositionX; vxdt = 0;
+        if (PlayerPositionHitCornerX + PlayerDimensionX >= MapRightLimit) {
+            LX = vxdt + MapRightLimit - PlayerPositionHitCornerX - PlayerDimensionX - 1;
+            MapLeftLimit = -MapSizeX + PlayerPositionHitCornerX + PlayerDimensionX + 1;
+            vxdt = 0;
+            if (LX < 1) {
+                LX = 0;
+            }
         }
 
-        if (PlayerPositionHitCornerY <= 0 ) {
-            LY = PlayerPositionHitCornerY -= vydt;
-            PlayerPositionHitCornerY = 0;
+        if (PlayerPositionHitCornerY <= MapTopLimit) {
+            LY = vydt + MapTopLimit - PlayerPositionHitCornerY - 1;
+            MapTopLimit = PlayerPositionHitCornerY - 1;
             vydt = 0;
+            if (LY < 1) {
+                LY = 0;
+            }
         }
 
-        if (PlayerPositionHitCornerY >= PlayerLimitPositionY) {
-            PlayerPositionHitCornerY = PlayerLimitPositionY;
+        if (PlayerPositionHitCornerY + PlayerDimensionY >= MapBottomLimit) {
+            LY = vydt + MapBottomLimit - PlayerPositionHitCornerY - PlayerDimensionY - 1;
+            MapTopLimit = -MapSizeY + PlayerPositionHitCornerY + PlayerDimensionY + 1;
             vydt = 0;
+            if (LY < 1) {
+                LY = 0;
+            }
         }
+        
 
 
         WallPositionX -= vxdt - LX;
         WallPositionY -= vydt - LY;
-
+        LX = 0;
+        LY = 0;
 
         hitBoxWall[0][0] = WallPositionX;
         hitBoxWall[0][1] = WallPositionY;
@@ -332,6 +364,10 @@ int main(void) {
 
         SDL_RenderClear(ren);
 
+        SDL_Rect Map = {MapLeftLimit, MapTopLimit, MapSizeX, MapSizeY};
+        SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
+        SDL_RenderFillRect(ren, &Map);
+
         SDL_Rect PlayerRender = { PlayerWindowPositionX, PlayerWindowPositionY, PlayerDimensionX, PlayerDimensionY };
         SDL_SetRenderDrawColor(ren, 255, 104, 230, 255);
         SDL_RenderFillRect(ren, &PlayerRender);
@@ -365,7 +401,7 @@ int main(void) {
         SDL_RenderFillRect(ren, &wallH);
 
         SDL_Rect wallV = { WallPositionX, WallPositionY, WallDimensionX, WallDimensionY};
-        SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
+        SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
         SDL_RenderFillRect(ren, &wallV);
 
         SDL_RenderPresent(ren);
