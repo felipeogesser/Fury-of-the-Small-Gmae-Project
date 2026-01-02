@@ -198,10 +198,10 @@ int main(void) {
         MapBottomLimit = MapTopLimit + MapSizeY;
 
         if (PlayerPositionHitCornerX <= MapLeftLimit) {
-            LX = vxdt + MapLeftLimit - PlayerPositionHitCornerX - 1;
+            LX = vxdt + MapLeftLimit - PlayerPositionHitCornerX + 1;
             MapLeftLimit = PlayerPositionHitCornerX - 1;
             vxdt = 0;
-            if (LX < 1) {
+            if (LX >= -1) {
                 LX = 0;
             }
         }
@@ -210,16 +210,16 @@ int main(void) {
             LX = vxdt + MapRightLimit - PlayerPositionHitCornerX - PlayerDimensionX - 1;
             MapLeftLimit = -MapSizeX + PlayerPositionHitCornerX + PlayerDimensionX + 1;
             vxdt = 0;
-            if (LX < 1) {
+            if (LX <= 1) {
                 LX = 0;
             }
         }
 
         if (PlayerPositionHitCornerY <= MapTopLimit) {
-            LY = vydt + MapTopLimit - PlayerPositionHitCornerY - 1;
+            LY = vydt + MapTopLimit - PlayerPositionHitCornerY + 1;
             MapTopLimit = PlayerPositionHitCornerY - 1;
             vydt = 0;
-            if (LY < 1) {
+            if (LY >= -1) {
                 LY = 0;
             }
         }
@@ -228,15 +228,15 @@ int main(void) {
             LY = vydt + MapBottomLimit - PlayerPositionHitCornerY - PlayerDimensionY - 1;
             MapTopLimit = -MapSizeY + PlayerPositionHitCornerY + PlayerDimensionY + 1;
             vydt = 0;
-            if (LY < 1) {
+            if (LY <= 1) {
                 LY = 0;
             }
         }
         
 
 
-        WallPositionX -= vxdt - LX;
-        WallPositionY -= vydt - LY;
+        WallPositionX -= vxdt + LX;
+        WallPositionY -= vydt + LY;
         LX = 0;
         LY = 0;
 
