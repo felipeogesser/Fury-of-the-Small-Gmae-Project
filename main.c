@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "objects.h"
 #include "player.h"
+#include "object_maker.h"
 
 int main(void) {
     
@@ -42,13 +43,9 @@ int main(void) {
 
     bool running = true;
 
-    int wall_id = create_object("wallV", 600.0f, 40.0f, 30.0f, 400.0f, true, 4);
     int player_id = create_player(50 ,100, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4);
     
     Player *get_ply = get_player(player_id);
-
-    Object *get_obj = get_object(wall_id);
-
 
     int PlayerMaxHealth = get_ply->max_hp;
     int PlayerMaxStamina = get_ply->max_st;
@@ -65,11 +62,13 @@ int main(void) {
     float PlayerPositionHitCornerX = PlayerWindowPositionX;
     float PlayerPositionHitCornerY = PlayerWindowPositionY;
 
-    float WallPositionX = get_obj->pointX;
-    float WallPositionY = get_obj->pointY;
-    float WallDimensionX = get_obj->dimensionX;
-    float WallDimensionY = get_obj->dimensionY;
+    float WallPositionX;
+    float WallPositionY;
+    float WallDimensionX;
+    float WallDimensionY;
    
+    float hitBoxWall[4][2];
+
     float LX, LY;
     float ZX, ZY;
 
@@ -86,13 +85,23 @@ int main(void) {
 
     PlayerPositionX -= ZX;
     PlayerPositionY -= ZY;
-    WallPositionX -= ZX;
-    WallPositionY -= ZY;
+
     MapLeftLimit -= ZX;
     MapRightLimit -= ZX;
     MapTopLimit -= ZY;
     MapBottomLimit -= ZY;
 
+    make_objects();
+
+    int i = 0;
+    int x = 0;
+    for (i = 0; i < MAX_OBJECTS; i++) {
+        Object *obj = get_object(object_id[i]);
+        if (obj->id == 0) break;
+        x++;
+        obj->pointX -= ZX;
+        obj->pointY -= ZY;
+    }
    
     float DirUp = 0.0f, DirDown = 0.0f, DirLeft = 0.0f, DirRight = 0.0f;
     float const speed = 150.0f;
@@ -106,12 +115,34 @@ int main(void) {
         {PlayerPositionX, PlayerPositionY + PlayerDimensionY},
         {PlayerPositionX + PlayerDimensionX, PlayerPositionY + PlayerDimensionY}
     };
-    float hitBoxWall[4][2] = {
-        {WallPositionX, WallPositionY},
-        {WallPositionX + WallDimensionX, WallPositionY},
-        {WallPositionX, WallPositionY + WallDimensionY},
-        {WallPositionX + WallDimensionX, WallPositionY + WallDimensionY}
-    };
+    
+    float hitBoxMaxObjects[MAX_OBJECTS][4][2];
+
+    for (int i = 0; i < x; i++) {
+        Object *obj = get_object(object_id[i]);
+        hitBoxMaxObjects[i][0][0] = obj->pointX;
+        hitBoxMaxObjects[i][0][1] = obj->pointY;
+        hitBoxMaxObjects[i][1][0] = obj->pointX + obj->dimensionX;
+        hitBoxMaxObjects[i][1][1] = obj->pointY;
+        hitBoxMaxObjects[i][2][0] = obj->pointX;
+        hitBoxMaxObjects[i][2][1] = obj->pointY + obj->dimensionY;
+        hitBoxMaxObjects[i][3][0] = obj->pointX + obj->dimensionX;
+        hitBoxMaxObjects[i][3][1] = obj->pointY + obj->dimensionY;
+    }
+
+    float (*hitBoxObject)[4][2] = malloc(x * sizeof *hitBoxMaxObjects);
+
+    for (int i = 0; i < x; i++) {
+        Object *obj = get_object(object_id[i]);
+        hitBoxObject[i][0][0] = obj->pointX;
+        hitBoxObject[i][0][1] = obj->pointY;
+        hitBoxObject[i][1][0] = obj->pointX + obj->dimensionX;
+        hitBoxObject[i][1][1] = obj->pointY;
+        hitBoxObject[i][2][0] = obj->pointX;
+        hitBoxObject[i][2][1] = obj->pointY + obj->dimensionY;
+        hitBoxObject[i][3][0] = obj->pointX + obj->dimensionX;
+        hitBoxObject[i][3][1] = obj->pointY + obj->dimensionY;
+    }
     
     Uint64 FrameStart = SDL_GetPerformanceCounter();
     Uint64 FrameEnd;
@@ -399,13 +430,16 @@ int main(void) {
         SDL_SetRenderDrawColor(ren, 102, 255, 51, 255);
         SDL_RenderFillRect(ren, &st);
         
-        SDL_Rect wallH = { 30, 500, 200, 10};
-        SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
-        SDL_RenderFillRect(ren, &wallH);
 
-        SDL_Rect wallV = { WallPositionX, WallPositionY, WallDimensionX, WallDimensionY};
-        SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
-        SDL_RenderFillRect(ren, &wallV);
+        for (i = 0; i < x; i++) {
+            Object *obj = get_object(object_id[i]);
+            if (obj->id == 0) break;
+            SDL_Rect Object_Render = {obj->pointX, obj->pointY, obj->dimensionX, obj->dimensionY};
+            SDL_SetRenderDrawColor(ren, obj->R_Color, obj->G_Color, obj->B_Color, obj->Alpha);
+            SDL_RenderFillRect(ren, &Object_Render);
+
+        }
+
 
         SDL_RenderPresent(ren);
     }
