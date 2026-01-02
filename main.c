@@ -264,7 +264,25 @@ int main(void) {
             }
         }
         
+        for (int i = 0; i < x; i++) {
+            Object *obj = get_object(object_id[i]);
+            obj->pointX -= vxdt + LX;
+            obj->pointY -= vydt + LY;
+        }
 
+
+
+        for (int i = 0; i < x; i++) {
+            Object *obj = get_object(object_id[i]);
+            hitBoxObject[i][0][0] = obj->pointX;
+            hitBoxObject[i][0][1] = obj->pointY;
+            hitBoxObject[i][1][0] = obj->pointX + obj->dimensionX;
+            hitBoxObject[i][1][1] = obj->pointY;
+            hitBoxObject[i][2][0] = obj->pointX;
+            hitBoxObject[i][2][1] = obj->pointY + obj->dimensionY;
+            hitBoxObject[i][3][0] = obj->pointX + obj->dimensionX;
+            hitBoxObject[i][3][1] = obj->pointY + obj->dimensionY;
+        }
 
         WallPositionX -= vxdt + LX;
         WallPositionY -= vydt + LY;
@@ -281,107 +299,130 @@ int main(void) {
         hitBoxWall[3][1] = WallPositionY + WallDimensionY;
 
         if (vx > 0) {
-            if (hitBoxPlayer[3][1] <  hitBoxWall[0][1] ||
-                hitBoxPlayer[1][1] >  hitBoxWall[2][1]) {
-            } else
-            if (hitBoxPlayer[1][0] >= hitBoxWall[0][0] &&
-                hitBoxPlayer[1][0] <  hitBoxWall[0][0] + vxdt + 1) {
-                WallPositionX = hitBoxPlayer[1][0] + 1;
-                MapLeftLimit += hitBoxPlayer[1][0] - hitBoxWall[0][0] + 1;
-            }            
+            for (int i = 0; i < x; i++) {
+                Object *obj = get_object(object_id[i]);
+                if (hitBoxPlayer[3][1] <  hitBoxObject[i][0][1] ||
+                    hitBoxPlayer[1][1] >  hitBoxObject[i][2][1]) {
+                } else
+                if (hitBoxPlayer[1][0] >= hitBoxObject[i][0][0] &&
+                    hitBoxPlayer[1][0] <  hitBoxObject[i][0][0] + vxdt + 1) {
+                    obj->pointX = hitBoxPlayer[1][0] + 1;
+                    MapLeftLimit += hitBoxPlayer[1][0] - hitBoxObject[i][0][0] + 1;
+                }     
+            }       
         }
 
         if (vx < 0) {
-            if (hitBoxPlayer[2][1] <  hitBoxWall[1][1] ||
-                hitBoxPlayer[0][1] >  hitBoxWall[3][1]) {
-            } else
-            if (hitBoxPlayer[0][0] <= hitBoxWall[1][0] &&
-                hitBoxPlayer[0][0] >  hitBoxWall[1][0] + vxdt - 1) {
-                WallPositionX = hitBoxPlayer[0][0] - WallDimensionX - 1;
-                MapLeftLimit += hitBoxPlayer[0][0] - hitBoxWall[1][0] - 1;
+            for (int i = 0; i < x; i++) {
+                Object *obj = get_object(object_id[i]);
+                if (hitBoxPlayer[2][1] <  hitBoxObject[i][1][1] ||
+                    hitBoxPlayer[0][1] >  hitBoxObject[i][3][1]) {
+                } else
+                if (hitBoxPlayer[0][0] <= hitBoxObject[i][1][0] &&
+                    hitBoxPlayer[0][0] >  hitBoxObject[i][1][0] + vxdt - 1) {
+                    obj->pointX = hitBoxPlayer[0][0] - obj->dimensionX - 1;
+                    MapLeftLimit += hitBoxPlayer[0][0] - hitBoxObject[i][1][0] - 1;
+                }
             }
         }
 
         if (vy > 0) {
-            if (hitBoxPlayer[3][0] <  hitBoxWall[0][0] ||
-                hitBoxPlayer[2][0] >  hitBoxWall[1][0]) {
-            } else
-            if (hitBoxPlayer[2][1] >= hitBoxWall[0][1] &&
-                hitBoxPlayer[2][1] <  hitBoxWall[0][1] + vydt + 1) {
-                WallPositionY = hitBoxPlayer[2][1] + 1;
-                MapTopLimit += hitBoxPlayer[2][1] - hitBoxWall[0][1] + 1;
+            for (int i = 0; i < x; i++) {
+                Object *obj = get_object(object_id[i]);
+                if (hitBoxPlayer[3][0] <  hitBoxObject[i][0][0] ||
+                    hitBoxPlayer[2][0] >  hitBoxObject[i][1][0]) {
+                } else
+                if (hitBoxPlayer[2][1] >= hitBoxObject[i][0][1] &&
+                    hitBoxPlayer[2][1] <  hitBoxObject[i][0][1] + vydt + 1) {
+                    obj->pointY = hitBoxPlayer[2][1] + 1;
+                    MapTopLimit += hitBoxPlayer[2][1] - hitBoxObject[i][0][1] + 1;
+                }
             }
         }
 
         if (vy < 0) {
-            if (hitBoxPlayer[1][0] <  hitBoxWall[2][0] ||
-                hitBoxPlayer[0][0] >  hitBoxWall[3][0]) {
-            } else
-            if (hitBoxPlayer[0][1] <= hitBoxWall[2][1] &&
-                hitBoxPlayer[0][1] >  hitBoxWall[2][1] + vydt - 1) {
-                WallPositionY = hitBoxPlayer[1][1] - WallDimensionY - 1;
-                MapTopLimit += hitBoxPlayer[0][1] - hitBoxWall[2][1] - 1;
-
+            for (int i = 0; i < x; i++) {
+                Object *obj = get_object(object_id[i]);
+                if (hitBoxPlayer[1][0] <  hitBoxObject[i][2][0] ||
+                    hitBoxPlayer[0][0] >  hitBoxObject[i][3][0]) {
+                } else
+                if (hitBoxPlayer[0][1] <= hitBoxObject[i][2][1] &&
+                    hitBoxPlayer[0][1] >  hitBoxObject[i][2][1] + vydt - 1) {
+                    obj->pointY = hitBoxPlayer[1][1] - obj->dimensionY - 1;
+                    MapTopLimit += hitBoxPlayer[0][1] - hitBoxObject[i][2][1] - 1;
+                }
             }
         }
 
         if (vx > 0 && vy > 0) {
-            if ((hitBoxPlayer[3][1] <  hitBoxWall[0][1] ||
-                hitBoxPlayer[1][1] >  hitBoxWall[2][1]) &&
-                (hitBoxPlayer[3][0] <  hitBoxWall[0][0] ||
-                hitBoxPlayer[2][0] >  hitBoxWall[1][0])) {
-            } else
-            if ((hitBoxPlayer[1][0] >= hitBoxWall[0][0] &&
-                hitBoxPlayer[1][0] <  hitBoxWall[0][0] + vxdt + 1) &&
-                (hitBoxPlayer[2][1] >= hitBoxWall[0][1] &&
-                hitBoxPlayer[2][1] <  hitBoxWall[0][1] + vydt + 1)) {
-                WallPositionY = hitBoxPlayer[2][1] - 2;
-                hitBoxWall[0][1] -= 2;
+            for (int i = 0; i < x; i++) {
+                Object *obj = get_object(object_id[i]);
+                if ((hitBoxPlayer[3][1] <  hitBoxObject[i][0][1] ||
+                    hitBoxPlayer[1][1] >  hitBoxObject[i][2][1]) &&
+                    (hitBoxPlayer[3][0] <  hitBoxObject[i][0][0] ||
+                    hitBoxPlayer[2][0] >  hitBoxObject[i][1][0])) {
+                } else
+                if ((hitBoxPlayer[1][0] >= hitBoxObject[i][0][0] &&
+                    hitBoxPlayer[1][0] <  hitBoxObject[i][0][0] + vxdt + 1) &&
+                    (hitBoxPlayer[2][1] >= hitBoxObject[i][0][1] &&
+                    hitBoxPlayer[2][1] <  hitBoxObject[i][0][1] + vydt + 1)) {
+                    obj->pointY = hitBoxPlayer[2][1] - 2;
+                    hitBoxObject[i][0][1] -= 2;
+                }
             }
         }
 
         if (vx > 0 && vy < 0) {
-            if ((hitBoxPlayer[3][1] <  hitBoxWall[0][1] ||
-                hitBoxPlayer[1][1] >  hitBoxWall[2][1]) &&
-                (hitBoxPlayer[1][0] <  hitBoxWall[2][0] ||
-                hitBoxPlayer[0][0] >  hitBoxWall[3][0])) {
-            } else
-            if ((hitBoxPlayer[1][0] >= hitBoxWall[0][0] &&
-                hitBoxPlayer[1][0] <  hitBoxWall[0][0] + vxdt + 1) &&
-                (hitBoxPlayer[0][1] <= hitBoxWall[2][1] &&
-                hitBoxPlayer[0][1] >  hitBoxWall[2][1] + vydt - 1)) {
-                WallPositionY = hitBoxPlayer[1][1] - WallDimensionY + 2;
-                hitBoxWall[2][1] += 2;
+            for (int i = 0; i < x; i++) {
+                Object *obj = get_object(object_id[i]);
+                if ((hitBoxPlayer[3][1] <  hitBoxObject[i][0][1] ||
+                    hitBoxPlayer[1][1] >  hitBoxObject[i][2][1]) &&
+                    (hitBoxPlayer[1][0] <  hitBoxObject[i][2][0] ||
+                    hitBoxPlayer[0][0] >  hitBoxObject[i][3][0])) {
+                } else
+                if ((hitBoxPlayer[1][0] >= hitBoxObject[i][0][0] &&
+                    hitBoxPlayer[1][0] <  hitBoxObject[i][0][0] + vxdt + 1) &&
+                    (hitBoxPlayer[0][1] <= hitBoxObject[i][2][1] &&
+                    hitBoxPlayer[0][1] >  hitBoxObject[i][2][1] + vydt - 1)) {
+                    obj->pointY = hitBoxPlayer[1][1] - obj->pointY + 2;
+                    hitBoxObject[i][2][1] += 2;
+                }
             }
         }
 
         if (vx < 0 && vy > 0) {
-            if ((hitBoxPlayer[2][1] <  hitBoxWall[1][1] ||
-                hitBoxPlayer[0][1] >  hitBoxWall[3][1]) &&
-                (hitBoxPlayer[3][0] <  hitBoxWall[0][0] ||
-                hitBoxPlayer[2][0] >  hitBoxWall[1][0])) {
-            } else
-            if ((hitBoxPlayer[0][0] <= hitBoxWall[1][0] &&
-                hitBoxPlayer[0][0] >  hitBoxWall[1][0] + vxdt - 1) &&
-                (hitBoxPlayer[2][1] >= hitBoxWall[0][1] &&
-                hitBoxPlayer[2][1] <  hitBoxWall[0][1] + vydt + 1)) {
-                WallPositionY = hitBoxPlayer[2][1] - 2;
-                hitBoxWall[1][1] -= 2;
+            for (int i = 0; i < x; i++) {
+                Object *obj = get_object(object_id[i]);
+                if ((hitBoxPlayer[2][1] <  hitBoxObject[i][1][1] ||
+                    hitBoxPlayer[0][1] >  hitBoxObject[i][3][1]) &&
+                    (hitBoxPlayer[3][0] <  hitBoxObject[i][0][0] ||
+                    hitBoxPlayer[2][0] >  hitBoxObject[i][1][0])) {
+                } else
+                if ((hitBoxPlayer[0][0] <= hitBoxObject[i][1][0] &&
+                    hitBoxPlayer[0][0] >  hitBoxObject[i][1][0] + vxdt - 1) &&
+                    (hitBoxPlayer[2][1] >= hitBoxObject[i][0][1] &&
+                    hitBoxPlayer[2][1] <  hitBoxObject[i][0][1] + vydt + 1)) {
+                    obj->pointY = hitBoxPlayer[2][1] - 2;
+                    hitBoxObject[i][1][1] -= 2;
+                }
             }
         }
 
         if (vx < 0 && vy < 0) {
-            if ((hitBoxPlayer[2][1] <  hitBoxWall[1][1] ||
-                hitBoxPlayer[0][1] >  hitBoxWall[3][1]) &&
-                (hitBoxPlayer[1][0] <  hitBoxWall[2][0] ||
-                hitBoxPlayer[0][0] >  hitBoxWall[3][0])) {
-            } else
-            if ((hitBoxPlayer[0][0] <= hitBoxWall[1][0] &&
-                hitBoxPlayer[0][0] >  hitBoxWall[1][0] + vxdt - 1) &&
-                (hitBoxPlayer[0][1] <= hitBoxWall[2][1] &&
-                hitBoxPlayer[0][1] >  hitBoxWall[2][1] + vydt - 1)) {
-                WallPositionY = hitBoxPlayer[0][1] - WallDimensionY + 2;
-                hitBoxWall[3][1] += 2;
+            for (int i = 0; i < x; i++) {
+                Object *obj = get_object(object_id[i]);
+                if ((hitBoxPlayer[2][1] <  hitBoxObject[i][1][1] ||
+                    hitBoxPlayer[0][1] >  hitBoxObject[i][3][1]) &&
+                    (hitBoxPlayer[1][0] <  hitBoxObject[i][2][0] ||
+                    hitBoxPlayer[0][0] >  hitBoxObject[i][3][0])) {
+                } else
+                if ((hitBoxPlayer[0][0] <= hitBoxObject[i][1][0] &&
+                    hitBoxPlayer[0][0] >  hitBoxObject[i][1][0] + vxdt - 1) &&
+                    (hitBoxPlayer[0][1] <= hitBoxObject[i][2][1] &&
+                    hitBoxPlayer[0][1] >  hitBoxObject[i][2][1] + vydt - 1)) {
+                    obj->pointY = hitBoxPlayer[0][1] - obj->pointY + 2;
+                    hitBoxObject[i][3][1] += 2;
+                }
             }
         }
 
