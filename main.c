@@ -70,6 +70,7 @@ int main(void) {
     float hitBoxWall[4][2];
 
     float LX, LY;
+    float KX, KY;
     float ZX, ZY;
 
     MapLeftLimit = 0.0f;
@@ -307,7 +308,32 @@ int main(void) {
                 if (hitBoxPlayer[1][0] >= hitBoxObject[i][0][0] &&
                     hitBoxPlayer[1][0] <  hitBoxObject[i][0][0] + vxdt + 1) {
                     obj->pointX = hitBoxPlayer[1][0] + 1;
-                    MapLeftLimit += hitBoxPlayer[1][0] - hitBoxObject[i][0][0] + 1;
+                 //   KX = vxdt - hitBoxPlayer[1][0] + hitBoxObject[i][0][0] - 1;
+                    int JX = -hitBoxPlayer[1][0] + hitBoxObject[i][0][0] - 1;
+                    if (JX < 1) {
+                        JX = 0;
+                        MapLeftLimit += vxdt;
+                    }
+                    MapLeftLimit -= JX;
+                   /*
+                    if (KX < 1) {
+                        KX = 0;
+                        MapLeftLimit += vxdt;
+                    }
+*/
+                    int g = i;
+                    for (int i = 0; i < x; i++) {
+                        if (i != g) {
+                            Object *obj = get_object(object_id[i]);
+                            obj->pointX -= JX;
+                            if (JX < 1) {
+                            JX = 0;
+                            obj->pointX += vxdt;
+                            }
+                        }
+                    }
+            //        KX = 0;
+                    JX = 0;
                 }     
             }       
         }
