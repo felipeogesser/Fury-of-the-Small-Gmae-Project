@@ -61,14 +61,7 @@ int main(void) {
     float PlayerWindowPositionY = WindowSizeY / 2 - PlayerDimensionY / 2;
     float PlayerPositionHitCornerX = PlayerWindowPositionX;
     float PlayerPositionHitCornerY = PlayerWindowPositionY;
-
-    float WallPositionX;
-    float WallPositionY;
-    float WallDimensionX;
-    float WallDimensionY;
    
-    float hitBoxWall[4][2];
-
     float LX, LY;
     float KX, KY;
     float ZX, ZY;
@@ -223,56 +216,56 @@ int main(void) {
         
 
         // verifies if player hits corner so to stop object from moving
-
+/*
         MapLeftLimit -= vxdt;
         MapRightLimit = MapLeftLimit + MapSizeX;
         MapTopLimit -= vydt;
         MapBottomLimit = MapTopLimit + MapSizeY;
-
-        if (PlayerPositionHitCornerX <= MapLeftLimit) {
-            LX = vxdt + MapLeftLimit - PlayerPositionHitCornerX + 1;
-            MapLeftLimit = PlayerPositionHitCornerX - 1;
+*/
+        if (PlayerPositionHitCornerX <= MapLeftLimit - vxdt) {
+            LX = MapLeftLimit - PlayerPositionHitCornerX + 1;
+            //MapLeftLimit = PlayerPositionHitCornerX - 1;
             vxdt = 0;
             if (LX >= -1) {
                 LX = 0;
             }
         }
 
-        if (PlayerPositionHitCornerX + PlayerDimensionX >= MapRightLimit) {
-            LX = vxdt + MapRightLimit - PlayerPositionHitCornerX - PlayerDimensionX - 1;
-            MapLeftLimit = -MapSizeX + PlayerPositionHitCornerX + PlayerDimensionX + 1;
+        if (PlayerPositionHitCornerX + PlayerDimensionX >= MapRightLimit - vxdt) {
+            LX = MapRightLimit - PlayerPositionHitCornerX - PlayerDimensionX - 1;
+            //MapLeftLimit = -MapSizeX + PlayerPositionHitCornerX + PlayerDimensionX + 1;
             vxdt = 0;
             if (LX <= 1) {
                 LX = 0;
             }
         }
 
-        if (PlayerPositionHitCornerY <= MapTopLimit) {
-            LY = vydt + MapTopLimit - PlayerPositionHitCornerY + 1;
-            MapTopLimit = PlayerPositionHitCornerY - 1;
+        if (PlayerPositionHitCornerY <= MapTopLimit - vydt) {
+            LY = MapTopLimit - PlayerPositionHitCornerY + 1;
+            //MapTopLimit = PlayerPositionHitCornerY - 1;
             vydt = 0;
             if (LY >= -1) {
                 LY = 0;
             }
         }
 
-        if (PlayerPositionHitCornerY + PlayerDimensionY >= MapBottomLimit) {
-            LY = vydt + MapBottomLimit - PlayerPositionHitCornerY - PlayerDimensionY - 1;
-            MapTopLimit = -MapSizeY + PlayerPositionHitCornerY + PlayerDimensionY + 1;
+        if (PlayerPositionHitCornerY + PlayerDimensionY >= MapBottomLimit - vydt) {
+            LY = MapBottomLimit - PlayerPositionHitCornerY - PlayerDimensionY - 1;
+            //MapTopLimit = -MapSizeY + PlayerPositionHitCornerY + PlayerDimensionY + 1;
             vydt = 0;
             if (LY <= 1) {
                 LY = 0;
             }
         }
-        
+        /*
         for (int i = 0; i < x; i++) {
             Object *obj = get_object(object_id[i]);
             obj->pointX -= vxdt + LX;
             obj->pointY -= vydt + LY;
         }
+*/
 
-
-
+/*
         for (int i = 0; i < x; i++) {
             Object *obj = get_object(object_id[i]);
             hitBoxObject[i][0][0] = obj->pointX;
@@ -298,161 +291,193 @@ int main(void) {
         hitBoxWall[2][1] = WallPositionY + WallDimensionY;
         hitBoxWall[3][0] = WallPositionX + WallDimensionX;
         hitBoxWall[3][1] = WallPositionY + WallDimensionY;
-
-        if (vx > 0) {
-            for (int i = 0; i < x; i++) {
-                Object *obj = get_object(object_id[i]);
-                if (hitBoxPlayer[3][1] <  hitBoxObject[i][0][1] ||
-                    hitBoxPlayer[1][1] >  hitBoxObject[i][2][1]) {
-                } else
-                if (hitBoxPlayer[1][0] >= hitBoxObject[i][0][0] &&
-                    hitBoxPlayer[1][0] <  hitBoxObject[i][0][0] + vxdt + 1) {
-                    obj->pointX = hitBoxPlayer[1][0] + 1;
-                 //   KX = vxdt - hitBoxPlayer[1][0] + hitBoxObject[i][0][0] - 1;
-                    int JX = -hitBoxPlayer[1][0] + hitBoxObject[i][0][0] - 1;
-                    if (JX < 1) {
-                        JX = 0;
-                        MapLeftLimit += vxdt;
-                    }
-                    MapLeftLimit -= JX;
-                   /*
-                    if (KX < 1) {
-                        KX = 0;
-                        MapLeftLimit += vxdt;
-                    }
 */
-                    int g = i;
-                    for (int i = 0; i < x; i++) {
-                        if (i != g) {
-                            Object *obj = get_object(object_id[i]);
-                            obj->pointX -= JX;
-                            if (JX < 1) {
-                            JX = 0;
-                            obj->pointX += vxdt;
-                            }
-                        }
-                    }
-            //        KX = 0;
-                    JX = 0;
-                }     
-            }       
-        }
-
-        if (vx < 0) {
-            for (int i = 0; i < x; i++) {
-                Object *obj = get_object(object_id[i]);
-                if (hitBoxPlayer[2][1] <  hitBoxObject[i][1][1] ||
-                    hitBoxPlayer[0][1] >  hitBoxObject[i][3][1]) {
-                } else
-                if (hitBoxPlayer[0][0] <= hitBoxObject[i][1][0] &&
-                    hitBoxPlayer[0][0] >  hitBoxObject[i][1][0] + vxdt - 1) {
-                    obj->pointX = hitBoxPlayer[0][0] - obj->dimensionX - 1;
-                    MapLeftLimit += hitBoxPlayer[0][0] - hitBoxObject[i][1][0] - 1;
-                }
-            }
-        }
-
-        if (vy > 0) {
-            for (int i = 0; i < x; i++) {
-                Object *obj = get_object(object_id[i]);
-                if (hitBoxPlayer[3][0] <  hitBoxObject[i][0][0] ||
-                    hitBoxPlayer[2][0] >  hitBoxObject[i][1][0]) {
-                } else
-                if (hitBoxPlayer[2][1] >= hitBoxObject[i][0][1] &&
-                    hitBoxPlayer[2][1] <  hitBoxObject[i][0][1] + vydt + 1) {
-                    obj->pointY = hitBoxPlayer[2][1] + 1;
-                    MapTopLimit += hitBoxPlayer[2][1] - hitBoxObject[i][0][1] + 1;
-                }
-            }
-        }
-
-        if (vy < 0) {
-            for (int i = 0; i < x; i++) {
-                Object *obj = get_object(object_id[i]);
-                if (hitBoxPlayer[1][0] <  hitBoxObject[i][2][0] ||
-                    hitBoxPlayer[0][0] >  hitBoxObject[i][3][0]) {
-                } else
-                if (hitBoxPlayer[0][1] <= hitBoxObject[i][2][1] &&
-                    hitBoxPlayer[0][1] >  hitBoxObject[i][2][1] + vydt - 1) {
-                    obj->pointY = hitBoxPlayer[1][1] - obj->dimensionY - 1;
-                    MapTopLimit += hitBoxPlayer[0][1] - hitBoxObject[i][2][1] - 1;
-                }
-            }
-        }
 
         if (vx > 0 && vy > 0) {
             for (int i = 0; i < x; i++) {
-                Object *obj = get_object(object_id[i]);
-                if ((hitBoxPlayer[3][1] <  hitBoxObject[i][0][1] ||
-                    hitBoxPlayer[1][1] >  hitBoxObject[i][2][1]) &&
-                    (hitBoxPlayer[3][0] <  hitBoxObject[i][0][0] ||
-                    hitBoxPlayer[2][0] >  hitBoxObject[i][1][0])) {
+               // Object *obj = get_object(object_id[i]);
+                if ((hitBoxPlayer[3][1] <  hitBoxObject[i][0][1] -vydt -1 ||
+                    hitBoxPlayer[1][1] >  hitBoxObject[i][2][1] -vydt +1) &&
+                    (hitBoxPlayer[3][0] <  hitBoxObject[i][0][0] -vxdt -1 ||
+                    hitBoxPlayer[2][0] >  hitBoxObject[i][1][0] -vxdt +1)) {
                 } else
-                if ((hitBoxPlayer[1][0] >= hitBoxObject[i][0][0] &&
-                    hitBoxPlayer[1][0] <  hitBoxObject[i][0][0] + vxdt + 1) &&
-                    (hitBoxPlayer[2][1] >= hitBoxObject[i][0][1] &&
-                    hitBoxPlayer[2][1] <  hitBoxObject[i][0][1] + vydt + 1)) {
-                    obj->pointY = hitBoxPlayer[2][1] - 2;
-                    hitBoxObject[i][0][1] -= 2;
+                if ((hitBoxPlayer[1][0] >= hitBoxObject[i][0][0] -vxdt -1 &&
+                    hitBoxPlayer[1][0] <  hitBoxObject[i][0][0] + 1) &&
+                    (hitBoxPlayer[2][1] >= hitBoxObject[i][0][1] -vydt -1 &&
+                    hitBoxPlayer[2][1] <  hitBoxObject[i][0][1] + 1)) {
+                   // obj->pointY = hitBoxPlayer[2][1] - 2;
+                    hitBoxObject[i][0][1] -= 3;
                 }
             }
         }
 
         if (vx > 0 && vy < 0) {
             for (int i = 0; i < x; i++) {
-                Object *obj = get_object(object_id[i]);
-                if ((hitBoxPlayer[3][1] <  hitBoxObject[i][0][1] ||
-                    hitBoxPlayer[1][1] >  hitBoxObject[i][2][1]) &&
-                    (hitBoxPlayer[1][0] <  hitBoxObject[i][2][0] ||
-                    hitBoxPlayer[0][0] >  hitBoxObject[i][3][0])) {
+              //  Object *obj = get_object(object_id[i]);
+                if ((hitBoxPlayer[3][1] <  hitBoxObject[i][0][1] -vydt -1 ||
+                    hitBoxPlayer[1][1] >  hitBoxObject[i][2][1] -vydt) +1 &&
+                    (hitBoxPlayer[1][0] <  hitBoxObject[i][2][0] -vxdt -1 ||
+                    hitBoxPlayer[0][0] >  hitBoxObject[i][3][0] -vxdt +1)) {
                 } else
-                if ((hitBoxPlayer[1][0] >= hitBoxObject[i][0][0] &&
-                    hitBoxPlayer[1][0] <  hitBoxObject[i][0][0] + vxdt + 1) &&
-                    (hitBoxPlayer[0][1] <= hitBoxObject[i][2][1] &&
-                    hitBoxPlayer[0][1] >  hitBoxObject[i][2][1] + vydt - 1)) {
-                    obj->pointY = hitBoxPlayer[1][1] - obj->pointY + 2;
-                    hitBoxObject[i][2][1] += 2;
+                if ((hitBoxPlayer[1][0] >= hitBoxObject[i][0][0] -vxdt -1 &&
+                    hitBoxPlayer[1][0] <  hitBoxObject[i][0][0] + 1) &&
+                    (hitBoxPlayer[0][1] <= hitBoxObject[i][2][1] -vydt +1 &&
+                    hitBoxPlayer[0][1] >  hitBoxObject[i][2][1] - 1)) {
+                    //obj->pointY = hitBoxPlayer[1][1] - obj->pointY + 2;
+                    hitBoxObject[i][2][1] += 3;
                 }
             }
         }
 
         if (vx < 0 && vy > 0) {
             for (int i = 0; i < x; i++) {
-                Object *obj = get_object(object_id[i]);
-                if ((hitBoxPlayer[2][1] <  hitBoxObject[i][1][1] ||
-                    hitBoxPlayer[0][1] >  hitBoxObject[i][3][1]) &&
-                    (hitBoxPlayer[3][0] <  hitBoxObject[i][0][0] ||
-                    hitBoxPlayer[2][0] >  hitBoxObject[i][1][0])) {
+              //  Object *obj = get_object(object_id[i]);
+                if ((hitBoxPlayer[2][1] <  hitBoxObject[i][1][1] -vydt -1 ||
+                    hitBoxPlayer[0][1] >  hitBoxObject[i][3][1] -vydt +1) &&
+                    (hitBoxPlayer[3][0] <  hitBoxObject[i][0][0] -vxdt -1 ||
+                    hitBoxPlayer[2][0] >  hitBoxObject[i][1][0] -vxdt +1)) {
                 } else
-                if ((hitBoxPlayer[0][0] <= hitBoxObject[i][1][0] &&
-                    hitBoxPlayer[0][0] >  hitBoxObject[i][1][0] + vxdt - 1) &&
-                    (hitBoxPlayer[2][1] >= hitBoxObject[i][0][1] &&
-                    hitBoxPlayer[2][1] <  hitBoxObject[i][0][1] + vydt + 1)) {
-                    obj->pointY = hitBoxPlayer[2][1] - 2;
-                    hitBoxObject[i][1][1] -= 2;
+                if ((hitBoxPlayer[0][0] <= hitBoxObject[i][1][0] -vxdt +1 &&
+                    hitBoxPlayer[0][0] >  hitBoxObject[i][1][0] - 1) &&
+                    (hitBoxPlayer[2][1] >= hitBoxObject[i][0][1] -vydt -1 &&
+                    hitBoxPlayer[2][1] <  hitBoxObject[i][0][1] + 1)) {
+                   // obj->pointY = hitBoxPlayer[2][1] - 2;
+                    hitBoxObject[i][1][1] -= 3;
                 }
             }
         }
 
         if (vx < 0 && vy < 0) {
             for (int i = 0; i < x; i++) {
-                Object *obj = get_object(object_id[i]);
-                if ((hitBoxPlayer[2][1] <  hitBoxObject[i][1][1] ||
-                    hitBoxPlayer[0][1] >  hitBoxObject[i][3][1]) &&
-                    (hitBoxPlayer[1][0] <  hitBoxObject[i][2][0] ||
-                    hitBoxPlayer[0][0] >  hitBoxObject[i][3][0])) {
+             //   Object *obj = get_object(object_id[i]);
+                if ((hitBoxPlayer[2][1] <  hitBoxObject[i][1][1] -vydt -1 ||
+                    hitBoxPlayer[0][1] >  hitBoxObject[i][3][1] -vydt +1) &&
+                    (hitBoxPlayer[1][0] <  hitBoxObject[i][2][0] -vxdt -1 ||
+                    hitBoxPlayer[0][0] >  hitBoxObject[i][3][0] -vxdt +1)) {
                 } else
-                if ((hitBoxPlayer[0][0] <= hitBoxObject[i][1][0] &&
-                    hitBoxPlayer[0][0] >  hitBoxObject[i][1][0] + vxdt - 1) &&
-                    (hitBoxPlayer[0][1] <= hitBoxObject[i][2][1] &&
-                    hitBoxPlayer[0][1] >  hitBoxObject[i][2][1] + vydt - 1)) {
-                    obj->pointY = hitBoxPlayer[0][1] - obj->pointY + 2;
-                    hitBoxObject[i][3][1] += 2;
+                if ((hitBoxPlayer[0][0] <= hitBoxObject[i][1][0] -vxdt +1 &&
+                    hitBoxPlayer[0][0] >  hitBoxObject[i][1][0] - 1) &&
+                    (hitBoxPlayer[0][1] <= hitBoxObject[i][2][1] -vydt +1 &&
+                    hitBoxPlayer[0][1] >  hitBoxObject[i][2][1] - 1)) {
+                    //obj->pointY = hitBoxPlayer[0][1] - obj->pointY + 2;
+                    hitBoxObject[i][3][1] += 3;
+                    vydt += vydt;
+                    vxdt -= vxdt;
                 }
             }
         }
 
 
+        if (vx > 0) {
+            for (int i = 0; i < x; i++) {
+             //   Object *obj = get_object(object_id[i]);
+                if (hitBoxPlayer[3][1] <  hitBoxObject[i][0][1] -vydt -1 ||
+                    hitBoxPlayer[1][1] >  hitBoxObject[i][2][1] -vydt +1) {
+                } else
+                if (hitBoxPlayer[1][0] >= hitBoxObject[i][0][0] -vxdt -1 &&
+                    hitBoxPlayer[1][0] <  hitBoxObject[i][0][0] + 1) {
+                    KX = 0;
+                    KX = - hitBoxPlayer[1][0] + hitBoxObject[i][0][0] - 1;
+                    vxdt = 0;
+                    if (KX < 1) {
+                        KX = 0;
+
+                    }
+                }     
+            }       
+        }
+
+        if (vx < 0) {
+            for (int i = 0; i < x; i++) {
+              //  Object *obj = get_object(object_id[i]);
+                if (hitBoxPlayer[2][1] <  hitBoxObject[i][1][1] -vydt -1 ||
+                    hitBoxPlayer[0][1] >  hitBoxObject[i][3][1] -vydt +1) {
+                } else
+                if (hitBoxPlayer[0][0] <= hitBoxObject[i][1][0] -vxdt +1 &&
+                    hitBoxPlayer[0][0] >  hitBoxObject[i][1][0] - 1) {
+                 //   obj->pointX = hitBoxPlayer[0][0] - obj->dimensionX - 1;
+                   // MapLeftLimit += hitBoxPlayer[0][0] - hitBoxObject[i][1][0] - 1;
+                    KX = - hitBoxPlayer[0][0] + hitBoxObject[i][1][0] + 1;
+                    vxdt = 0;
+                    if (KX > -1) {
+                        KX = 0;
+                    }
+                }
+            }
+        }
+
+        if (vy > 0) {
+            for (int i = 0; i < x; i++) {
+               // Object *obj = get_object(object_id[i]);
+                if (hitBoxPlayer[3][0] <  hitBoxObject[i][0][0] -vxdt -1 ||
+                    hitBoxPlayer[2][0] >  hitBoxObject[i][1][0] -vxdt +1) {
+                } else
+                if (hitBoxPlayer[2][1] >= hitBoxObject[i][0][1] -vydt -1 &&
+                    hitBoxPlayer[2][1] <  hitBoxObject[i][0][1] + 1) {
+                    //obj->pointY = hitBoxPlayer[2][1] + 1;
+                    //MapTopLimit += hitBoxPlayer[2][1] - hitBoxObject[i][0][1] + 1;
+                    KY = - hitBoxPlayer[2][1] + hitBoxObject[i][0][1] - 1;
+                    vydt = 0;
+                    if (KY < 1) {
+                        KY = 0;
+                    }
+                }
+            }
+        }
+
+        if (vy < 0) {
+            for (int i = 0; i < x; i++) {
+              //  Object *obj = get_object(object_id[i]);
+                if (hitBoxPlayer[1][0] <  hitBoxObject[i][2][0] -vxdt -1 ||
+                    hitBoxPlayer[0][0] >  hitBoxObject[i][3][0] -vxdt +1) {
+                } else
+                if (hitBoxPlayer[0][1] <= hitBoxObject[i][2][1] -vydt +1 &&
+                    hitBoxPlayer[0][1] >  hitBoxObject[i][2][1] - 1) {
+                    //obj->pointY = hitBoxPlayer[1][1] - obj->dimensionY - 1;
+                   // MapTopLimit += hitBoxPlayer[0][1] - hitBoxObject[i][2][1] - 1;
+                    KY = - hitBoxPlayer[0][1] + hitBoxObject[i][2][1] + 1;
+                    vydt = 0;
+                    if (KY > -1) {
+                        KY = 0;
+                    }
+                }
+            }
+        }
+
+
+
+
+        for (int i = 0; i < x; i++) {
+            Object *obj = get_object(object_id[i]);
+            obj->pointX -= vxdt + LX + KX;
+            obj->pointY -= vydt + LY + KY;
+        }
+
+
+
+        for (int i = 0; i < x; i++) {
+            Object *obj = get_object(object_id[i]);
+            hitBoxObject[i][0][0] = obj->pointX;
+            hitBoxObject[i][0][1] = obj->pointY;
+            hitBoxObject[i][1][0] = obj->pointX + obj->dimensionX;
+            hitBoxObject[i][1][1] = obj->pointY;
+            hitBoxObject[i][2][0] = obj->pointX;
+            hitBoxObject[i][2][1] = obj->pointY + obj->dimensionY;
+            hitBoxObject[i][3][0] = obj->pointX + obj->dimensionX;
+            hitBoxObject[i][3][1] = obj->pointY + obj->dimensionY;
+        }
+
+        MapLeftLimit -= vxdt + LX + KX;
+        MapRightLimit = MapLeftLimit + MapSizeX;
+        MapTopLimit -= vydt + LY + KY;
+        MapBottomLimit = MapTopLimit + MapSizeY;
+
+
+
+        KX = 0;
+        KY = 0;
+        LX = 0;
+        LY = 0;
 
 
         // Render
