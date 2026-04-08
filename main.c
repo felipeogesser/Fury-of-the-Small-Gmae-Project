@@ -2,12 +2,16 @@
 #include <stdbool.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
 #include "objects.h"
 #include "player.h"
 #include "object_maker.h"
 
 int main(void) {
-    
+    srand(time(NULL));
+
     float MapSizeX, MapSizeY;
     float MapLeftLimit, MapRightLimit, MapTopLimit, MapBottomLimit;
     float WindowSizeX = 800.0f, WindowSizeY = 600.0f;
@@ -71,7 +75,7 @@ int main(void) {
     MapTopLimit = 0.0f;
     MapBottomLimit = MapSizeY;
     
-    
+
     
     // Z* moves player spawn to screen center and all objects relatively to player's position
     ZX = PlayerPositionX - WindowSizeX / 2 + PlayerDimensionX / 2;
@@ -84,6 +88,10 @@ int main(void) {
     MapRightLimit -= ZX;
     MapTopLimit -= ZY;
     MapBottomLimit -= ZY;
+
+    float randomGuyX = 30.0f - ZX;
+    float randomGuyY = 30.0f - ZY;
+
 
     make_objects();
 
@@ -141,7 +149,8 @@ int main(void) {
     Uint64 FrameStart = SDL_GetPerformanceCounter();
     Uint64 FrameEnd;
     Uint64 FrameTicks;
-
+    Uint32 now = SDL_GetTicks();
+    Uint32 last;
     while (running) {
         FrameEnd = SDL_GetPerformanceCounter();
         FrameTicks = SDL_GetPerformanceFrequency();
@@ -467,6 +476,54 @@ int main(void) {
             hitBoxObject[i][3][1] = obj->pointY + obj->dimensionY;
         }
 
+        float diff;
+        float randomGuyvX;
+        float randomGuyvY;
+        float rx;
+        float ry;
+        float dx;
+        float dy;
+        float hypotenuseLengh;
+        float randomGuyXtest = randomGuyX;
+        float randomGuyYtest = randomGuyY;
+        now = SDL_GetTicks();
+        
+        if (now - last >= 10000) {
+            rx = -1000 + rand() % 1000;
+            ry = -1000 + rand() % 1000;
+            dx = rx - randomGuyX;
+            dy = ry - randomGuyY;
+            hypotenuseLengh = sqrt(dx*dx + dy*dy);
+            randomGuyvX = 200 * dx/hypotenuseLengh;
+            randomGuyvY = 200 * dy/hypotenuseLengh;
+            last = now;
+        }
+        
+        randomGuyXtest += randomGuyvX * dt - vxdt;
+        randomGuyYtest += randomGuyvY * dt - vydt;
+
+        if (MapLeftLimit>randomGuyXtest) {
+            randomGuyvX = -randomGuyvX;
+        }
+
+        if (randomGuyXtest>MapRightLimit - 20.0f) {
+            randomGuyvX = -randomGuyvX;
+        }
+
+        if (MapTopLimit>randomGuyYtest) {
+            randomGuyvY = -randomGuyvY;
+        }
+
+        if (randomGuyYtest>MapBottomLimit - 20.0f) {
+            randomGuyvY = -randomGuyvY;
+        }
+
+        randomGuyX += randomGuyvX * dt - vxdt;
+        randomGuyY += randomGuyvY * dt - vydt;
+
+
+
+
         MapLeftLimit -= vxdt + LX + KX;
         MapRightLimit = MapLeftLimit + MapSizeX;
         MapTopLimit -= vydt + LY + KY;
@@ -532,6 +589,11 @@ int main(void) {
 
         }
 
+
+    
+        SDL_Rect randomGuy = { randomGuyX, randomGuyY, 20, 20};
+        SDL_SetRenderDrawColor(ren, 204, 204, 255, 255);
+        SDL_RenderFillRect(ren, &randomGuy);
 
         SDL_RenderPresent(ren);
     }
