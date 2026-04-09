@@ -1,6 +1,6 @@
 #ifndef PMEC
 #define PMEC
 
-PlayerMapEdgeCollision(Player *player, Map *map, GameState *game);
+inline PlayerMapEdgeCollision(Player *player, Map *map, GameState *game);
 
 #endif
