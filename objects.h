@@ -1,4 +1,6 @@
-#pragma once
+#ifndef OBJECTS
+#define OBJECTS
+
 #include <stdbool.h>
 
 #define MAX_OBJECTS 128
@@ -23,3 +25,5 @@ int create_object(const char *name, float pointX, float pointY,
     int R_Color, int G_Color, int B_Color, int Alpha,
     bool collision, int quadrant);
  Object *get_object(int id);
+
+ #endif
