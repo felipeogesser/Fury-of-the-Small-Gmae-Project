@@ -12,18 +12,22 @@ typedef struct Player {
     int current_hp;
     int current_st;
     char name[32];
-    float spawnX, spawnY;
-    float dimensionX, dimensionY;
+    float playerSpawnX, playerSpawnY;
+    float playerPositionX, playerPositionY;
+    float playerDimensionX, playerDimensionY;
     bool collision;
     int quadrant;
-    float PlayerWindowPositionX;
-    float PlayerWindowPositionY;
+    float playerWindowPositionX;
+    float playerWindowPositionY;
 
 } Player;
 
 int create_player(int max_hp, int max_st, const char *name,
-                   float spawnX, float spawnY, float dimensionX, float dimensionY,
-                   bool collision, int quadrant);
+                   float playerSpawnX, float playerSpawnY,
+                   float playerPositionX, float playerDimensionY,
+                   float playerDimensionX, float playerDimensionY,
+                   bool collision, int quadrant,
+                   float playerWindowPositionX, float playerWindowPositionY);
 
 Player *get_player(int id);
 

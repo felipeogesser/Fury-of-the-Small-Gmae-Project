@@ -5,10 +5,12 @@
 
 typedef struct Map {
     int id;
-    float MapSizeX, MapSizeY;
+    float mapSizeX, mapSizeY;
+    float mapLeftLimit, mapRightLimit, mapTopLimit, mapBottomLimit;
 } Map;
 
-int create_map(float MapSizeX, float MapSizeY);
+int create_map(float mapSizeX, float mapSizeY);
 
 Map *get_map(int id);
+
 #endif
