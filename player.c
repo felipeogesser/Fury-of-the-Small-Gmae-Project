@@ -5,7 +5,12 @@
 static Player players[MAX_PLAYERS];
 static int player_count;
 
-int create_player(int max_hp, int max_st, const char *name, float playerSpawnX, float playerSpawnY, float playerDimensionX, float playerDimensionY, bool collision, int quadrant, float playerWindowPositionX, float playerWindowPositionY) {
+int create_player(int max_hp, int max_st, const char *name,
+    float playerSpawnX, float playerSpawnY,
+    float playerDimensionX, float playerDimensionY,
+    bool collision, int quadrant,
+    float playerWindowPositionX, float playerWindowPositionY,
+    float speed, float runSpeed) {
     if (player_count >= MAX_PLAYERS) return -1; 
     int id = player_count;
     players[id].id = id;
@@ -24,6 +29,8 @@ int create_player(int max_hp, int max_st, const char *name, float playerSpawnX, 
     players[id].quadrant = quadrant;
     players[id].playerWindowPositionX = WINDOW_SIZE_X / 2 - playerDimensionX / 2;
     players[id].playerWindowPositionY = WINDOW_SIZE_Y / 2 - playerDimensionY / 2;
+    players[id].speed = speed;
+    players[id].runSpeed = runSpeed;
     player_count++;
     return id;
 }

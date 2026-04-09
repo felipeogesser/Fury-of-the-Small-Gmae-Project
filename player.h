@@ -19,7 +19,8 @@ typedef struct Player {
     int quadrant;
     float playerWindowPositionX;
     float playerWindowPositionY;
-
+    float speed;
+    float runSpeed;
 } Player;
 
 int create_player(int max_hp, int max_st, const char *name,
@@ -27,7 +28,8 @@ int create_player(int max_hp, int max_st, const char *name,
                    float playerPositionX, float playerDimensionY,
                    float playerDimensionX, float playerDimensionY,
                    bool collision, int quadrant,
-                   float playerWindowPositionX, float playerWindowPositionY);
+                   float playerWindowPositionX, float playerWindowPositionY,
+                   float speed, float runSpeed);
 
 Player *get_player(int id);
 
