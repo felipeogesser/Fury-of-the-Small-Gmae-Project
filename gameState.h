@@ -10,6 +10,7 @@ typedef struct GameState {
     float vxdt, vydt;
     float dirUp, dirDown, dirLeft, dirRight;
     float vx, vy, va, vb;
+    float delta;
 } GameState;
 
 // inline int modify_gameState(GameState *game);
