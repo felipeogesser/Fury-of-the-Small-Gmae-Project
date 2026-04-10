@@ -7,35 +7,35 @@
 
 void PlayerMapEdgeCollision(Player *player, Map *map, GameState *game) {
 
-    if (player->playerWindowPositionX <= map->mapLeftLimit - game->vydt) {
+    if (player->playerWindowPositionX <= map->mapLeftLimit - game->vxdt) {
         game->LX = map->mapLeftLimit - player->playerWindowPositionX + 1;
-        game->vydt = 0;
+        game->vxdt = 0;
         if (game->LX >= -1) {
             game->LX = 0;
         }
     }
 
-    if (player->playerWindowPositionX + player->playerDimensionX >= map->mapRightLimit - game->vydt) {
+    if (player->playerWindowPositionX + player->playerDimensionX >= map->mapRightLimit - game->vxdt) {
         game->LX = map->mapRightLimit - player->playerWindowPositionX - player->playerDimensionX - 1;
-        game->vydt = 0;
+        game->vxdt = 0;
         if (game->LX <= 1) {
             game->LX = 0;
         }
     }
 
     if (player->playerWindowPositionX <= map->mapTopLimit - game->vydt) {
-        game->LX = map->mapTopLimit - player->playerWindowPositionX + 1;
+        game->LY = map->mapTopLimit - player->playerWindowPositionX + 1;
         game->vydt = 0;
-        if (game->LX >= -1) {
-            game->LX = 0;
+        if (game->LY >= -1) {
+            game->LY = 0;
         }
     }
 
     if (player->playerWindowPositionX + player->playerDimensionY >= map->mapBottomLimit - game->vydt) {
-        game->LX = map->mapBottomLimit - player->playerWindowPositionX - player->playerDimensionY - 1;
+        game->LY = map->mapBottomLimit - player->playerWindowPositionX - player->playerDimensionY - 1;
         game->vydt = 0;
-        if (game->LX) {
-            game->LX = 0;
+        if (game->LY) {
+            game->LY = 0;
         }
     }
 }
