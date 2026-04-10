@@ -9,7 +9,6 @@ int create_player(int max_hp, int max_st, const char *name,
     float playerSpawnX, float playerSpawnY,
     float playerDimensionX, float playerDimensionY,
     bool collision, int quadrant,
-    float playerWindowPositionX, float playerWindowPositionY,
     float speed, float runSpeed) {
     if (player_count >= MAX_PLAYERS) return -1; 
     int id = player_count;

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "objects.h"
-#include "object_maker.h"
+#include "objectMaker.h"
 
 int object_id[MAX_OBJECTS];
 void make_objects(void) {

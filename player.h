@@ -25,10 +25,9 @@ typedef struct Player {
 
 int create_player(int max_hp, int max_st, const char *name,
                    float playerSpawnX, float playerSpawnY,
-                   float playerPositionX, float playerDimensionY,
+                   float playerPositionX, float playerPositionY,
                    float playerDimensionX, float playerDimensionY,
                    bool collision, int quadrant,
-                   float playerWindowPositionX, float playerWindowPositionY,
                    float speed, float runSpeed);
 
 Player *get_player(int id);
