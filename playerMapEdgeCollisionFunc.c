@@ -4,14 +4,8 @@
 #include "maps.h"
 #include "gameState.h"
 
-player_id = 0;
-map_id = 0;
 
-Player *player = get_player(player_id);
-Map *map = get_map(map_id);
-
-
-PlayerMapEdgeCollision(Player *player, Map *map, GameState *game) {
+void PlayerMapEdgeCollision(Player *player, Map *map, GameState *game) {
 
     if (player->playerWindowPositionX <= map->mapLeftLimit - game->vydt) {
         game->LX = map->mapLeftLimit - player->playerWindowPositionX + 1;
