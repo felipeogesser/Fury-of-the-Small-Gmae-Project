@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include "objects.h"
 #include "objectMaker.h"
 
 int object_id[MAX_OBJECTS];

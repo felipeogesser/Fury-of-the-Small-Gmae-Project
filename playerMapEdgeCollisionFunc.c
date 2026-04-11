@@ -1,9 +1,4 @@
-#include <stdio.h>
 #include "playerMapEdgeCollisionFunc.h"
-#include "player.h"
-#include "maps.h"
-#include "gameState.h"
-
 
 void PlayerMapEdgeCollision(Player *player, Map *map, GameState *game) {
 

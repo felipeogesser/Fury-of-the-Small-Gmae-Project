@@ -1,9 +1,4 @@
-#include <stdio.h>
-#include "objects.h"
-#include "player.h"
-#include "gameState.h"
-
-
+#include "playerObjectCollision.h"
 
 void isPlayerCollidingObject(float hitBoxPlayer[4][2], float (*hitBoxObject)[4][2], GameState *game, int x) {
     if (game->vx > 0 && game->vy > 0) {
