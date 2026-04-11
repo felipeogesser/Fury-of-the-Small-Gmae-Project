@@ -26,9 +26,6 @@ int main(void) {
     int player_id = create_player(50 ,100, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
     Player *get_ply = get_player(player_id);
 
-
-
-
     GameState gameState;
     GameState *game = &gameState;
 
@@ -73,10 +70,6 @@ int main(void) {
     get_ply->playerPositionX -= game->ZX;
     get_ply->playerPositionY -= game->ZY;
 
-   // float positionX = 30.0f - game->ZX;
-   // float positionY = 30.0f - game->ZY;
-
-
     map->mapLeftLimit -= game->ZX;
     map->mapRightLimit -= game->ZX;
     map->mapTopLimit -= game->ZY;
@@ -97,7 +90,7 @@ int main(void) {
     init_entities();
     make_entities();
 
-    for (i = 0, y = 0; i < MAX_ENTITIES; i++) {
+    for (i = 1, y = 0; i <= MAX_ENTITIES; i++) {
         Entity *get_ent = get_entity(entity_id[i]);
         if (get_ent->id == 0) break;
         y++;
