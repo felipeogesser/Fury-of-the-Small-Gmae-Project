@@ -13,6 +13,9 @@
 #include "maps.h"
 #include "windowSettings.h"
 #include "playerObjectCollision.h"
+#include "entities.h"
+#include "entityMaker.h"
+#include "calculateEntityMovement.h"
 
 int main(void) {
     srand(time(NULL));
@@ -22,6 +25,9 @@ int main(void) {
     
     int player_id = create_player(50 ,100, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
     Player *get_ply = get_player(player_id);
+
+
+
 
     GameState gameState;
     GameState *game = &gameState;
@@ -67,26 +73,47 @@ int main(void) {
     get_ply->playerPositionX -= game->ZX;
     get_ply->playerPositionY -= game->ZY;
 
+   // float positionX = 30.0f - game->ZX;
+   // float positionY = 30.0f - game->ZY;
+
+
     map->mapLeftLimit -= game->ZX;
     map->mapRightLimit -= game->ZX;
     map->mapTopLimit -= game->ZY;
     map->mapBottomLimit -= game->ZY;
 
-    //float randomGuyX = 30.0f - game->ZX;
-    //float randomGuyY = 30.0f - game->ZY;
-
 
     make_objects();
 
-    int i = 0;
-    int x = 0;
-    for (i = 0; i < MAX_OBJECTS; i++) {
+    int i, x, y;
+    for (i = 0, x = 0; i < MAX_OBJECTS; i++) {
         Object *obj = get_object(object_id[i]);
         if (obj->id == 0) break;
         x++;
         obj->pointX -= game->ZX;
         obj->pointY -= game->ZY;
     }
+
+    init_entities();
+    make_entities();
+
+    for (i = 0, y = 0; i < MAX_ENTITIES; i++) {
+        Entity *get_ent = get_entity(entity_id[i]);
+        if (get_ent->id == 0) break;
+        y++;
+        get_ent->positionX -= game->ZX;
+        get_ent->positionY -= game->ZY;
+    }
+
+    Entity *trimmedEntities = malloc(y * sizeof *trimmedEntities);
+    for (int i = 0; i < y; i++) {
+        trimmedEntities[i] = entities[i];
+    }
+    
+    free(entities);
+    entities = trimmedEntities;
+
+
 
     float hitBoxPlayer[4][2] = {
         {get_ply->playerPositionX, get_ply->playerPositionY},
@@ -226,54 +253,11 @@ int main(void) {
             hitBoxObject[i][3][0] = obj->pointX + obj->dimensionX;
             hitBoxObject[i][3][1] = obj->pointY + obj->dimensionY;
         }
-    /*
-        float diff;
-        float randomGuyvX;
-        float randomGuyvY;
-        float rx;
-        float ry;
-        float dx;
-        float dy;
-        float hypotenuseLengh;
-        float randomGuyXtest = randomGuyX;
-        float randomGuyYtest = randomGuyY;
+
         now = SDL_GetTicks();
-        
-        if (now - last >= 10000) {
-            rx = -1000 + rand() % 1000;
-            ry = -1000 + rand() % 1000;
-            dx = rx - randomGuyX;
-            dy = ry - randomGuyY;
-            hypotenuseLengh = sqrt(dx*dx + dy*dy);
-            randomGuyvX = 200 * dx/hypotenuseLengh;
-            randomGuyvY = 200 * dy/hypotenuseLengh;
-            last = now;
+        for (i = 0; i < y; i++) {
+            calculateEntityRandomMov(&entities[i], map, game, &now);
         }
-        
-        randomGuyXtest += randomGuyvX * delta - vxdt;
-        randomGuyYtest += randomGuyvY * delta - vydt;
-
-        if (MapLeftLimit>randomGuyXtest) {
-            randomGuyvX = -randomGuyvX;
-        }
-
-        if (randomGuyXtest>MapRightLimit - 20.0f) {
-            randomGuyvX = -randomGuyvX;
-        }
-
-        if (MapTopLimit>randomGuyYtest) {
-            randomGuyvY = -randomGuyvY;
-        }
-
-        if (randomGuyYtest>MapBottomLimit - 20.0f) {
-            randomGuyvY = -randomGuyvY;
-        }
-
-        randomGuyX += randomGuyvX * delta - vxdt;
-        randomGuyY += randomGuyvY * delta - vydt;
-    */
-
-
 
         map->mapLeftLimit -= game->vxdt + game->LX + game->KX;
         map->mapRightLimit = map->mapLeftLimit + map->mapSizeX;
@@ -341,11 +325,12 @@ int main(void) {
         }
 
 
-    /*
-        SDL_Rect randomGuy = { randomGuyX, randomGuyY, 20, 20};
-        SDL_SetRenderDrawColor(ren, 204, 204, 255, 255);
-        SDL_RenderFillRect(ren, &randomGuy);
-    */
+        for (i = 0; i < y; i++) {
+        SDL_Rect Entity = { entities[i].positionX, entities[i].positionY, entities[i].dimensionX, entities[i].dimensionY};
+        SDL_SetRenderDrawColor(ren, entities[i].R_Color, entities[i].G_Color, entities[i].B_Color, entities[i].Alpha);
+        SDL_RenderFillRect(ren, &Entity);
+        }
+    
         SDL_RenderPresent(ren);
     }
 
