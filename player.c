@@ -1,7 +1,7 @@
 #include "player.h"
 
 static Player players[MAX_PLAYERS];
-static int player_count;
+static int player_count = 1;
 
 int create_player(int max_hp, int max_st, const char *name,
     float playerSpawnX, float playerSpawnY,

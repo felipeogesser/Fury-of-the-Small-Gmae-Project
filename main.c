@@ -26,7 +26,7 @@ int main(void) {
     int player_id = create_player(50 ,100, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
     Player *get_ply = get_player(player_id);
 
-    GameState gameState;
+    GameState gameState = {0};
     GameState *game = &gameState;
 
     
@@ -80,8 +80,9 @@ int main(void) {
 
     int i, x, y;
     for (i = 0, x = 0; i < MAX_OBJECTS; i++) {
+        if (object_id[i] < 0) break;
         Object *obj = get_object(object_id[i]);
-        if (obj->id == 0) break;
+        if (obj == NULL) break;
         x++;
         obj->pointX -= game->ZX;
         obj->pointY -= game->ZY;
@@ -90,9 +91,10 @@ int main(void) {
     init_entities();
     make_entities();
 
-    for (i = 1, y = 0; i <= MAX_ENTITIES; i++) {
+    for (i = 0, y = 0; i < MAX_ENTITIES; i++) {
+        if (entity_id[i] < 0) break;
         Entity *get_ent = get_entity(entity_id[i]);
-        if (get_ent->id == 0) break;
+        if (get_ent == NULL) break;
         y++;
         get_ent->positionX -= game->ZX;
         get_ent->positionY -= game->ZY;
