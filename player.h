@@ -1,6 +1,8 @@
 #ifndef PLAYER
 #define PLAYER
 
+#include "windowSettings.h"
+#include <stdio.h>
 #include <stdbool.h>
 
 #define MAX_PLAYERS 16

@@ -1,6 +1,4 @@
-#include <stdio.h>
 #include "player.h"
-#include "windowSettings.h"
 
 static Player players[MAX_PLAYERS];
 static int player_count;

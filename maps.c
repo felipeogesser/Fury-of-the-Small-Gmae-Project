@@ -1,5 +1,4 @@
 #include "maps.h"
-#include <stdio.h>
 
 static Map maps[MAX_MAPS];
 static int map_count;

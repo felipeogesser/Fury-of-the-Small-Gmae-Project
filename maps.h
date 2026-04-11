@@ -1,6 +1,8 @@
 #ifndef MAPS
 #define MAPS
 
+#include <stdio.h>
+
 #define MAX_MAPS 10
 
 typedef struct Map {
