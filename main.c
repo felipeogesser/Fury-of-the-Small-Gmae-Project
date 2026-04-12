@@ -90,6 +90,7 @@ int main(void) {
 
     init_entities();
     make_entities();
+    auto_make_entities(1);
 
     for (i = 0, y = 0; i < MAX_ENTITIES; i++) {
         if (entity_id[i] < 0) break;
@@ -98,6 +99,8 @@ int main(void) {
         y++;
         get_ent->positionX -= game->ZX;
         get_ent->positionY -= game->ZY;
+        get_ent->nextMoveDelay = 10000 - (-5000 + rand() % 5000);
+
     }
 
     Entity *trimmedEntities = malloc(y * sizeof *trimmedEntities);
@@ -284,7 +287,22 @@ int main(void) {
         SDL_Rect PlayerRender = { get_ply->playerWindowPositionX, get_ply->playerWindowPositionY, get_ply->playerDimensionX, get_ply->playerDimensionY };
         SDL_SetRenderDrawColor(ren, 255, 104, 230, 255);
         SDL_RenderFillRect(ren, &PlayerRender);
-        
+
+        for (i = 0; i < x; i++) {
+            Object *obj = get_object(object_id[i]);
+            if (obj->id == 0) break;
+            SDL_Rect Object_Render = {obj->pointX, obj->pointY, obj->dimensionX, obj->dimensionY};
+            SDL_SetRenderDrawColor(ren, obj->R_Color, obj->G_Color, obj->B_Color, obj->Alpha);
+            SDL_RenderFillRect(ren, &Object_Render);
+
+        }
+
+        for (i = 0; i < y; i++) {
+        SDL_Rect Entity = { entities[i].positionX, entities[i].positionY, entities[i].dimensionX, entities[i].dimensionY};
+        SDL_SetRenderDrawColor(ren, entities[i].R_Color, entities[i].G_Color, entities[i].B_Color, entities[i].Alpha);
+        SDL_RenderFillRect(ren, &Entity);
+        }
+    
         SDL_Rect hp_bar = { 28, 28, get_ply->max_hp + 4, 19 };
         SDL_SetRenderDrawColor(ren, 204, 204, 255, 255);
         SDL_RenderFillRect(ren, &hp_bar);
@@ -308,24 +326,7 @@ int main(void) {
         SDL_Rect st = { 30, 52, get_ply->current_st, 15 };
         SDL_SetRenderDrawColor(ren, 102, 255, 51, 255);
         SDL_RenderFillRect(ren, &st);
-        
 
-        for (i = 0; i < x; i++) {
-            Object *obj = get_object(object_id[i]);
-            if (obj->id == 0) break;
-            SDL_Rect Object_Render = {obj->pointX, obj->pointY, obj->dimensionX, obj->dimensionY};
-            SDL_SetRenderDrawColor(ren, obj->R_Color, obj->G_Color, obj->B_Color, obj->Alpha);
-            SDL_RenderFillRect(ren, &Object_Render);
-
-        }
-
-
-        for (i = 0; i < y; i++) {
-        SDL_Rect Entity = { entities[i].positionX, entities[i].positionY, entities[i].dimensionX, entities[i].dimensionY};
-        SDL_SetRenderDrawColor(ren, entities[i].R_Color, entities[i].G_Color, entities[i].B_Color, entities[i].Alpha);
-        SDL_RenderFillRect(ren, &Entity);
-        }
-    
         SDL_RenderPresent(ren);
     }
 

@@ -24,7 +24,7 @@ typedef struct Entity {
     float directionX, directionY;
     float hypotenuseLengh;
     Uint32 lastTick;
-
+    int nextMoveDelay;
 
 } Entity;
 
