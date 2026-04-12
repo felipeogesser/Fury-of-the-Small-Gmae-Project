@@ -1,5 +1,8 @@
-#pragma once
+#ifndef OBJECTS
+#define OBJECTS
+
 #include <stdbool.h>
+#include <stdio.h>
 
 #define MAX_OBJECTS 128
 
@@ -10,10 +13,18 @@ typedef struct Object {
     float pointY;
     float dimensionX;
     float dimensionY;
+    int R_Color;
+    int G_Color;
+    int B_Color;
+    int Alpha;
     bool collision;
     int quadrant;
 } Object;
 
 int create_object(const char *name, float pointX, float pointY,
-    float dimensionX, float dimensionY, bool collision, int quadrant);
+    float dimensionX, float dimensionY, 
+    int R_Color, int G_Color, int B_Color, int Alpha,
+    bool collision, int quadrant);
  Object *get_object(int id);
+
+ #endif

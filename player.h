@@ -1,4 +1,8 @@
-#pragma once
+#ifndef PLAYER
+#define PLAYER
+
+#include "windowSettings.h"
+#include <stdio.h>
 #include <stdbool.h>
 
 #define MAX_PLAYERS 16
@@ -10,14 +14,23 @@ typedef struct Player {
     int current_hp;
     int current_st;
     char name[32];
-    float spawnX, spawnY;
-    float dimensionX, dimensionY;
+    float playerSpawnX, playerSpawnY;
+    float playerPositionX, playerPositionY;
+    float playerDimensionX, playerDimensionY;
     bool collision;
     int quadrant;
+    float playerWindowPositionX;
+    float playerWindowPositionY;
+    float speed;
+    float runSpeed;
 } Player;
 
 int create_player(int max_hp, int max_st, const char *name,
-                   float spawnX, float spawnY, float dimensionX, float dimensionY,
-                   bool collision, int quadrant);
+                   float playerSpawnX, float playerSpawnY,
+                   float playerDimensionX, float playerDimensionY,
+                   bool collision, int quadrant,
+                   float speed, float runSpeed);
 
 Player *get_player(int id);
+
+#endif

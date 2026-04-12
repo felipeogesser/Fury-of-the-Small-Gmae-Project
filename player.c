@@ -1,10 +1,13 @@
 #include "player.h"
-#include <stdio.h>
 
 static Player players[MAX_PLAYERS];
-static int player_count;
+static int player_count = 1;
 
-int create_player(int max_hp, int max_st, const char *name, float spawnX, float spawnY, float dimensionX, float dimensionY, bool collision, int quadrant) {
+int create_player(int max_hp, int max_st, const char *name,
+    float playerSpawnX, float playerSpawnY,
+    float playerDimensionX, float playerDimensionY,
+    bool collision, int quadrant,
+    float speed, float runSpeed) {
     if (player_count >= MAX_PLAYERS) return -1; 
     int id = player_count;
     players[id].id = id;
@@ -13,12 +16,18 @@ int create_player(int max_hp, int max_st, const char *name, float spawnX, float 
     players[id].current_hp = max_hp;
     players[id].current_st = max_st;
     snprintf(players[id].name, sizeof players[id].name, "%s", name ? name : "");
-    players[id].spawnX = spawnX;
-    players[id].spawnY = spawnY;
-    players[id].dimensionX = dimensionX;
-    players[id].dimensionY = dimensionY;
+    players[id].playerSpawnX = playerSpawnX;
+    players[id].playerSpawnY = playerSpawnY;
+    players[id].playerPositionX = playerSpawnX;
+    players[id].playerPositionY = playerSpawnY;
+    players[id].playerDimensionX = playerDimensionX;
+    players[id].playerDimensionY = playerDimensionY;
     players[id].collision = collision;
     players[id].quadrant = quadrant;
+    players[id].playerWindowPositionX = WINDOW_SIZE_X / 2 - playerDimensionX / 2;
+    players[id].playerWindowPositionY = WINDOW_SIZE_Y / 2 - playerDimensionY / 2;
+    players[id].speed = speed;
+    players[id].runSpeed = runSpeed;
     player_count++;
     return id;
 }
