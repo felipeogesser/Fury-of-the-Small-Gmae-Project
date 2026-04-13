@@ -5,7 +5,7 @@ void init_entities(void)
 {
     entities = malloc(MAX_ENTITIES * sizeof *entities);
 }
-static int entity_count = 1;
+static int entity_count = 0;
 
 int create_entity(const char *name, float positionX, float positionY,
     float dimensionX, float dimensionY,
@@ -13,7 +13,7 @@ int create_entity(const char *name, float positionX, float positionY,
     bool collision, int speed) {
         if (entity_count >= MAX_ENTITIES) return -1;
         int id = entity_count;
-        entities[id].id = id;
+        entities[id].id = id + 1;
         snprintf(entities[id].name, sizeof entities[id].name, "%s", name);
         entities[id].positionX = positionX;
         entities[id].positionY = positionY;
@@ -26,12 +26,10 @@ int create_entity(const char *name, float positionX, float positionY,
         entities[id].collision = collision;
         entities[id].speed = speed;
         entity_count++;
-        return id;
+        return entities[id].id;
     }
 
-
-
 Entity *get_entity(int id) {
-    if (id < 0 || id >= entity_count) return NULL;
-    return &entities[id];
+    if (id <= 0 || id > entity_count) return NULL;
+    return &entities[id - 1];
 }
