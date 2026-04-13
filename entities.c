@@ -12,21 +12,21 @@ int create_entity(const char *name, float positionX, float positionY,
     int R_Color, int G_Color, int B_Color, int Alpha,
     bool collision, int speed) {
         if (entity_count >= MAX_ENTITIES) return -1;
-        int id = entity_count;
-        entities[id].id = id + 1;
-        snprintf(entities[id].name, sizeof entities[id].name, "%s", name);
-        entities[id].positionX = positionX;
-        entities[id].positionY = positionY;
-        entities[id].dimensionX = dimensionX;
-        entities[id].dimensionY = dimensionY;
-        entities[id].R_Color = R_Color;
-        entities[id].G_Color = G_Color;
-        entities[id].B_Color = B_Color;
-        entities[id].Alpha = Alpha;
-        entities[id].collision = collision;
-        entities[id].speed = speed;
+        int index = entity_count;
+        entities[index].id = index + 1;
+        snprintf(entities[index].name, sizeof entities[index].name, "%s", name);
+        entities[index].positionX = positionX;
+        entities[index].positionY = positionY;
+        entities[index].dimensionX = dimensionX;
+        entities[index].dimensionY = dimensionY;
+        entities[index].R_Color = R_Color;
+        entities[index].G_Color = G_Color;
+        entities[index].B_Color = B_Color;
+        entities[index].Alpha = Alpha;
+        entities[index].collision = collision;
+        entities[index].speed = speed;
         entity_count++;
-        return entities[id].id;
+        return entities[index].id;
     }
 
 Entity *get_entity(int id) {
