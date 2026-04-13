@@ -7,7 +7,7 @@ void init_entities(void)
 }
 static int entity_count = 0;
 
-int create_entity(const char *name, float positionX, float positionY,
+int create_entity(const char *name, const char *team, float positionX, float positionY,
     float dimensionX, float dimensionY,
     int R_Color, int G_Color, int B_Color, int Alpha,
     bool collision, int speed) {
@@ -15,6 +15,7 @@ int create_entity(const char *name, float positionX, float positionY,
         int index = entity_count;
         entities[index].id = index + 1;
         snprintf(entities[index].name, sizeof entities[index].name, "%s", name);
+        snprintf(entities[index].team, sizeof entities[index].team, "%s", team);
         entities[index].positionX = positionX;
         entities[index].positionY = positionY;
         entities[index].dimensionX = dimensionX;

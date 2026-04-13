@@ -10,6 +10,7 @@
 typedef struct Entity {
     int id;
     char name[32];
+    char team[32];
     float positionX, positionY;
     float dimensionX, dimensionY;
     int R_Color;
@@ -30,7 +31,7 @@ typedef struct Entity {
 
 extern Entity *entities;
 
-int create_entity(const char *name, float positionX, float positionY,
+int create_entity(const char *name, const char *team, float positionX, float positionY,
     float dimensionX, float dimensionY,
     int R_Color, int G_Color, int B_Color, int Alpha,
     bool collision, int speed);

@@ -16,6 +16,7 @@
 #include "entities.h"
 #include "entityMaker.h"
 #include "calculateEntityMovement.h"
+#include "teamsPositionAssembler.h"
 
 int main(void) {
     srand(time(NULL));
@@ -89,8 +90,12 @@ int main(void) {
     }
 
     init_entities();
-    make_entities();
-    auto_make_entities(1);
+    //make_entities();
+    //auto_make_entities(1);
+    team_blue_entities(50);
+    team_red_entities(50);
+    set_team_position(entities);
+
 
     for (i = 0, y = 0; i < MAX_ENTITIES; i++) {
         if (entity_id[i] < 0) break;
@@ -110,7 +115,6 @@ int main(void) {
     
     free(entities);
     entities = trimmedEntities;
-
 
 
     float hitBoxPlayer[4][2] = {
