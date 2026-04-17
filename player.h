@@ -31,6 +31,6 @@ int create_player(int max_hp, int max_st, const char *name,
                    bool collision, int quadrant,
                    float speed, float runSpeed);
 
-Player *get_player(int id);
+Player *get_player(int playerId);
 
 #endif

@@ -13,6 +13,6 @@ typedef struct Map {
 
 int create_map(float mapSizeX, float mapSizeY);
 
-Map *get_map(int id);
+Map *get_map(int mapIndex);
 
 #endif
