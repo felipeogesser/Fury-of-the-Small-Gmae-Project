@@ -13,6 +13,10 @@ typedef struct Entity {
     char team[32];
     float positionX, positionY;
     float dimensionX, dimensionY;
+    float positionOnMapX, positionOnMapY;
+    float positionOnScreenX, positionOnScreenY;
+    int previousCol, previousRow;
+    int previousX, previousY;
     int R_Color;
     int G_Color;
     int B_Color;
@@ -26,7 +30,9 @@ typedef struct Entity {
     float hypotenuseLengh;
     Uint32 lastTick;
     int nextMoveDelay;
-
+    int currentQuadrants[4];
+    unsigned char alreadyInQuadrant;
+    unsigned char quadrantOutOfBounds;
 } Entity;
 
 extern Entity *entities;

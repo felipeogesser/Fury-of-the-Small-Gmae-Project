@@ -20,12 +20,16 @@ int create_entity(const char *name, const char *team, float positionX, float pos
         entities[entityIndex].positionY = positionY;
         entities[entityIndex].dimensionX = dimensionX;
         entities[entityIndex].dimensionY = dimensionY;
+        entities[entityIndex].positionOnMapX = positionX;
+        entities[entityIndex].positionOnMapY = positionY;
         entities[entityIndex].R_Color = R_Color;
         entities[entityIndex].G_Color = G_Color;
         entities[entityIndex].B_Color = B_Color;
         entities[entityIndex].Alpha = Alpha;
         entities[entityIndex].collision = collision;
         entities[entityIndex].speed = speed;
+        entities[entityIndex].alreadyInQuadrant = 0;
+        entities[entityIndex].quadrantOutOfBounds = 0;
         entity_count++;
         return entities[entityIndex].id;
     }

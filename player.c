@@ -10,7 +10,7 @@ int create_player(int max_hp, int max_st, const char *name,
     float speed, float runSpeed) {
     if (player_count >= MAX_PLAYERS) return -1; 
     int playerIndex = player_count;
-    players[playerIndex].id = id + 1;
+    players[playerIndex].id = playerIndex + 1;
     players[playerIndex].max_hp = max_hp;
     players[playerIndex].max_st = max_st;
     players[playerIndex].current_hp = max_hp;

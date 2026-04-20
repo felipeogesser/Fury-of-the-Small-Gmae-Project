@@ -35,9 +35,11 @@ void calculateEntityRandomMov(Entity *get_ent, Map *map, GameState *game, Uint32
         get_ent->vectorY = -get_ent->vectorY;
     }
 
-    get_ent->positionX += get_ent->vectorX * game->delta - game->vxdt;
-    get_ent->positionY += get_ent->vectorY * game->delta - game->vydt;
+    get_ent->positionX += get_ent->vectorX * game->delta - game->vxdt - game->LX - game->KX;
+    get_ent->positionY += get_ent->vectorY * game->delta - game->vydt - game->LY - game->KY;
 
+    get_ent->positionOnMapX += get_ent->vectorX * game->delta;
+    get_ent->positionOnMapY += get_ent->vectorY * game->delta;
 
 
 }

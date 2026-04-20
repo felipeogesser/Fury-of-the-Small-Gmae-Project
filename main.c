@@ -17,6 +17,8 @@
 #include "entityMaker.h"
 #include "calculateEntityMovement.h"
 #include "teamsPositionAssembler.h"
+#include "quadrant.h"
+#include "calculateEntityQuadrant.h"
 
 int main(void) {
     srand(time(NULL));
@@ -51,6 +53,9 @@ int main(void) {
         win, -1,
         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
     );
+
+    SDL_SetRenderDrawBlendMode(ren, SDL_BLENDMODE_BLEND);
+
     if (!ren) {
         SDL_Log("SDL_CreateRenderer error: %s", SDL_GetError());
         SDL_DestroyWindow(win);
@@ -91,10 +96,19 @@ int main(void) {
 
     init_entities();
     //make_entities();
-    //auto_make_entities(1);
-    team_blue_entities(50);
-    team_red_entities(50);
-    set_team_position(entities);
+    auto_make_entities(3);
+    //team_blue_entities(50);
+    //team_red_entities(50);
+    //set_team_position(entities);
+
+
+    //int val1 = (int)map->mapSizeX / quad->quadrantSize;
+    //int val2 = (int)map->mapSizeY / quad->quadrantSize;
+
+    //int val3 = val1 * val2; //48
+
+    //Quadrant *quads = malloc(val3 * sizeof *quads);
+
 
 
     for (i = 0, y = 0; i < MAX_ENTITIES; i++) {
@@ -116,7 +130,12 @@ int main(void) {
     free(entities);
     entities = trimmedEntities;
 
-
+    calculateQuadrantSize(map, game);
+    calculateAmountOfQuadrants(map, game);
+    init_quadrants(amountX, amountY);
+    initialCheckEntityQuadrant(game, entities, quadrant, y);
+    renderQuadrantsFirstTime(ren, game, entities, quadrant, y);
+    
     float hitBoxPlayer[4][2] = {
         {get_ply->playerPositionX, get_ply->playerPositionY},
         {get_ply->playerPositionX + get_ply->playerDimensionX, get_ply->playerPositionY},
@@ -266,12 +285,17 @@ int main(void) {
         map->mapTopLimit -= game->vydt + game->LY + game->KY;
         map->mapBottomLimit = map->mapTopLimit + map->mapSizeY;
 
+        checkEntityQuadrant(game, entities, quadrant, y);
 
-
+        /*
         game->KX = 0;
         game->KY = 0;
         game->LX = 0;
         game->LY = 0;
+        */
+
+        //printf("ZX=%f, ZY=%f", game->ZX, game->ZY);
+        //printf("x=%f, y=%f", get_ply->playerPositionX, get_ply->playerPositionY);
 
 
         // Render
@@ -300,13 +324,20 @@ int main(void) {
             SDL_RenderFillRect(ren, &Object_Render);
 
         }
-
+        /*
         for (i = 0; i < y; i++) {
-        SDL_Rect Entity = { entities[i].positionX, entities[i].positionY, entities[i].dimensionX, entities[i].dimensionY};
+        SDL_Rect randomEntityMov = { entities[i].positionX, entities[i].positionY, entities[i].dimensionX, entities[i].dimensionY};
         SDL_SetRenderDrawColor(ren, entities[i].R_Color, entities[i].G_Color, entities[i].B_Color, entities[i].Alpha);
-        SDL_RenderFillRect(ren, &Entity);
+        SDL_RenderFillRect(ren, &randomEntityMov);
         }
-    
+        */
+  
+        for (i = 0; i < y; i++) {
+        SDL_Rect EntityMovement = { entities[i].positionX, entities[i].positionY, entities[i].dimensionX, entities[i].dimensionY};
+        SDL_SetRenderDrawColor(ren, entities[i].R_Color, entities[i].G_Color, entities[i].B_Color, entities[i].Alpha);
+        SDL_RenderFillRect(ren, &EntityMovement);
+        }
+
         SDL_Rect hp_bar = { 28, 28, get_ply->max_hp + 4, 19 };
         SDL_SetRenderDrawColor(ren, 204, 204, 255, 255);
         SDL_RenderFillRect(ren, &hp_bar);
@@ -331,7 +362,14 @@ int main(void) {
         SDL_SetRenderDrawColor(ren, 102, 255, 51, 255);
         SDL_RenderFillRect(ren, &st);
 
+        renderQuadrants(ren, game, entities, quadrant, y);
+
         SDL_RenderPresent(ren);
+
+        game->KX = 0;
+        game->KY = 0;
+        game->LX = 0;
+        game->LY = 0;
     }
 
     SDL_DestroyRenderer(ren);

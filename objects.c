@@ -8,7 +8,7 @@ int create_object(const char *name, float pointX, float pointY, float dimensionX
     bool collision, int quadrant) {
     if (object_count >= MAX_OBJECTS) return -1; 
     int objectIndex = object_count;
-    objects[objectIndex].id = id + 1;
+    objects[objectIndex].id = objectIndex + 1;
     snprintf(objects[objectIndex].name, sizeof objects[objectIndex].name, "%s", name);
     objects[objectIndex].pointX = pointX;
     objects[objectIndex].pointY = pointY;
