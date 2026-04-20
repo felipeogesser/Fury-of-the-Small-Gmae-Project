@@ -23,7 +23,7 @@ void calculateAmountOfQuadrants(Map *map, GameState *game) {
 
 
 void init_quadrants(int amountX, int amountY) {
-    quadrant = malloc( (amountX * amountY) * sizeof *quadrant);
+    quadrant = calloc(amountX * amountY, sizeof *quadrant);
     int i;
     for (i = 0; i < amountX * amountY; i++) {
         quadrant[i].id = i + 1;

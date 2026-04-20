@@ -3,7 +3,7 @@
 Entity *entities = NULL;
 void init_entities(void)
 {
-    entities = malloc(MAX_ENTITIES * sizeof *entities);
+    entities = calloc(MAX_ENTITIES, sizeof *entities);
 }
 static int entity_count = 0;
 

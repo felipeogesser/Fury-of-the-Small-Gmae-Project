@@ -101,16 +101,6 @@ int main(void) {
     //team_red_entities(50);
     //set_team_position(entities);
 
-
-    //int val1 = (int)map->mapSizeX / quad->quadrantSize;
-    //int val2 = (int)map->mapSizeY / quad->quadrantSize;
-
-    //int val3 = val1 * val2; //48
-
-    //Quadrant *quads = malloc(val3 * sizeof *quads);
-
-
-
     for (i = 0, y = 0; i < MAX_ENTITIES; i++) {
         if (entity_id[i] < 0) break;
         Entity *get_ent = get_entity(entity_id[i]);
@@ -122,7 +112,7 @@ int main(void) {
 
     }
 
-    Entity *trimmedEntities = malloc(y * sizeof *trimmedEntities);
+    Entity *trimmedEntities = calloc(y, sizeof *trimmedEntities);
     for (int i = 0; i < y; i++) {
         trimmedEntities[i] = entities[i];
     }
@@ -134,7 +124,7 @@ int main(void) {
     calculateAmountOfQuadrants(map, game);
     init_quadrants(amountX, amountY);
     initialCheckEntityQuadrant(game, entities, quadrant, y);
-    renderQuadrantsFirstTime(ren, game, entities, quadrant, y);
+    renderQuadrantsSetup(ren, game, entities, quadrant, y);
     
     float hitBoxPlayer[4][2] = {
         {get_ply->playerPositionX, get_ply->playerPositionY},
@@ -157,7 +147,7 @@ int main(void) {
         hitBoxMaxObjects[i][3][1] = obj->pointY + obj->dimensionY;
     }
 
-    float (*hitBoxObject)[4][2] = malloc(x * sizeof *hitBoxMaxObjects);
+    float (*hitBoxObject)[4][2] = calloc(x, sizeof *hitBoxMaxObjects);
 
     for (int i = 0; i < x; i++) {
         Object *obj = get_object(object_id[i]);

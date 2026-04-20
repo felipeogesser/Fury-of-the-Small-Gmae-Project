@@ -17,7 +17,7 @@
 
 void initialCheckEntityQuadrant(GameState *game, Entity *entities, Quadrant *quadrant, int y);
 void checkEntityQuadrant(GameState *game, Entity *entities, Quadrant *quadrant, int y);
-void renderQuadrantsFirstTime(SDL_Renderer *ren, GameState *game, Entity *entities, Quadrant *quadrant, int y);
+void renderQuadrantsSetup(SDL_Renderer *ren, GameState *game, Entity *entities, Quadrant *quadrant, int y);
 void renderQuadrants(SDL_Renderer *ren, GameState *game, Entity *entities, Quadrant *quadrant, int y);
 
 #endif
