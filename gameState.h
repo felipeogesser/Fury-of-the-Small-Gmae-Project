@@ -6,14 +6,12 @@
 typedef struct GameState {
     float LX, LY;
     float KX, KY;
-    float ZX, ZY;
+    float offSetX, offSetY;
     float vxdt, vydt;
     float dirUp, dirDown, dirLeft, dirRight;
     float vx, vy, va, vb;
     float delta;
     int quadrantSize;
 } GameState;
-
-// inline int modify_gameState(GameState *game);
 
 #endif

@@ -11,6 +11,7 @@
 #include "playerMapEdgeCollisionFunc.h"
 #include "gameState.h"
 #include "maps.h"
+#include "mapMaker.h"
 #include "windowSettings.h"
 #include "playerObjectCollision.h"
 #include "entities.h"
@@ -22,9 +23,14 @@
 
 int main(void) {
     srand(time(NULL));
-
-    int map_id = create_map(800.0f, 600.0f);
-    Map *map = get_map(map_id);
+    /*
+    struct timespec start, end;
+    double elapsedNs;
+    double totalNs = 0.0;
+    unsigned long long countElapsed = 0;
+    */
+    make_maps();
+    Map *map = get_map(map_id[0]);
     
     int player_id = create_player(50 ,100, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
     Player *get_ply = get_player(player_id);
@@ -69,34 +75,32 @@ int main(void) {
     
 
     
-    // Z* moves player spawn to screen center and all objects relatively to player's position
-    game->ZX = get_ply->playerPositionX - WINDOW_SIZE_X / 2 + get_ply->playerDimensionX / 2;
-    game->ZY = get_ply->playerPositionY - WINDOW_SIZE_Y / 2 + get_ply->playerDimensionY / 2;
+    // offSet moves map, entities, objects, anything other than the player,
+    // an amount base on the difference between player spawn and the center window.
+    game->offSetX = get_ply->playerPositionX - WINDOW_SIZE_X / 2 + get_ply->playerDimensionX / 2;
+    game->offSetY = get_ply->playerPositionY - WINDOW_SIZE_Y / 2 + get_ply->playerDimensionY / 2;
 
-    get_ply->playerPositionX -= game->ZX;
-    get_ply->playerPositionY -= game->ZY;
+    get_ply->playerPositionOnScreenX = WINDOW_SIZE_X / 2 - get_ply->playerDimensionX / 2;
+    get_ply->playerPositionOnScreenY = WINDOW_SIZE_Y / 2 - get_ply->playerDimensionY / 2;
 
-    map->mapLeftLimit -= game->ZX;
-    map->mapRightLimit -= game->ZX;
-    map->mapTopLimit -= game->ZY;
-    map->mapBottomLimit -= game->ZY;
+
 
 
     make_objects();
 
-    int i, x, y;
+    unsigned int i, x, y;
+
     for (i = 0, x = 0; i < MAX_OBJECTS; i++) {
         if (object_id[i] < 0) break;
         Object *obj = get_object(object_id[i]);
         if (obj == NULL) break;
         x++;
-        obj->pointX -= game->ZX;
-        obj->pointY -= game->ZY;
     }
 
+    init_entity_id();
     init_entities();
     //make_entities();
-    auto_make_entities(3);
+    auto_make_entities(8);
     //team_blue_entities(50);
     //team_red_entities(50);
     //set_team_position(entities);
@@ -105,11 +109,8 @@ int main(void) {
         if (entity_id[i] < 0) break;
         Entity *get_ent = get_entity(entity_id[i]);
         if (get_ent == NULL) break;
-        y++;
-        get_ent->positionX -= game->ZX;
-        get_ent->positionY -= game->ZY;
         get_ent->nextMoveDelay = 10000 - (-5000 + rand() % 5000);
-
+        y++;
     }
 
     Entity *trimmedEntities = calloc(y, sizeof *trimmedEntities);
@@ -117,8 +118,11 @@ int main(void) {
         trimmedEntities[i] = entities[i];
     }
     
-    free(entities);
+    //free(entities);
     entities = trimmedEntities;
+    trimmedEntities = NULL;
+    //free(entity_id);
+    entity_id = NULL;
 
     calculateQuadrantSize(map, game);
     calculateAmountOfQuadrants(map, game);
@@ -164,14 +168,16 @@ int main(void) {
     Uint64 FrameStart = SDL_GetPerformanceCounter();
     Uint64 FrameEnd;
     Uint64 FrameTicks;
-    Uint32 now = SDL_GetTicks();
+    Uint32 now1 = SDL_GetTicks();
     Uint32 last;
     while (running) {
-        FrameEnd = SDL_GetPerformanceCounter();
+        //clock_gettime(CLOCK_MONOTONIC, &start);
+        /*FrameEnd = SDL_GetPerformanceCounter();
         FrameTicks = SDL_GetPerformanceFrequency();
         game->delta = (float)(FrameEnd - FrameStart) / (float)FrameTicks;
         FrameStart = FrameEnd;
-
+        */
+        game->delta = 0.016666667f;
         // Calculate game state
         SDL_Event e;
         while (SDL_PollEvent(&e)) {
@@ -245,87 +251,62 @@ int main(void) {
         isPlayerCollidingObject(hitBoxPlayer, hitBoxObject, game, x);
 
 
-        for (int i = 0; i < x; i++) {
-            Object *obj = get_object(object_id[i]);
-            obj->pointX -= game->vxdt + game->LX + game->KX;
-            obj->pointY -= game->vydt + game->LY + game->KY;
-        }
+    game->offSetX += game->vxdt + game->LX + game->KX;
+    game->offSetY += game->vydt + game->LY + game->KY;
 
 
+    get_ply->playerPositionX += game->vxdt + game->LX + game->KX;
+    get_ply->playerPositionY += game->vydt + game->LY + game->KY;
 
-        for (int i = 0; i < x; i++) {
-            Object *obj = get_object(object_id[i]);
-            hitBoxObject[i][0][0] = obj->pointX;
-            hitBoxObject[i][0][1] = obj->pointY;
-            hitBoxObject[i][1][0] = obj->pointX + obj->dimensionX;
-            hitBoxObject[i][1][1] = obj->pointY;
-            hitBoxObject[i][2][0] = obj->pointX;
-            hitBoxObject[i][2][1] = obj->pointY + obj->dimensionY;
-            hitBoxObject[i][3][0] = obj->pointX + obj->dimensionX;
-            hitBoxObject[i][3][1] = obj->pointY + obj->dimensionY;
-        }
+    hitBoxPlayer[0][0] = get_ply->playerPositionX;
+    hitBoxPlayer[0][1] = get_ply->playerPositionY;
 
-        now = SDL_GetTicks();
+    hitBoxPlayer[1][0] = get_ply->playerPositionX + get_ply->playerDimensionX;
+    hitBoxPlayer[1][1] = get_ply->playerPositionY;
+
+    hitBoxPlayer[2][0] = get_ply->playerPositionX;
+    hitBoxPlayer[2][1] = get_ply->playerPositionY + get_ply->playerDimensionY;
+
+    hitBoxPlayer[3][0] = get_ply->playerPositionX + get_ply->playerDimensionX;
+    hitBoxPlayer[3][1] = get_ply->playerPositionY + get_ply->playerDimensionY;
+
+
+        Uint32 now2 = SDL_GetTicks();
         for (i = 0; i < y; i++) {
-            calculateEntityRandomMov(&entities[i], map, game, &now);
+            calculateEntityRandomMov(&entities[i], map, game, now1, now2);
         }
-
-        map->mapLeftLimit -= game->vxdt + game->LX + game->KX;
-        map->mapRightLimit = map->mapLeftLimit + map->mapSizeX;
-        map->mapTopLimit -= game->vydt + game->LY + game->KY;
-        map->mapBottomLimit = map->mapTopLimit + map->mapSizeY;
 
         checkEntityQuadrant(game, entities, quadrant, y);
 
-        /*
-        game->KX = 0;
-        game->KY = 0;
-        game->LX = 0;
-        game->LY = 0;
-        */
 
-        //printf("ZX=%f, ZY=%f", game->ZX, game->ZY);
-        //printf("x=%f, y=%f", get_ply->playerPositionX, get_ply->playerPositionY);
-
-
+        printf("offSetX= %f, offSetY=%f, LX= %f, LY= %f, mll= %f, ppX= %f\n", game->offSetX, game->offSetY, game->LX, game->LY, map->mapLeftLimit, get_ply->playerPositionX);
         // Render
-
-
-
-
 
         SDL_SetRenderDrawColor(ren, 120, 80, 80, 255);
 
         SDL_RenderClear(ren);
 
-        SDL_Rect Map = {map->mapLeftLimit, map->mapTopLimit, map->mapSizeX, map->mapSizeY};
+        SDL_Rect Map = {map->mapLeftLimit - game->offSetX, map->mapTopLimit - game->offSetY, map->mapSizeX, map->mapSizeY};
         SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
         SDL_RenderFillRect(ren, &Map);
 
-        SDL_Rect PlayerRender = { get_ply->playerWindowPositionX, get_ply->playerWindowPositionY, get_ply->playerDimensionX, get_ply->playerDimensionY };
+        SDL_Rect PlayerRender = { get_ply->playerPositionOnScreenX, get_ply->playerPositionOnScreenY, get_ply->playerDimensionX, get_ply->playerDimensionY };
         SDL_SetRenderDrawColor(ren, 255, 104, 230, 255);
         SDL_RenderFillRect(ren, &PlayerRender);
 
         for (i = 0; i < x; i++) {
             Object *obj = get_object(object_id[i]);
             if (obj->id == 0) break;
-            SDL_Rect Object_Render = {obj->pointX, obj->pointY, obj->dimensionX, obj->dimensionY};
+            SDL_Rect Object_Render = {obj->pointX - game->offSetX, obj->pointY - game->offSetY, obj->dimensionX, obj->dimensionY};
             SDL_SetRenderDrawColor(ren, obj->R_Color, obj->G_Color, obj->B_Color, obj->Alpha);
             SDL_RenderFillRect(ren, &Object_Render);
 
         }
-        /*
+
         for (i = 0; i < y; i++) {
-        SDL_Rect randomEntityMov = { entities[i].positionX, entities[i].positionY, entities[i].dimensionX, entities[i].dimensionY};
-        SDL_SetRenderDrawColor(ren, entities[i].R_Color, entities[i].G_Color, entities[i].B_Color, entities[i].Alpha);
-        SDL_RenderFillRect(ren, &randomEntityMov);
-        }
-        */
-  
-        for (i = 0; i < y; i++) {
-        SDL_Rect EntityMovement = { entities[i].positionX, entities[i].positionY, entities[i].dimensionX, entities[i].dimensionY};
-        SDL_SetRenderDrawColor(ren, entities[i].R_Color, entities[i].G_Color, entities[i].B_Color, entities[i].Alpha);
-        SDL_RenderFillRect(ren, &EntityMovement);
+            SDL_Rect EntityMovement = { entities[i].positionX - game->offSetX, entities[i].positionY - game->offSetY, entities[i].dimensionX, entities[i].dimensionY};
+            SDL_SetRenderDrawColor(ren, entities[i].R_Color, entities[i].G_Color, entities[i].B_Color, entities[i].Alpha);
+            SDL_RenderFillRect(ren, &EntityMovement);
         }
 
         SDL_Rect hp_bar = { 28, 28, get_ply->max_hp + 4, 19 };
@@ -360,6 +341,15 @@ int main(void) {
         game->KY = 0;
         game->LX = 0;
         game->LY = 0;
+        /*
+        countElapsed++;
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        elapsedNs =
+            (double)(end.tv_sec - start.tv_sec) * 1000000000.0 +
+            (double)(end.tv_nsec - start.tv_nsec);
+        totalNs += elapsedNs;
+        printf("Average: %f ns\n", totalNs / countElapsed);
+        */
     }
 
     SDL_DestroyRenderer(ren);

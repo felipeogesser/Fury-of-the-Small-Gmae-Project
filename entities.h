@@ -13,8 +13,7 @@ typedef struct Entity {
     char team[32];
     float positionX, positionY;
     float dimensionX, dimensionY;
-    float positionOnMapX, positionOnMapY;
-    float positionOnScreenX, positionOnScreenY;
+    float quadrantOccupiedX, quadrantOccupiedY;
     int previousCol, previousRow;
     int previousX, previousY;
     int R_Color;
@@ -22,16 +21,12 @@ typedef struct Entity {
     int B_Color;
     int Alpha;
     bool collision;
-    int quadrant;
     float speed;
     float vectorX, vectorY;
-    float randomX, randomY;
-    float directionX, directionY;
-    float hypotenuseLengh;
     Uint32 lastTick;
     int nextMoveDelay;
     int currentQuadrants[4];
-    unsigned char alreadyInQuadrant;
+    //unsigned char alreadyInQuadrant;
     unsigned char quadrantOutOfBounds;
 } Entity;
 

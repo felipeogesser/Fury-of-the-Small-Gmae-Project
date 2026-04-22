@@ -1,6 +1,12 @@
 #include "entityMaker.h"
 
-int entity_id[MAX_ENTITIES];
+int *entity_id = NULL;
+
+void init_entity_id(void)
+{
+    entity_id = calloc(MAX_ENTITIES, sizeof *entity_id);
+}
+
 int i = 0;
 int I = 0;
 

@@ -16,11 +16,10 @@ typedef struct Player {
     char name[32];
     float playerSpawnX, playerSpawnY;
     float playerPositionX, playerPositionY;
+    float playerPositionOnScreenX, playerPositionOnScreenY;
     float playerDimensionX, playerDimensionY;
     bool collision;
     int quadrant;
-    float playerWindowPositionX;
-    float playerWindowPositionY;
     float speed;
     float runSpeed;
 } Player;
