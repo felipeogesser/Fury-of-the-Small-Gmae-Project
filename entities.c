@@ -26,7 +26,7 @@ int create_entity(const char *name, const char *team, float positionX, float pos
         entities[entityIndex].Alpha = Alpha;
         entities[entityIndex].collision = collision;
         entities[entityIndex].speed = speed;
-        entities[entityIndex].alreadyInQuadrant = 0;
+        //entities[entityIndex].alreadyInQuadrant = 0;
         entities[entityIndex].quadrantOutOfBounds = 0;
         entity_count++;
         return entities[entityIndex].id;

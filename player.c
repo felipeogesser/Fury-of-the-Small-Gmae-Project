@@ -20,14 +20,12 @@ int create_player(int max_hp, int max_st, const char *name,
     players[playerIndex].playerSpawnY = playerSpawnY;
     players[playerIndex].playerPositionX = playerSpawnX;
     players[playerIndex].playerPositionY = playerSpawnY;
-    //players[playerIndex].playerPositionOnScreenX = playerSpawnX;
-    //players[playerIndex].playerPositionOnScreenY = playerSpawnY;
+    players[playerIndex].playerPositionOnScreenX = WINDOW_SIZE_X / 2 - playerDimensionX / 2;
+    players[playerIndex].playerPositionOnScreenY = WINDOW_SIZE_Y / 2 - playerDimensionY / 2;
     players[playerIndex].playerDimensionX = playerDimensionX;
     players[playerIndex].playerDimensionY = playerDimensionY;
     players[playerIndex].collision = collision;
     players[playerIndex].quadrant = quadrant;
-    players[playerIndex].playerWindowPositionX = WINDOW_SIZE_X / 2 - playerDimensionX / 2;
-    players[playerIndex].playerWindowPositionY = WINDOW_SIZE_Y / 2 - playerDimensionY / 2;
     players[playerIndex].speed = speed;
     players[playerIndex].runSpeed = runSpeed;
     player_count++;

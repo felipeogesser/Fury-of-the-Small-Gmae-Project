@@ -80,8 +80,6 @@ int main(void) {
     game->offSetX = get_ply->playerPositionX - WINDOW_SIZE_X / 2 + get_ply->playerDimensionX / 2;
     game->offSetY = get_ply->playerPositionY - WINDOW_SIZE_Y / 2 + get_ply->playerDimensionY / 2;
 
-    get_ply->playerPositionOnScreenX = WINDOW_SIZE_X / 2 - get_ply->playerDimensionX / 2;
-    get_ply->playerPositionOnScreenY = WINDOW_SIZE_Y / 2 - get_ply->playerDimensionY / 2;
 
 
 
@@ -172,12 +170,12 @@ int main(void) {
     Uint32 last;
     while (running) {
         //clock_gettime(CLOCK_MONOTONIC, &start);
-        /*FrameEnd = SDL_GetPerformanceCounter();
+        FrameEnd = SDL_GetPerformanceCounter();
         FrameTicks = SDL_GetPerformanceFrequency();
         game->delta = (float)(FrameEnd - FrameStart) / (float)FrameTicks;
         FrameStart = FrameEnd;
-        */
-        game->delta = 0.016666667f;
+        printf("delta=%f\n", game->delta);
+        //game->delta = 0.016666667f;
         // Calculate game state
         SDL_Event e;
         while (SDL_PollEvent(&e)) {
@@ -251,24 +249,24 @@ int main(void) {
         isPlayerCollidingObject(hitBoxPlayer, hitBoxObject, game, x);
 
 
-    game->offSetX += game->vxdt + game->LX + game->KX;
-    game->offSetY += game->vydt + game->LY + game->KY;
+        game->offSetX += game->vxdt + game->LX + game->KX;
+        game->offSetY += game->vydt + game->LY + game->KY;
 
 
-    get_ply->playerPositionX += game->vxdt + game->LX + game->KX;
-    get_ply->playerPositionY += game->vydt + game->LY + game->KY;
+        get_ply->playerPositionX += game->vxdt + game->LX + game->KX;
+        get_ply->playerPositionY += game->vydt + game->LY + game->KY;
 
-    hitBoxPlayer[0][0] = get_ply->playerPositionX;
-    hitBoxPlayer[0][1] = get_ply->playerPositionY;
+        hitBoxPlayer[0][0] = get_ply->playerPositionX;
+        hitBoxPlayer[0][1] = get_ply->playerPositionY;
 
-    hitBoxPlayer[1][0] = get_ply->playerPositionX + get_ply->playerDimensionX;
-    hitBoxPlayer[1][1] = get_ply->playerPositionY;
+        hitBoxPlayer[1][0] = get_ply->playerPositionX + get_ply->playerDimensionX;
+        hitBoxPlayer[1][1] = get_ply->playerPositionY;
 
-    hitBoxPlayer[2][0] = get_ply->playerPositionX;
-    hitBoxPlayer[2][1] = get_ply->playerPositionY + get_ply->playerDimensionY;
+        hitBoxPlayer[2][0] = get_ply->playerPositionX;
+        hitBoxPlayer[2][1] = get_ply->playerPositionY + get_ply->playerDimensionY;
 
-    hitBoxPlayer[3][0] = get_ply->playerPositionX + get_ply->playerDimensionX;
-    hitBoxPlayer[3][1] = get_ply->playerPositionY + get_ply->playerDimensionY;
+        hitBoxPlayer[3][0] = get_ply->playerPositionX + get_ply->playerDimensionX;
+        hitBoxPlayer[3][1] = get_ply->playerPositionY + get_ply->playerDimensionY;
 
 
         Uint32 now2 = SDL_GetTicks();
@@ -279,7 +277,7 @@ int main(void) {
         checkEntityQuadrant(game, entities, quadrant, y);
 
 
-        printf("offSetX= %f, offSetY=%f, LX= %f, LY= %f, mll= %f, ppX= %f\n", game->offSetX, game->offSetY, game->LX, game->LY, map->mapLeftLimit, get_ply->playerPositionX);
+        //printf("offSetX= %f, offSetY=%f, LX= %f, LY= %f, mll= %f, ppX= %f\n", game->offSetX, game->offSetY, game->LX, game->LY, map->mapLeftLimit, get_ply->playerPositionX);
         // Render
 
         SDL_SetRenderDrawColor(ren, 120, 80, 80, 255);
@@ -333,7 +331,7 @@ int main(void) {
         SDL_SetRenderDrawColor(ren, 102, 255, 51, 255);
         SDL_RenderFillRect(ren, &st);
 
-        renderQuadrants(ren, game, entities, quadrant, y);
+        //renderQuadrants(ren, game, entities, quadrant, y);
 
         SDL_RenderPresent(ren);
 

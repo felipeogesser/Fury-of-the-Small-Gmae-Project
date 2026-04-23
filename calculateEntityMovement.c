@@ -8,7 +8,7 @@ void calculateEntityRandomMov(Entity *get_ent, Map *map, GameState *game, Uint32
     float dummyPositionX = get_ent->positionX;
     float dummyPositionY = get_ent->positionY;
 
-    if (now2 - get_ent->lastTick >= get_ent->nextMoveDelay) {
+    /*if (now2 - get_ent->lastTick >= get_ent->nextMoveDelay) {
         Uint32 seedX = now1 ^ ((Uint32)get_ent->id * 1103515245u);
         Uint32 seedY = now2 ^ ((Uint32)get_ent->id * 2654435761u);
 
@@ -27,6 +27,52 @@ void calculateEntityRandomMov(Entity *get_ent, Map *map, GameState *game, Uint32
         vectorY = directionY * invHyp;
         get_ent->lastTick = now2;
     }
+
+*/
+
+    if (now2 - get_ent->lastTick >= get_ent->nextMoveDelay) {
+        Uint32 seedX = now1 ^ ((Uint32)get_ent->id * 1103515245u);
+        Uint32 seedY = now2 ^ ((Uint32)get_ent->id * 2654435761u);
+
+        float magX = (float)((seedX & 1023u) + 1u);
+        float magY = (float)((seedY & 1023u) + 1u);
+
+
+        float hypo = magX * magX + magY * magY;
+        
+        float directionX = magX;
+        float directionY = magY;
+
+        if (seedX & 2048u) {
+            float directionX = -magX;
+        }
+        
+        if (seedY & 2048) {
+            float directionY = -magY;
+        }
+        //directionX *= (seedX & 2048u) ? -1.0f : 1.0f;
+        //directionY *= (seedY & 4096u) ? -1.0f : 1.0f;
+
+        // modern fast invsqrt implementation (Quake III Arena)
+        float halfHypo = 0.5f * hypo;
+        uint32_t i;
+        memcpy(&i, &hypo, sizeof(i));
+        i = 0x5f3759df - (i >> 1);
+        memcpy(&hypo, &i, sizeof(hypo));
+        float invHypo = 1.5f * hypo - halfHypo * hypo * hypo * hypo; // newton formula for inverse sqrt
+        float scale = invHypo * get_ent->speed;
+  
+        vectorX = directionX * scale;
+        vectorY = directionY * scale;
+        get_ent->lastTick = now2;
+    }
+
+
+/*float scale = invHypo * speed;
+vectorX = directionX * scale;
+vectorY = directionY * scale;*/
+
+
 
     dummyPositionX += vectorX * delta;
     dummyPositionY += vectorY * delta;
