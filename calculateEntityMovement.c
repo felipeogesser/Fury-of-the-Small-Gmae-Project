@@ -43,15 +43,8 @@ void calculateEntityRandomMov(Entity *get_ent, Map *map, GameState *game, Uint32
         float directionX = magX;
         float directionY = magY;
 
-        if (seedX & 2048u) {
-            float directionX = -magX;
-        }
-        
-        if (seedY & 2048) {
-            float directionY = -magY;
-        }
-        //directionX *= (seedX & 2048u) ? -1.0f : 1.0f;
-        //directionY *= (seedY & 4096u) ? -1.0f : 1.0f;
+        directionX *= (seedX & 2048u) ? -1.0f : 1.0f;
+        directionY *= (seedY & 4096u) ? -1.0f : 1.0f;
 
         // modern fast invsqrt implementation (Quake III Arena)
         float halfHypo = 0.5f * hypo;
