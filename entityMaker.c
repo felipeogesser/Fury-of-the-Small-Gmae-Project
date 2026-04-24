@@ -16,7 +16,7 @@ void make_entities(void) {
 
 void auto_make_entities(int iter) {
     for (i = 0; i < iter; i++) {
-        I = create_entity("bob", "red", 30.0f, 30.0f, 20.0f, 20.0f, rand() % 256, rand() % 256, rand() % 256, 255, true, 200.0f);
+        I = create_entity("bob", "red", rand() % 770, rand() % 570, 20.0f, 20.0f, rand() % 256, rand() % 256, rand() % 256, 255, true, 200.0f);
         entity_id[I-1] = I;
     }
 }

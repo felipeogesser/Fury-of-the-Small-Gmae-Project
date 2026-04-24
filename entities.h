@@ -28,6 +28,7 @@ typedef struct Entity {
     int currentQuadrants[4];
     //unsigned char alreadyInQuadrant;
     unsigned char quadrantOutOfBounds;
+    int enemyEntityId;
 } Entity;
 
 extern Entity *entities;

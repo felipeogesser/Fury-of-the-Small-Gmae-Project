@@ -1,7 +1,7 @@
 #include "quadrant.h"
 #include "gameState.h"
 
-int a, b, temp, amountX, amountY;
+int a, b, q, temp, amountX, amountY;
 
 Quadrant *quadrant = NULL;
 
@@ -19,15 +19,16 @@ void calculateQuadrantSize(Map *map, GameState *game) {
 void calculateAmountOfQuadrants(Map *map, GameState *game) {
     amountX = map->mapSizeX / game->quadrantSize;
     amountY = map->mapSizeY / game->quadrantSize;
+    q = amountX * amountY;
 }
 
 
 void init_quadrants(int amountX, int amountY) {
     quadrant = calloc(amountX * amountY, sizeof *quadrant);
-    int i;
-    for (i = 0; i < amountX * amountY; i++) {
+    for (int i = 0; i < amountX * amountY; i++) {
         quadrant[i].id = i + 1;
     }
+
 }
 
 Quadrant *get_quadrant(int id) {

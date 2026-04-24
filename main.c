@@ -20,6 +20,7 @@
 #include "teamsPositionAssembler.h"
 #include "quadrant.h"
 #include "calculateEntityQuadrant.h"
+#include "entityEngageEnemy.h"
 
 int main(void) {
     srand(time(NULL));
@@ -174,7 +175,7 @@ int main(void) {
         FrameTicks = SDL_GetPerformanceFrequency();
         game->delta = (float)(FrameEnd - FrameStart) / (float)FrameTicks;
         FrameStart = FrameEnd;
-        printf("delta=%f\n", game->delta);
+        //printf("delta=%f\n", game->delta);
         //game->delta = 0.016666667f;
         // Calculate game state
         SDL_Event e;
@@ -269,12 +270,15 @@ int main(void) {
         hitBoxPlayer[3][1] = get_ply->playerPositionY + get_ply->playerDimensionY;
 
 
-        Uint32 now2 = SDL_GetTicks();
+        /*Uint32 now2 = SDL_GetTicks();
         for (i = 0; i < y; i++) {
             calculateEntityRandomMov(&entities[i], map, game, now1, now2);
-        }
+        }*/
 
         checkEntityQuadrant(game, entities, quadrant, y);
+        entityFindEnemy(entities, quadrant, y, q);
+        entityEngageEnemy(entities, game, map, y);
+
 
 
         //printf("offSetX= %f, offSetY=%f, LX= %f, LY= %f, mll= %f, ppX= %f\n", game->offSetX, game->offSetY, game->LX, game->LY, map->mapLeftLimit, get_ply->playerPositionX);
@@ -331,7 +335,7 @@ int main(void) {
         SDL_SetRenderDrawColor(ren, 102, 255, 51, 255);
         SDL_RenderFillRect(ren, &st);
 
-        //renderQuadrants(ren, game, entities, quadrant, y);
+        renderQuadrants(ren, game, entities, quadrant, y);
 
         SDL_RenderPresent(ren);
 

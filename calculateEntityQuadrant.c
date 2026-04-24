@@ -137,7 +137,8 @@ void checkEntityQuadrant(GameState *game, Entity *entities, Quadrant *quadrant, 
 
         if (indexer + amountX + 1 < amountX * amountY && indexer + amountX + 1 != (row + 2) * amountX) {
             entities[i].quadrantOutOfBounds &= ~OOBQUAD4;
-            if (entities[i].currentQuadrants[3] != 0 && entities[i].currentQuadrants[3] != quadrant[indexer + amountX + 1].id) {
+            if (entities[i].currentQuadrants[3] != 0 && entities[i].currentQuadrants[3] != quadrant[indexer + amountX + 1].id ||
+                (entities[i].currentQuadrants[1] == 0 || entities[i].currentQuadrants[2] == 0)) {
                 quadrant[entities[i].currentQuadrants[3] - 1].innerEntsInQuad.entitiesInsideQuadrantById[entities[i].id - 1] = 0;
                 entities[i].currentQuadrants[3] = 0;
                 //entities[i].alreadyInQuadrant &= ~QUAD4;

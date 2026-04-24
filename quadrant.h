@@ -5,7 +5,7 @@
 #include "maps.h"
 #include "gameState.h"
 
-extern int a, b, temp, amountX, amountY;
+extern int a, b, q, temp, amountX, amountY;
 
 
 typedef struct EntitiesInsideQuadrant {
