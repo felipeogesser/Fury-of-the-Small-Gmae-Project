@@ -39,12 +39,12 @@ void entityEngageEnemy(Entity *entities, GameState *game, Map *map, int y) {
             w = 0x5f3759df - (w >> 1);
             memcpy(&hypo, &w, sizeof(hypo));
             float invHypo = 1.5f * hypo - halfHypo * hypo * hypo * hypo; // newton formula for inverse sqrt
-            float scale = invHypo * entities[i].speed;
+            float scale = invHypo * entities[i].speed * delta;
             float vectorX = directionX * scale;
             float vectorY = directionY * scale;
 
-            float dummyPositionX = entities[i].positionX + vectorX * delta;
-            float dummyPositionY = entities[i].positionY + vectorY * delta;
+            float dummyPositionX = entities[i].positionX + vectorX;
+            float dummyPositionY = entities[i].positionY + vectorY;
 
             if (map->mapLeftLimit > dummyPositionX) {
                 vectorX = -vectorX;

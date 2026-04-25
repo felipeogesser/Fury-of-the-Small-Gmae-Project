@@ -95,9 +95,8 @@ int main(void) {
         Object *obj = get_object(object_id[i]);
         if (obj == NULL) break;
         x++;
-            printf("%d\n", x);
     }
-    printf("x=%d\n", x);
+
     init_entity_id();
     init_entities();
     //make_entities();
@@ -289,14 +288,14 @@ int main(void) {
         hitBoxPlayer[3][1] = get_ply->playerPositionY + get_ply->playerDimensionY;
 
 
-        Uint32 now2 = SDL_GetTicks();
+        /*Uint32 now2 = SDL_GetTicks();
         for (i = 0; i < y; i++) {
             calculateEntityRandomMov(&entities[i], map, game, now1, now2);
-        }
+        }*/
 
+        entityFindEnemy(entities, quadrant, y, q);
+        entityEngageEnemy(entities, game, map, y);
         checkEntityQuadrant(game, entities, quadrant, y);
-        //entityFindEnemy(entities, quadrant, y, q);
-        //entityEngageEnemy(entities, game, map, y);
         entityObjectCollision(entities, quadrant, hitBoxObject, game, x, y);
 
         for (int i = 0; i < y; i++) {
