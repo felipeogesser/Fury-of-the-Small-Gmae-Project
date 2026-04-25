@@ -21,6 +21,7 @@
 #include "quadrant.h"
 #include "calculateEntityQuadrant.h"
 #include "entityEngageEnemy.h"
+#include "entityObjectCollision.h"
 
 int main(void) {
     srand(time(NULL));
@@ -94,8 +95,9 @@ int main(void) {
         Object *obj = get_object(object_id[i]);
         if (obj == NULL) break;
         x++;
+            printf("%d\n", x);
     }
-
+    printf("x=%d\n", x);
     init_entity_id();
     init_entities();
     //make_entities();
@@ -163,7 +165,24 @@ int main(void) {
         hitBoxObject[i][3][0] = obj->pointX + obj->dimensionX;
         hitBoxObject[i][3][1] = obj->pointY + obj->dimensionY;
     }
+
+    /*for (int i = 0; i < x; i++) {
+        object = calloc(x, sizeof *hitBoxObject);
+    }
     
+    for (int i = 0; i < x; i++) {
+        Object *obj = get_object(object_id[i]);
+        object[i][0][0] = obj->pointX;
+        object[i][0][1] = obj->pointY;
+        object[i][1][0] = obj->pointX + obj->dimensionX;
+        object[i][1][1] = obj->pointY;
+        object[i][2][0] = obj->pointX;
+        object[i][2][1] = obj->pointY + obj->dimensionY;
+        object[i][3][0] = obj->pointX + obj->dimensionX;
+        object[i][3][1] = obj->pointY + obj->dimensionY;
+    }*/
+
+
     Uint64 FrameStart = SDL_GetPerformanceCounter();
     Uint64 FrameEnd;
     Uint64 FrameTicks;
@@ -270,16 +289,20 @@ int main(void) {
         hitBoxPlayer[3][1] = get_ply->playerPositionY + get_ply->playerDimensionY;
 
 
-        /*Uint32 now2 = SDL_GetTicks();
+        Uint32 now2 = SDL_GetTicks();
         for (i = 0; i < y; i++) {
             calculateEntityRandomMov(&entities[i], map, game, now1, now2);
-        }*/
+        }
 
         checkEntityQuadrant(game, entities, quadrant, y);
-        entityFindEnemy(entities, quadrant, y, q);
-        entityEngageEnemy(entities, game, map, y);
+        //entityFindEnemy(entities, quadrant, y, q);
+        //entityEngageEnemy(entities, game, map, y);
+        entityObjectCollision(entities, quadrant, hitBoxObject, game, x, y);
 
-
+        for (int i = 0; i < y; i++) {
+            entities[i].positionX += entities[i].vectorX;
+            entities[i].positionY += entities[i].vectorY;
+        }
 
         //printf("offSetX= %f, offSetY=%f, LX= %f, LY= %f, mll= %f, ppX= %f\n", game->offSetX, game->offSetY, game->LX, game->LY, map->mapLeftLimit, get_ply->playerPositionX);
         // Render

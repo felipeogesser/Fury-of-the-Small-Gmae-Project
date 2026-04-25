@@ -53,8 +53,7 @@ void calculateEntityRandomMov(Entity *get_ent, Map *map, GameState *game, Uint32
         i = 0x5f3759df - (i >> 1);
         memcpy(&hypo, &i, sizeof(hypo));
         float invHypo = 1.5f * hypo - halfHypo * hypo * hypo * hypo; // newton formula for inverse sqrt
-        float scale = invHypo * get_ent->speed;
-  
+        float scale = invHypo * get_ent->speed * delta;
         vectorX = directionX * scale;
         vectorY = directionY * scale;
         get_ent->lastTick = now2;
@@ -67,8 +66,8 @@ vectorY = directionY * scale;*/
 
 
 
-    dummyPositionX += vectorX * delta;
-    dummyPositionY += vectorY * delta;
+    dummyPositionX += vectorX;
+    dummyPositionY += vectorY;
 
     if (map->mapLeftLimit > dummyPositionX) {
         vectorX = -vectorX;
@@ -86,8 +85,8 @@ vectorY = directionY * scale;*/
         vectorY = -vectorY;
     }
 
-    get_ent->positionX += vectorX * delta;
-    get_ent->positionY += vectorY * delta;
+    //get_ent->positionX += vectorX;
+    //get_ent->positionY += vectorY;
 
     get_ent->vectorX = vectorX;
     get_ent->vectorY = vectorY;

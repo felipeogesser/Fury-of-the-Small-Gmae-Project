@@ -21,6 +21,8 @@ typedef struct Object {
     int quadrant;
 } Object;
 
+extern Object *object;
+
 int create_object(const char *name, float pointX, float pointY,
     float dimensionX, float dimensionY, 
     int R_Color, int G_Color, int B_Color, int Alpha,

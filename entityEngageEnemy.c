@@ -68,12 +68,6 @@ void entityEngageEnemy(Entity *entities, GameState *game, Map *map, int y) {
             entities[i].vectorX = vectorX;
             entities[i].vectorY = vectorY;
         }
-
-    }
-    
-    for (int i = 0; i < y; i++) {
-        entities[i].positionX += entities[i].vectorX * game->delta;
-        entities[i].positionY += entities[i].vectorY * game->delta;
     }
 }
 

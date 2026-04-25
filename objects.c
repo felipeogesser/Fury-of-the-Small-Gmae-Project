@@ -3,6 +3,9 @@
 static Object objects[MAX_OBJECTS];
 static int object_count = 0;
 
+Object *object = NULL;
+
+
 int create_object(const char *name, float pointX, float pointY, float dimensionX,
     float dimensionY, int R_Color, int G_Color, int B_Color, int Alpha,
     bool collision, int quadrant) {
