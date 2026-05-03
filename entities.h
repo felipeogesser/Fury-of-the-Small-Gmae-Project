@@ -29,6 +29,8 @@ typedef struct Entity {
     //unsigned char alreadyInQuadrant;
     unsigned char quadrantOutOfBounds;
     int enemyEntityId;
+    bool pathFound;
+    float constMovX, constMovY;
 } Entity;
 
 extern Entity *entities;

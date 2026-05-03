@@ -5,8 +5,7 @@
 // futuramente trocar [i] por ->
 
 void initialCheckEntityQuadrant(GameState *game, Entity *entities, Quadrant *quadrant, int y) {
-    int i;
-    for (i = 0; i < y; i++) {
+    for (int i = 0; i < y; i++) {
         int column = (int)floor(entities[i].positionX / game->quadrantSize);
         int X = column * game->quadrantSize;
         int row = (int)floor(entities[i].positionY / game->quadrantSize);
@@ -20,6 +19,7 @@ void initialCheckEntityQuadrant(GameState *game, Entity *entities, Quadrant *qua
         
 
 
+        quadrant[indexer].innerEntsInQuad.entitiesInsideQuadrantById[entities[i].id - 1] = entities[i].id;
         entities[i].currentQuadrants[0] = quadrant[indexer].id;
         //entities[i].alreadyInQuadrant |= QUAD1;
 
@@ -41,7 +41,7 @@ void initialCheckEntityQuadrant(GameState *game, Entity *entities, Quadrant *qua
             entities[i].quadrantOutOfBounds |= OOBQUAD3;
             //entities[i].alreadyInQuadrant &= ~QUAD3;
         }
-
+                                                            //indexer + 1 != (row + 1) * amountX
         if (indexer + amountX + 1 < amountX * amountY && indexer + amountX + 1 != (row + 2) * amountX) {
             entities[i].quadrantOutOfBounds &= ~OOBQUAD4;
         } else {
@@ -77,8 +77,7 @@ void initialCheckEntityQuadrant(GameState *game, Entity *entities, Quadrant *qua
 
 // entities goes into indexes = to their id -1
 void checkEntityQuadrant(GameState *game, Entity *entities, Quadrant *quadrant, int y) {
-    int i;
-    for (i = 0; i < y; i++) {
+    for (int i = 0; i < y; i++) {
         int column = (int)floor((entities[i].positionX) / game->quadrantSize);
         int X = column * game->quadrantSize;
         int row = (int)floor((entities[i].positionY) / game->quadrantSize);

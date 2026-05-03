@@ -11,7 +11,10 @@ int i = 0;
 int I = 0;
 
 void make_entities(void) {
-    entity_id[I-1] = I = create_entity("bob", "blue", 30.0f, 30.0f, 20.0f, 20.0f, 222, 0, 211, 255, true, 200.0f);
+    I = create_entity("bob", "blue", 134.0f, 206.0f, 20.0f, 20.0f, 222, 0, 211, 255, true, 200.0f);
+    entity_id[I-1] = I;
+    I = create_entity("bob", "blue", 302.0f, 135.0f, 20.0f, 20.0f, 222, 0, 211, 255, true, 200.0f);
+    entity_id[I-1] = I;
 }
 
 void auto_make_entities(int iter) {

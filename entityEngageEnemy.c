@@ -11,7 +11,7 @@ void entityFindEnemy(Entity *entities, Quadrant *quadrant, int y, int q) {
                     break;
                 }
             }
-            if (entities[i].enemyEntityId != 0) break;
+            if (entities[i].enemyEntityId != 0) continue;
         }
     }
 }
@@ -30,7 +30,7 @@ void entityEngageEnemy(Entity *entities, GameState *game, Map *map, int y) {
 
             //float dummyPositionX, dummyPositionY;
 
-            float delta = game->delta;
+            //float delta = game->delta;
             float hypo = directionX * directionX + directionY * directionY;
             // modern fast invsqrt implementation (Quake III Arena)
             float halfHypo = 0.5f * hypo;
@@ -39,7 +39,7 @@ void entityEngageEnemy(Entity *entities, GameState *game, Map *map, int y) {
             w = 0x5f3759df - (w >> 1);
             memcpy(&hypo, &w, sizeof(hypo));
             float invHypo = 1.5f * hypo - halfHypo * hypo * hypo * hypo; // newton formula for inverse sqrt
-            float scale = invHypo * entities[i].speed * delta;
+            float scale = invHypo * entities[i].speed; //* delta;
             float vectorX = directionX * scale;
             float vectorY = directionY * scale;
 

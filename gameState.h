@@ -11,7 +11,11 @@ typedef struct GameState {
     float dirUp, dirDown, dirLeft, dirRight;
     float vx, vy, va, vb;
     float delta;
-    int quadrantSize;
+    unsigned int quadrantSize;
+    signed int amountX, amountY;
+    float decay_rate;
 } GameState;
+
+extern GameState *game;
 
 #endif
