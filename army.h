@@ -3,8 +3,12 @@
 
 #include "battalion.h"
 
+typedef struct Armies {
+    struct Army *army;
+} Armies;
+
 typedef struct Army {
-    struct Battalion *Battalions;
+    struct Battalion *battalions;
     unsigned short battalion_count;
 
 } Army;

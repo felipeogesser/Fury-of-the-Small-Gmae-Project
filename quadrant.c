@@ -1,8 +1,6 @@
 #include "quadrant.h"
 #include "gameState.h"
 
-int a, b, temp;
-
 Quadrant *quadrant = NULL;
 
 /*void calculateQuadrantSize(Map *map, GameState *game) {
@@ -17,23 +15,20 @@ Quadrant *quadrant = NULL;
 }*/
 
 void calculateAmountOfQuadrants(Map *map, GameState *game) {
-    amountX = map->mapSizeX / game->quadrantSize;
-    amountY = map->mapSizeY / game->quadrantSize;
-    game->high_LOD_quadrant_count = amountX * amountY;
-    game->amountX;
-    game->amountY;
-
+    amountX = map->mapSizeX / game->low_LOD_quadrant_size;
+    amountY = map->mapSizeY / game->low_LOD_quadrant_size;
+    game->low_LOD_quadrant_count = amountX * amountY;
+    game->amountX = amountX;
+    game->amountY = amountY;
 }
 
-
-void init_quadrants(GameState *game) {
+void fill_quadrant_data(GameState *game, Grids *grids) {
+    bigQuadrant *bigQuad = grids->GLLoD->bigQuad;
     unsigned int amountX = game->amountX;
     unsigned int amountY = game->amountY;
-    quadrant = calloc(amountX * amountY, sizeof *quadrant);
     for (unsigned int i = 0; i < amountX * amountY; i++) {
-        quadrant[i].id = i + 1;
+        bigQuad[i].id = i + 1;
     }
-
 }
 
 Quadrant *get_quadrant(int id) {

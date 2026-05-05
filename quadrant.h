@@ -6,8 +6,10 @@
 #include "gameState.h"
 
 typedef struct bigQuadrant {
+    unsigned short id;
     unsigned short entity_count;
     unsigned char smell;
+    unsigned short entitiesInsideQuadrantById[entities_created_count];
 } bigQuadrant;
 
 typedef struct mediumQuadrant {
