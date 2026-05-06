@@ -7,11 +7,6 @@ typedef struct Grids {
     struct GridHighLOD *GHLoD;
 } Grids;
 
-typedef struct Occupied {
-    unsigned int occupied_count;
-    unsigned int index[quantity / 16];
-} Occupied;
-
 typedef struct GridLowLOD {
     struct bigQuadrant *bigQuad;
     struct Occupied *occupied;
@@ -24,5 +19,14 @@ typedef struct GridMediumLOD {
 typedef struct GridHighLOD {
     struct smallQuadrant *smallQuad;
 } GridHighLOD;
+
+typedef struct Occupied {
+    unsigned int quads_occupied_count;
+    unsigned int index[];
+} Occupied;
+
+void init_grids(void);
+
+void free_grid_memory(void);
 
 #endif

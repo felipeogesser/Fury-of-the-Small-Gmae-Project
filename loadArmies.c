@@ -13,9 +13,9 @@ void init_armies_memory_arena(void) {
 
     total =
         sizeof(Armies) +
-        number_of_armies * sizeof(Army) + (alignof(Army) - 1) +
-        number_of_armies * number_of_battalions * sizeof(Battalion) + (alignof(Battalion) - 1) +
-        number_of_armies * number_of_battalions * battalion_size * sizeof(Entity) + (alignof(Entity) - 1);
+        number_of_armies * sizeof(Army) + (_Alignof(Army) - 1) +
+        number_of_armies * number_of_battalions * sizeof(Battalion) + (_Alignof(Battalion) - 1) +
+        number_of_armies * number_of_battalions * battalion_size * sizeof(Entity) + (_Alignof(Entity) - 1);
 
     army_memory = calloc(1, total);
 
@@ -25,17 +25,17 @@ void init_armies_memory_arena(void) {
 
     p += sizeof(Armies);
 
-    p = (char*)(((uintptr_t)p + alignof(Army) - 1) & ~(alignof(Army) - 1));
+    p = (char *)(((uintptr_t)p + _Alignof(Army) - 1) & ~(_Alignof(Army) - 1));
     Army *army = (Army *)p;
 
     p += number_of_armies * sizeof(Army);
 
-    p = (char*)(((uintptr_t)p + alignof(Battalion) - 1) & ~(alignof(Battalion) - 1));
+    p = (char *)(((uintptr_t)p + _Alignof(Battalion) - 1) & ~(_Alignof(Battalion) - 1));
     Battalion *battalions = (Battalion *)p;
 
     p += number_of_armies * number_of_battalions * sizeof(Battalion);
 
-    p = (char*)(((uintptr_t)p + alignof(Entity) - 1) & ~(alignof(Entity) - 1));
+    p = (char *)(((uintptr_t)p + _Alignof(Entity) - 1) & ~(_Alignof(Entity) - 1));
     Entity *entities = (Entity *)p;
 
     armies->army = army;
@@ -48,7 +48,7 @@ void init_armies_memory_arena(void) {
     }
 }
 
-void load_armies_into_arena(void) {
+void load_armies_into_arena(Armies *armies) {
     Army *army_ptr = armies->army;
     for (unsigned int i = 0; i < number_of_armies; i++) {
         Battalion *battalions_ptr = army_ptr[i].battalions;
