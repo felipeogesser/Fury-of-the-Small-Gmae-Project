@@ -1,6 +1,14 @@
 #include "playerObjectCollision.h"
 
-void isPlayerCollidingObject(float hitBoxPlayer[4][2], float (*hitBoxObject)[4][2], GameState *game, int x) {
+void isPlayerCollidingObject(Player *player, float (*hitBoxObject)[4][2], GameState *game, int x) {
+    
+    float hitBoxPlayer[4][2] = {
+        {player->playerPositionX, player->playerPositionY},
+        {player->playerPositionX + player->playerDimensionX, player->playerPositionY},
+        {player->playerPositionX, player->playerPositionY + player->playerDimensionY},
+        {player->playerPositionX + player->playerDimensionX, player->playerPositionY + player->playerDimensionY}
+    }
+
     if (game->vx > 0 && game->vy > 0) {
         for (int i = 0; i < x; i++) {
             // Object *obj = get_object(object_id[i]);

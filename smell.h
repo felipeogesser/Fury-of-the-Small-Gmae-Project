@@ -1,11 +1,10 @@
 #ifndef SMELL_H
 #define SMELL_H
 
+#include "armies.h"
 #include "gameState.h"
 #include "grids.h"
-#include "---"
-#include "teamsManager.h"
 
-void smell_value(GameState *game, Grids *grids, Occupied *occupied, Teams *teams);
+void smell_value(Armies *armies, GameState *game, Grids *grids);
 
 #endif

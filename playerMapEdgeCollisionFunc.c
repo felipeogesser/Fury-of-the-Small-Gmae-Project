@@ -1,6 +1,6 @@
 #include "playerMapEdgeCollisionFunc.h"
 
-void PlayerMapEdgeCollision(Player *player, Map *map, GameState *game) {
+void player_map_edge_collision(GameState *game, Map *map, Player *player) {
 
     if (player->playerPositionX <= map->mapLeftLimit - game->vxdt) {
         game->LX = -player->playerPositionX;

@@ -6,6 +6,6 @@
 #include "gameState.h"
 #include <stdio.h>
 
-void PlayerMapEdgeCollision(Player *player, Map *map, GameState *game);
+void player_map_edge_collision(GameState *game, Map *map, Player *player);
 
 #endif
