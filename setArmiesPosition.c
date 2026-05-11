@@ -21,7 +21,7 @@ void set_armies_in_the_battlefield(Armies *armies) {
         Battalion *battalions = army[j].battalions;
 
         for (unsigned int k = 0; k < number_of_battalions; k++) {
-
+            // simple color randomizer
             unsigned int x = (k + 1) * 2654435761u;
 
             unsigned char r = (x >>  0) & 255u;
@@ -39,16 +39,16 @@ void set_armies_in_the_battlefield(Armies *armies) {
                 for (unsigned int m = 0; m < 10; m++) {
 
                     create_entities(entities, ongoing_point_X, ongoing_point_Y, i);
-                    ongoing_point_Y += 3;
+                    ongoing_point_Y += 6;
                     i++;
                 }
 
-                ongoing_point_X += 5;
+                ongoing_point_X += 10;
                 ongoing_point_Y = starting_point_Y;
             }
 
             ongoing_point_X = starting_point_X;
-            starting_point_Y *= 2;
+            starting_point_Y += 70;
             ongoing_point_Y = starting_point_Y;
             i = 0;
         }

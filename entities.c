@@ -44,6 +44,6 @@ void create_entities(Entity *entities, unsigned int ongoing_point_X, unsigned in
     entities[i].id = i + 1;
     entities[i].positionX = ongoing_point_X;
     entities[i].positionY = ongoing_point_Y;
-    entities[i].dimensionX = 10;
-    entities[i].dimensionY = 10;
+    entities[i].dimensionX = 4;
+    entities[i].dimensionY = 4;
 }

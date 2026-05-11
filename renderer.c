@@ -61,9 +61,9 @@ void render(Armies *armies, GameState *game, Map *map, Player *player, SDL_Rende
     SDL_SetRenderDrawColor(renderer, 102, 255, 51, 255);
     SDL_RenderFillRect(renderer, &st);
 
-    Entity *entities = battalions->entities;
+    //Entity *entities = battalions->entities;
 
-    renderQuadrants(entities, game, renderer);
+    //renderQuadrants(entities, game, renderer);
 
     SDL_RenderPresent(renderer);
 }
