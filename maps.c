@@ -1,23 +1,23 @@
 #include "maps.h"
 
 static Map maps[MAX_MAPS];
-static int map_count;
-
+static int map_count = 0;
+static int mapIndex;
 int create_map(float mapSizeX, float mapSizeY) {
     if (map_count >= MAX_MAPS) return -1;
-    int id = map_count;
-    maps[id].id = id;
-    maps[id].mapSizeX = mapSizeX;
-    maps[id].mapSizeY = mapSizeY;
-    maps[id].mapLeftLimit = 0;
-    maps[id].mapRightLimit = mapSizeX;
-    maps[id].mapTopLimit = 0;
-    maps[id].mapBottomLimit = mapSizeY;
+    mapIndex = map_count;
+    maps[mapIndex].id = mapIndex + 1;
+    maps[mapIndex].mapSizeX = mapSizeX;
+    maps[mapIndex].mapSizeY = mapSizeY;
+    maps[mapIndex].mapLeftLimit = 0;
+    maps[mapIndex].mapRightLimit = mapSizeX;
+    maps[mapIndex].mapTopLimit = 0;
+    maps[mapIndex].mapBottomLimit = mapSizeY;
     map_count++;
-    return id;
+    return maps[mapIndex].id;
 }
 
-Map *get_map(int id) {
-    if (id < 0 || id >= map_count) return NULL;
-    return &maps[id];
+Map *get_map(int mapIndex) {
+    if (mapIndex <= 0 || mapIndex > map_count) return NULL;
+    return &maps[mapIndex - 1];
 }
