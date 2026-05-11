@@ -14,11 +14,14 @@ typedef struct GameState {
     unsigned int low_LOD_quadrant_size;
     unsigned int medium_LOD_quadrant_size;
     unsigned int high_LOD_quadrant_size;
+    unsigned int low_LOD_quadrant_count;
+    unsigned int medium_LOD_quadrant_count;
+    unsigned int high_LOD_quadrant_count;
     signed int amountX, amountY;
     float decay_rate;
     unsigned int entities_created_count, objects_created_count;
 } GameState;
 
-extern GameState *game;
+GameState *pass_pointer(void);
 
 #endif

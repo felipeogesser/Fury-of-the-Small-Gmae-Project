@@ -7,9 +7,9 @@
 
 typedef struct bigQuadrant {
     unsigned short id;
-    unsigned short entity_count;
+    unsigned short local_entities_count;
     unsigned char smell;
-    unsigned short entitiesInsideQuadrantById[entities_created_count];
+    unsigned short entitiesInsideQuadrantById[20];
 } bigQuadrant;
 
 typedef struct mediumQuadrant {
@@ -35,12 +35,14 @@ typedef struct Quadrant {
 
 //extern Quadrant *quadrant;
 
-void calculateQuadrantSize(Map *map, GameState *game);
+//void calculateQuadrantSize(Map *map, GameState *game);
 
-void calculateAmountOfQuadrants(Map *map, GameState *game);
+void calculateAmountOfQuadrants(void);
 
-void init_quadrants(GameState *game);
+void fill_quadrant_data(void);
 
-Quadrant *get_quadrant(int id);
+//void init_quadrants(GameState *game);
+
+//Quadrant *get_quadrant(int id);
 
 #endif

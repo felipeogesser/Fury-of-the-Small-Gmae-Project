@@ -12,4 +12,4 @@ typedef struct Battalion {
     unsigned char Alpha;
 } Battalion;
 
-#ifndef
+#endif

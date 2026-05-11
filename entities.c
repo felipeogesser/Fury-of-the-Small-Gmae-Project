@@ -1,16 +1,14 @@
 #include "entities.h"
 
-Entity *entities = NULL;
+/*Entity *entities = NULL;
 void init_entities(void)
 {
     entities = calloc(MAX_ENTITIES, sizeof *entities);
-}
-static int entity_count = 0;
+}*/
+/*static int entity_count = 0;
 
 int create_entity(const char *name, const char *team, float positionX, float positionY,
-    float dimensionX, float dimensionY,
-    int R_Color, int G_Color, int B_Color, int Alpha,
-    bool collision, int speed) {
+    float dimensionX, float dimensionY, bool collision, int speed) {
         if (entity_count >= MAX_ENTITIES) return -1;
         int entityIndex = entity_count;
         entities[entityIndex].id = entityIndex + 1;
@@ -20,21 +18,32 @@ int create_entity(const char *name, const char *team, float positionX, float pos
         entities[entityIndex].positionY = positionY;
         entities[entityIndex].dimensionX = dimensionX;
         entities[entityIndex].dimensionY = dimensionY;
-        entities[entityIndex].R_Color = R_Color;
-        entities[entityIndex].G_Color = G_Color;
-        entities[entityIndex].B_Color = B_Color;
-        entities[entityIndex].Alpha = Alpha;
         entities[entityIndex].collision = collision;
         entities[entityIndex].speed = speed;
         //entities[entityIndex].alreadyInQuadrant = 0;
         entities[entityIndex].quadrantOutOfBounds = 0;
         entities[entityIndex].enemyEntityId = 0;
         entities[entityIndex].pathFound = false;
+        entities[entityIndex].health = 50.0f;
         entity_count++;
         return entities[entityIndex].id;
-    }
+}
 
 Entity *get_entity(int entityId) {
     if (entityId <= 0 || entityId > entity_count) return NULL;
     return &entities[entityId - 1];
+}*/
+
+/*void unit_template(float positionX, float positionY,
+    float dimensionX, float dimensionY,
+    int R_Color, int G_Color, int B_Color, int Alpha) {
+
+    }*/
+
+void create_entities(Entity *entities, unsigned int ongoing_point_X, unsigned int ongoing_point_Y, unsigned int i) {
+    entities[i].id = i + 1;
+    entities[i].positionX = ongoing_point_X;
+    entities[i].positionY = ongoing_point_Y;
+    entities[i].dimensionX = 10;
+    entities[i].dimensionY = 10;
 }

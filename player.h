@@ -1,11 +1,12 @@
 #ifndef PLAYER
 #define PLAYER
 
-#include "windowSettings.h"
+#define MAX_PLAYERS 1
+
 #include <stdio.h>
 #include <stdbool.h>
-
-#define MAX_PLAYERS 16
+#include "windowSettings.h"
+#include "gameState.h"
 
 typedef struct Player {
     int id;
@@ -24,6 +25,8 @@ typedef struct Player {
     float runSpeed;
 } Player;
 
+//void init_player(void);
+
 int create_player(int max_hp, int max_st, const char *name,
                    float playerSpawnX, float playerSpawnY,
                    float playerDimensionX, float playerDimensionY,
@@ -31,5 +34,7 @@ int create_player(int max_hp, int max_st, const char *name,
                    float speed, float runSpeed);
 
 Player *get_player(int playerId);
+
+void calculate_player_movement(GameState *game);
 
 #endif
