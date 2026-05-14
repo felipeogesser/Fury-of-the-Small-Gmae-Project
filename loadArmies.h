@@ -7,6 +7,6 @@ void init_armies_memory_arena(void);
 void load_armies_into_arena(void);
 void free_army_memory(void);
 
-extern size_t armies_total;
+extern size_t armies_total_memory_size;
 
 #endif

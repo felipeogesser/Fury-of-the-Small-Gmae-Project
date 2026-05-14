@@ -1,7 +1,7 @@
 #include "grids.h"
 #include "engine.h"
 
-size_t grids_total;
+size_t grids_total_memory_size;
 
 void init_grids(void) {
     
@@ -11,7 +11,7 @@ void init_grids(void) {
     //size_t entities_created_count = engine.game.entities_created_count;
     size_t number_of_grids = 3;
 
-    grids_total =
+    grids_total_memory_size =
         sizeof(Grids) +
         sizeof(GridLowLOD) + (_Alignof(GridLowLOD) - 1) +
         sizeof(GridMediumLOD) + (_Alignof(GridMediumLOD) - 1) +
@@ -22,9 +22,16 @@ void init_grids(void) {
         mediumCount * sizeof(mediumQuadrant) + (_Alignof(mediumQuadrant) - 1) +
         smallCount * sizeof(smallQuadrant) + (_Alignof(smallQuadrant) - 1);
         
-    engine.grid_memory = calloc(1, grids_total);
+    if (memory_arena_memory_remainder() < grids_total_memory_size) {
 
-    char *p = engine.grid_memory;
+        fprintf(stderr, "Grids memory allocation failed. Not enough memory available.\n");
+        exit(EXIT_FAILURE);
+
+    }
+
+    engine.grid_memory_ptr = memory_arena_current_pointer();
+
+    char *p = engine.grid_memory_ptr;
     
     engine.grids = (Grids *)p;
     
@@ -90,6 +97,8 @@ void init_grids(void) {
 }
 
 void free_grid_memory(void) {
-    free(engine.grid_memory);
-    engine.grid_memory = NULL;
+    
+    memset(engine.grid_memory_ptr, 0, grids_total_memory_size);
+    engine.grid_memory_ptr = NULL;
+    
 }

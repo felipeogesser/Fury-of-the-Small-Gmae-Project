@@ -30,7 +30,7 @@ typedef struct Occupied {
     unsigned int index[];
 } Occupied;
 
-extern size_t grids_total;
+extern size_t armies_total_memory_size;
 
 void init_grids(void);
 

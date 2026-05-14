@@ -3,10 +3,10 @@
 #include "battalion.h"
 #include "engine.h"
 #include "entities.h"
+#include "memory_arena.h"
 #include "setArmiesPosition.h"
 
-size_t armies_total;
-
+size_t armies_total_memory_size;
 size_t battalion_size = 50;
 size_t number_of_battalions = 3;
 size_t number_of_armies = 2;
@@ -15,15 +15,22 @@ void init_armies_memory_arena(void) {
 
     engine.game->entities_created_count = (unsigned int)(battalion_size * number_of_battalions * number_of_armies);
 
-    armies_total =
+    armies_total_memory_size =
         sizeof(Armies) + (_Alignof(Army) - 1) +
         number_of_armies * sizeof(Army) + (_Alignof(Battalion) - 1) +
         number_of_armies * number_of_battalions * sizeof(Battalion) + (_Alignof(Entity) - 1) +
         number_of_armies * number_of_battalions * battalion_size * sizeof(Entity);
-        
-    engine.army_memory = calloc(1, armies_total);
+    
+    if (memory_arena_memory_remainder() < armies_total_memory_size) {
 
-    char *p = engine.army_memory;
+        fprintf(stderr, "Armies memory allocation failed. Not enough memory available.\n");
+        exit(EXIT_FAILURE);
+
+    }
+    
+    engine.army_memory_ptr = memory_arena_current_pointer();
+
+    char *p = engine.army_memory_ptr;
     
     engine.armies = (Armies *)p;
 
@@ -79,8 +86,10 @@ void load_armies_into_arena(void) { //funcao precisa ser melhorada dps, mt desor
 }
 
 void free_army_memory(void) {
-    free(engine.army_memory);
-    engine.army_memory = NULL;
+    
+    memset(engine.army_memory_ptr, 0, armies_total_memory_size);
+    engine.army_memory_ptr = NULL;
+
 }
 
 /*void load_armies_into_arena(void) {
