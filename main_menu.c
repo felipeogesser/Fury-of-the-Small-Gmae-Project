@@ -1,4 +1,5 @@
 #include "main_menu.h"
+#include "engine.h"
 #include "windowSettings.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -15,6 +16,8 @@ SDL_Surface* surface = NULL;
 SDL_Texture* message = NULL;
 
 void main_menu_init(void) {
+
+    engine.main_menu = &main_menu;
 
     if (TTF_Init() == -1) {
         SDL_Log("TTF_Init failed: %s", TTF_GetError());
@@ -82,7 +85,7 @@ void render_main_menu_screen(struct MainMenu main_menu, struct SDL_Renderer *ren
 
     SDL_RenderCopy(renderer, message, NULL, &message_rect);
 
-    //SDL_FreeSurface(surfaceMessage);
-    //SDL_DestroyTexture(Message);
+    //SDL_FreeSurface(surface);
+    //SDL_DestroyTexture(message);
 
 }
