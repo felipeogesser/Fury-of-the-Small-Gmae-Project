@@ -1,13 +1,7 @@
 #include "peripherals.h"
 #include <SDL2/SDL.h>
 
-void process_peripherals(GameState *game, Player *player, _Bool *window_running) {
-    
-    get_keyboard_input(game, player, window_running);
-
-} 
-
-static void get_keyboard_input(GameState *game, Player *player, _Bool *window_running) {
+void get_keyboard_input(GameState *game, Player *player, _Bool *window_running) {
 
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
@@ -41,4 +35,10 @@ static void get_keyboard_input(GameState *game, Player *player, _Bool *window_ru
             }
         }
     }    
+}
+
+void process_peripherals(GameState *game, Player *player, _Bool *window_running) {
+    
+    get_keyboard_input(game, player, window_running);
+
 }
