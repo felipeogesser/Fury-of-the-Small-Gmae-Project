@@ -1,5 +1,4 @@
 #include "gameLoop.h"
-#include <SDL2/SDL.h>
 #include "armies.h"
 #include "battalion.h"
 #include "calculateEntityQuadrant.h"
@@ -7,12 +6,15 @@
 #include "entities.h"
 #include "gameState.h"
 #include "grids.h"
+#include "main_menu.h"
 #include "maps.h"
 #include "peripherals.h"
 #include "player.h"
 #include "playerMapEdgeCollisionFunc.h"
 #include "renderer.h"
 #include "update_data.h"
+#include "window.h"
+#include <SDL2/SDL.h>
 
 void game_loop(void) {
 
@@ -25,6 +27,8 @@ void game_loop(void) {
     Player *player = engine.player;
     SDL_Renderer *renderer = engine.renderer;
 
+    game->scene_state = MAIN_MENU;
+
     Uint64 FrameStart = SDL_GetPerformanceCounter();
     engine.FrameStart = FrameStart;
     Uint64 FrameEnd;
@@ -33,30 +37,45 @@ void game_loop(void) {
     _Bool *window_running = &engine.window_running;
 
     while (*window_running) {
-        
+
         FrameEnd = SDL_GetPerformanceCounter();
         engine.FrameEnd = FrameEnd;
         FrameTicks = SDL_GetPerformanceFrequency();
         engine.FrameTicks = FrameTicks;
         game->delta = (float)(FrameEnd - FrameStart) / (float)FrameTicks;
         FrameStart = FrameEnd;
-        
-        process_peripherals(game, player, window_running);
 
-        calculate_player_movement(game);
-        
-        player_map_edge_collision(game, map, player);
+        switch(game->scene_state) {
 
-        checkEntityQuadrant(armies, game, grids);
+            case MAIN_MENU:
+            
+                //process_peripherals(game, player, window_running);
 
-        update_game_data(entities, game, player);
+                render_main_menu_screen(main_menu, renderer);
 
-        render(armies, game, map, player, renderer);
+                continue;
+
+            case BATTLEFIELD:
+                
+                process_peripherals(game, player, window_running);
+
+                calculate_player_movement(game);
+                
+                player_map_edge_collision(game, map, player);
+
+                check_entity_quadrant(armies, game, grids);
+
+                update_game_data(entities, game, player);
+
+                render(armies, game, map, player, renderer);
+
+                continue;
+
+        }
 
     }
     
-    SDL_DestroyRenderer(engine.renderer);
-    SDL_DestroyWindow(engine.window);
-    SDL_Quit();
+    destroy_window();
+
 
 }

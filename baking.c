@@ -1,10 +1,15 @@
 #include "baking.h"
+#include "calculateEntityQuadrant.h"
+#include "engine.h"
+#include "grids.h"
+#include "loadArmies.h"
+#include "mapMaker.h"
+#include "maps.h"
+#include "player.h"
+#include "quadrant.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
-#include "engine.h"
-#include "mapMaker.h"
-#include "player.h"
 
 // this file still mixes inits with baking. will change later
 

@@ -3,7 +3,15 @@
 
 #define INVSQRT2 0.70710678f
 
+enum SceneState {
+    MAIN_MENU,
+    //VILLAGE,
+    //BATTLEPLAN,
+    BATTLEFIELD
+};
+
 typedef struct GameState {
+    enum SceneState scene_state;
     float LX, LY;
     float KX, KY;
     float offSetX, offSetY;
