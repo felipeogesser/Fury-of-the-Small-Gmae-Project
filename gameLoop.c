@@ -12,6 +12,8 @@
 #include "player.h"
 #include "playerMapEdgeCollisionFunc.h"
 #include "renderer.h"
+#include "scene_handler.h"
+#include "scenes.h"
 #include "update_data.h"
 #include "window.h"
 #include <SDL2/SDL.h>
@@ -28,6 +30,8 @@ void game_loop(void) {
     SDL_Renderer *renderer = engine.renderer;
 
     game->scene_state = MAIN_MENU;
+
+    scene_switch(MAIN_MENU);
 
     Uint64 FrameStart = SDL_GetPerformanceCounter();
     engine.FrameStart = FrameStart;
@@ -48,16 +52,16 @@ void game_loop(void) {
         switch(game->scene_state) {
 
             case MAIN_MENU:
-            
-                //process_peripherals(game, player, window_running);
 
-                render_main_menu_screen(main_menu, renderer);
+                process_peripherals(window_running);
+
+                scene_render();
 
                 continue;
 
             case BATTLEFIELD:
                 
-                process_peripherals(game, player, window_running);
+                process_peripherals(window_running);
 
                 calculate_player_movement(game);
                 
@@ -71,11 +75,12 @@ void game_loop(void) {
 
                 continue;
 
+            default:
+                break;
         }
 
     }
     
     destroy_window();
-
 
 }

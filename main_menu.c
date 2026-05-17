@@ -1,5 +1,7 @@
 #include "main_menu.h"
 #include "engine.h"
+#include "scene_handler.h"
+#include "scenes.h"
 #include "windowSettings.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -7,15 +9,17 @@
 
 struct MainMenu main_menu = {0};
 
-TTF_Font* font = NULL;
+TTF_Font *font = NULL;
 
-SDL_Color white = {0};
+SDL_Color white = {255, 255, 255, 255};
 
-SDL_Surface* surface = NULL; 
+SDL_Surface *surface = NULL; 
 
-SDL_Texture* message = NULL;
+SDL_Texture *message = NULL;
 
 void main_menu_init(void) {
+
+    SDL_Renderer *renderer = engine.renderer;
 
     engine.main_menu = &main_menu;
 
@@ -38,20 +42,66 @@ void main_menu_init(void) {
     main_menu.start_button_Alpha = 255;
     main_menu.start_button_text = "start game";
 
-    font = TTF_OpenFont("Sans.ttf", 24);
+    font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24);
+    if (!font) {
+        SDL_Log("TTF_OpenFont failed: %s", TTF_GetError());
+        return;
+    }
 
-    white = {255, 255, 255, 255};
-
-    surface = TTF_RenderText_Solid(font, "put your text here", white); 
+    surface = TTF_RenderText_Solid(font, "play button", white);
+    if (!surface) {
+        SDL_Log("TTF_RenderText_Solid failed: %s", TTF_GetError());
+        return;
+    }
 
     message = SDL_CreateTextureFromSurface(renderer, surface);
-
     SDL_FreeSurface(surface);
+    surface = NULL;
+    TTF_CloseFont(font);
+    font = NULL;
+
+    if (!message) {
+        SDL_Log("SDL_CreateTextureFromSurface failed: %s", SDL_GetError());
+        return;
+    }
 
 }
 
-void render_main_menu_screen(struct MainMenu main_menu, struct SDL_Renderer *renderer) {
+void main_menu_input(SDL_Event *e) {
+
+    if (e->type == SDL_MOUSEBUTTONDOWN &&
+        e->button.button == SDL_BUTTON_LEFT) {
+
+        int mouse_x = e->button.x;
+        int mouse_y = e->button.y;
+
+        _Bool button_clicked =
+            mouse_x >= main_menu.start_button_position_X &&
+            mouse_x <  main_menu.start_button_position_X +
+            main_menu.start_button_width_X &&
+            mouse_y >= main_menu.start_button_position_Y &&
+            mouse_y <  main_menu.start_button_position_Y +
+            main_menu.start_button_width_Y;
+
+        if (button_clicked) {
+            
+            scene_switch(BATTLEFIELD);
     
+        }
+
+    }
+
+}
+
+void main_menu_render(void) {
+    
+    if (message == NULL) return;
+
+    SDL_Renderer *renderer = engine.renderer;
+
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+
     SDL_Rect main_menu_background = {0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y};
     SDL_SetRenderDrawColor(
         renderer,
@@ -77,15 +127,20 @@ void render_main_menu_screen(struct MainMenu main_menu, struct SDL_Renderer *ren
     );
     SDL_RenderFillRect(renderer, &main_menu_start_button);
 
-    SDL_Rect message_rect;
-    message_rect.x = 0;
-    message_rect.y = 0;
-    message_rect.w = 100;
-    message_rect.h = 100;
+    SDL_RenderCopy(renderer, message, NULL, &main_menu_start_button);
 
-    SDL_RenderCopy(renderer, message, NULL, &message_rect);
+    SDL_RenderPresent(renderer);
 
-    //SDL_FreeSurface(surface);
-    //SDL_DestroyTexture(message);
+}
+
+
+void main_menu_destroy(void) {
+
+    if (message) {
+        SDL_DestroyTexture(message);
+        message = NULL;
+    }
+
+    TTF_Quit();
 
 }

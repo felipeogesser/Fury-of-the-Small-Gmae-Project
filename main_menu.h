@@ -26,6 +26,10 @@ extern struct MainMenu main_menu;
 
 void main_menu_init(void);
 
-void render_main_menu_screen(struct MainMenu main_menu, struct SDL_Renderer *renderer);
+void main_menu_input(SDL_Event *e);
+
+void main_menu_render(void);
+
+void main_menu_destroy(void);
 
 #endif
