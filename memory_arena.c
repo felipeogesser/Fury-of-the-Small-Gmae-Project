@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 struct Arena {
     char *base;
@@ -21,7 +22,7 @@ static struct Arena arena = {0};
 
 static enum MemoryArenaAllocStatus memory_arena_alloc(void) {
 
-    size_t capacity = 8388608;
+    size_t capacity = 67108864;
     arena.capacity = capacity;
     
     void *ptr = mmap(
@@ -113,12 +114,24 @@ size_t memory_arena_memory_used(void) {
 
 size_t memory_arena_memory_remainder(void) {
 
-    return arena.capacity - memory_arena_memory_used();
+    return arena.capacity - (size_t)(arena.current - arena.base);
 
 }
 
 size_t memory_arena_memory_capacity(void) {
 
     return arena.capacity;
+
+}
+
+void *memory_arena_push(size_t size, size_t alignment) {
+
+    char *p = arena.current;
+
+    p = (char *)(((uintptr_t)p + alignment - 1) & ~(alignment - 1));
+
+    arena.current = p + size;
+
+    return p;
 
 }
