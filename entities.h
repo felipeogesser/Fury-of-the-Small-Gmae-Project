@@ -8,7 +8,7 @@
 #define MAX_ENTITIES 1024
 
 typedef struct Entity {
-    int id;
+    unsigned int id;
     char name[32];
     char team[32];
     float positionX, positionY;
@@ -39,7 +39,7 @@ Entity *get_entity(int id);
 
 void init_entities(void);
 
-void create_entities(Entity *entities, unsigned int ongoing_point_X, unsigned int ongoing_point_Y, unsigned int i);
+void create_entities(Entity *entities, float ongoing_point_X, float ongoing_point_Y, unsigned int i);
 
 
 #endif

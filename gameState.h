@@ -1,14 +1,9 @@
 #ifndef GAMESTATE
 #define GAMESTATE
 
-#define INVSQRT2 0.70710678f
+#include "scenes.h"
 
-enum SceneState {
-    MAIN_MENU,
-    //VILLAGE,
-    //BATTLEPLAN,
-    BATTLEFIELD
-};
+#define INVSQRT2 0.70710678f
 
 typedef struct GameState {
     enum SceneState scene_state;
@@ -19,15 +14,15 @@ typedef struct GameState {
     float dirUp, dirDown, dirLeft, dirRight;
     float vx, vy, va, vb;
     float delta;
-    unsigned int low_LOD_quadrant_size;
-    unsigned int medium_LOD_quadrant_size;
-    unsigned int high_LOD_quadrant_size;
-    unsigned int low_LOD_quadrant_count;
-    unsigned int medium_LOD_quadrant_count;
-    unsigned int high_LOD_quadrant_count;
-    signed int amountX, amountY;
     float decay_rate;
     unsigned int entities_created_count, objects_created_count;
+    unsigned short low_LOD_quadrant_count;
+    unsigned short low_LOD_quadrant_size;
+    unsigned short medium_LOD_quadrant_count;
+    unsigned short medium_LOD_quadrant_size;
+    unsigned short high_LOD_quadrant_count;
+    unsigned short high_LOD_quadrant_size;
+    unsigned short amountX, amountY;
 } GameState;
 
 GameState *pass_pointer(void);

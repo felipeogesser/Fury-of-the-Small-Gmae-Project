@@ -40,7 +40,7 @@ Entity *get_entity(int entityId) {
 
     }*/
 
-void create_entities(Entity *entities, unsigned int ongoing_point_X, unsigned int ongoing_point_Y, unsigned int i) {
+void create_entities(Entity *entities, float ongoing_point_X, float ongoing_point_Y, unsigned int i) {
     entities[i].id = i + 1;
     entities[i].positionX = ongoing_point_X;
     entities[i].positionY = ongoing_point_Y;

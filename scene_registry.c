@@ -11,6 +11,8 @@
     .destroy = destroy_fn                                 \
 }
 
+void void_function(void);
+
 void void_function(void) {
     return;
 }

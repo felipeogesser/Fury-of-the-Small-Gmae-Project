@@ -7,14 +7,14 @@ static Player player[MAX_PLAYERS] = {0};
     engine.player = player;
 }*/
 
-static int player_count = 0;
+static unsigned int player_count = 0;
 
-int create_player(int max_hp, int max_st, const char *name,
+unsigned int create_player(int max_hp, int max_st, const char *name,
     float playerSpawnX, float playerSpawnY,
     float playerDimensionX, float playerDimensionY,
     bool collision, int quadrant,
     float speed, float runSpeed) {
-    if (player_count >= MAX_PLAYERS) return -1; 
+    if (player_count >= MAX_PLAYERS) return 1; 
     unsigned int playerIndex = player_count;
     player[playerIndex].id = playerIndex + 1;
     player[playerIndex].max_hp = max_hp;
@@ -38,7 +38,7 @@ int create_player(int max_hp, int max_st, const char *name,
     return player[playerIndex].id;
 }
 
-Player *get_player(int playerId) {
+Player *get_player(unsigned int playerId) {
     if (playerId <= 0 || playerId > player_count) return NULL;
     return &player[playerId - 1];
 }

@@ -1,5 +1,6 @@
 #include "grids.h"
 #include "engine.h"
+#include "memory_arena.h"
 
 size_t grids_total_memory_size;
 
@@ -61,11 +62,11 @@ void init_grids(void) {
     grids->GMLoD->occupied = (Occupied *)p;
 
     p += sizeof(Occupied);
-
-    p = (char *)(((uintptr_t)p + _Alignof(*((Occupied *)0)->index) - 1) & ~(_Alignof(*((Occupied *)0)->index) - 1));
+    // typeof(*((Occupied *)0)->index) == unsigned int
+    p = (char *)(((uintptr_t)p + _Alignof(unsigned int) - 1) & ~(_Alignof(unsigned int) - 1));
 
     //grids->GMLoD->occupied->index = (void *)p;
-    p += sizeof(*((Occupied *)0)->index) * mediumCount;
+    p += sizeof(unsigned int) * mediumCount;
 
     p = (char *)(((uintptr_t)p + _Alignof(GridHighLOD) - 1) & ~(_Alignof(GridHighLOD) - 1));
     grids->GHLoD = (GridHighLOD *)p;

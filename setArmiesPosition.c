@@ -8,10 +8,10 @@ void set_armies_in_the_battlefield(Armies *armies) {
     unsigned int battalion_size = 50;
     unsigned int number_of_battalions = 3;
     unsigned int number_of_armies = 2;
-    signed int starting_point_X = 50;
-    signed int starting_point_Y = 50;
-    signed int ongoing_point_X = starting_point_X;
-    signed int ongoing_point_Y = starting_point_Y;
+    float starting_point_X = 50;
+    float starting_point_Y = 50;
+    float ongoing_point_X = starting_point_X;
+    float ongoing_point_Y = starting_point_Y;
 
     Army *army = armies->army;
 

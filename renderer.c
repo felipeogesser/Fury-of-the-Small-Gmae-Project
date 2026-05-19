@@ -1,7 +1,9 @@
 #include "renderer.h"
 #include "battalion.h"
-#include "entities.h"
 #include "calculateEntityQuadrant.h"
+#include "entities.h"
+//#include "scene_handler.h"
+
 
 void render(Armies *armies, GameState *game, Map *map, Player *player, SDL_Renderer *renderer) {
     
@@ -9,11 +11,11 @@ void render(Armies *armies, GameState *game, Map *map, Player *player, SDL_Rende
 
     SDL_RenderClear(renderer);
 
-    SDL_Rect Map = {map->mapLeftLimit - game->offSetX, map->mapTopLimit - game->offSetY, map->mapSizeX, map->mapSizeY};
+    SDL_Rect map_rect = {map->mapLeftLimit - (signed int)game->offSetX, map->mapTopLimit - (signed int)game->offSetY, map->mapSizeX, map->mapSizeY};
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderFillRect(renderer, &Map);
+    SDL_RenderFillRect(renderer, &map_rect);
 
-    SDL_Rect PlayerRender = { player->playerPositionOnScreenX, player->playerPositionOnScreenY, player->playerDimensionX, player->playerDimensionY };
+    SDL_Rect PlayerRender = { (signed int)player->playerPositionOnScreenX, (signed int)player->playerPositionOnScreenY, (signed int)player->playerDimensionX, (signed int)player->playerDimensionY };
     SDL_SetRenderDrawColor(renderer, 255, 104, 230, 255);
     SDL_RenderFillRect(renderer, &PlayerRender);
 
@@ -29,7 +31,7 @@ void render(Armies *armies, GameState *game, Map *map, Player *player, SDL_Rende
         
         for (unsigned int j = 0; j < entities_count; j++) {
             
-            SDL_Rect EntityMovement = { entities[j].positionX - game->offSetX, entities[j].positionY - game->offSetY, entities[j].dimensionX, entities[j].dimensionY};
+            SDL_Rect EntityMovement = { (signed int)(entities[j].positionX - game->offSetX), (signed int)(entities[j].positionY - game->offSetY), (signed int)entities[j].dimensionX, (signed int)entities[j].dimensionY};
             SDL_SetRenderDrawColor(renderer, battalions[i].R_Color, battalions[i].G_Color, battalions[i].B_Color, battalions[i].Alpha);
             SDL_RenderFillRect(renderer, &EntityMovement);
 

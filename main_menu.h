@@ -5,20 +5,20 @@
 
 struct MainMenu {
 
-    char background_R_color;
-    char background_G_color;
-    char background_B_color;
-    char background_Alpha;
+    unsigned char background_R_color;
+    unsigned char background_G_color;
+    unsigned char background_B_color;
+    unsigned char background_Alpha;
 
-    short start_button_position_X;
-    short start_button_position_Y;
-    short start_button_width_X;
-    short start_button_width_Y;
-    short start_button_R_color;
-    short start_button_G_color;
-    short start_button_B_color;
-    short start_button_Alpha;
-    char *start_button_text;
+    unsigned short start_button_position_X;
+    unsigned short start_button_position_Y;
+    unsigned short start_button_width_X;
+    unsigned short start_button_width_Y;
+    unsigned char start_button_R_color;
+    unsigned char start_button_G_color;
+    unsigned char start_button_B_color;
+    unsigned char start_button_Alpha;
+    const char *start_button_text;
 
 };
 

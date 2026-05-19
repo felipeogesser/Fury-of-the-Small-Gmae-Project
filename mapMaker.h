@@ -2,7 +2,7 @@
 #define MAP_MAKER
 #include "maps.h"
 
-extern int map_id[MAX_MAPS];
+extern unsigned int map_id[MAX_MAPS];
 
 void make_maps(void);
 #endif

@@ -1,7 +1,5 @@
 #include "entityObjectCollision.h"
 
-
-
 void entityObjectCollision(Entity *entities, Quadrant *quadrant, float (*hitBoxObject)[4][2], GameState *game, int x, int y) {
     for (int i = 0; i < x; i++) {
         for (int j = 0; j < y; j++) {
@@ -17,34 +15,12 @@ void entityObjectCollision(Entity *entities, Quadrant *quadrant, float (*hitBoxO
             float posDimX = positionX + dimensionX;
             float posDimY = positionY + dimensionY;
 
-            /*if (entities[j].vectorX > 0 &&
-                entities[j].vectorX + entities[j].positionX + entities[j].dimensionX >=
-                hitBoxObject[i][0][0] &&
-                hitBoxObject[i][0][0] > entities[j].positionX + entities[j].dimensionX) {
-                    entities[j].vectorX *= -1.0f;
-                    float x = entities[j].vectorX;
-                    uint32_t bits;
-
-                    memcpy(&bits, &x, sizeof(bits));
-
-                    if (bits & 0x80000000u) {
-                        ;
-                    } else {
-                        entities[j].vectorX = -entities[j].vectorX;
-                    }
-            }
-            
             if (entities[j].vectorY > 0 &&
                 entities[j].vectorY + entities[j].positionY + entities[j].dimensionY >=
                 hitBoxObject[i][0][0] &&
                 hitBoxObject[i][0][0] > entities[j].positionY + entities[j].dimensionY) {
                     entities[j].vectorY *= -1.0f;
-            }*/
-
-            /*if (entities[j].positionX + entities[j].dimensionX > hitBoxObject[i][0][0] &&
-                entities[j].positionY + entities[j].dimensionY > hitBoxObject[i][0][1]) {
-                    COLLISION |= CORNER1;
-            }*/
+            }
 
             if (positionX < hitBoxObject[i][1][0] &&
                 posDimY > hitBoxObject[i][1][1]) {
@@ -60,11 +36,6 @@ void entityObjectCollision(Entity *entities, Quadrant *quadrant, float (*hitBoxO
                     hitBoxObject[i][2][1] - positionY) ? FLIPVECX2 : FLIPVECY2;
             }
 
-            /*if (entities[j].positionX < hitBoxObject[i][3][0] && // ou se if 2 e 3 true esse tru tbm
-                entities[j].positionY < hitBoxObject[i][3][1]) {
-                    COLLISION |= CORNER4;
-            }*/
-            //((COLLISION &= ~1U) && (COLLISION &= ~(1U << 2)))
             float gx = 1.0f;
             float gy = 1.0f;
 

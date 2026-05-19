@@ -16,20 +16,20 @@
 }*/
 
 void calculateAmountOfQuadrants(void) {
-    unsigned int amountX = engine.map->mapSizeX / engine.game->low_LOD_quadrant_size;
-    unsigned int amountY = engine.map->mapSizeY / engine.game->low_LOD_quadrant_size;
+    unsigned short amountX = (unsigned short)(engine.map->mapSizeX / engine.game->low_LOD_quadrant_size);
+    unsigned short amountY = (unsigned short)(engine.map->mapSizeY / engine.game->low_LOD_quadrant_size);
     engine.game->amountX = amountX;
     engine.game->amountY = amountY;
-    engine.game->low_LOD_quadrant_count = amountX * amountY;
-    engine.game->medium_LOD_quadrant_count = amountX * amountY * 4;
-    engine.game->high_LOD_quadrant_count = amountX * amountY * 16;
+    engine.game->low_LOD_quadrant_count = (unsigned short)(amountX * amountY);
+    engine.game->medium_LOD_quadrant_count = (unsigned short)(amountX * amountY * 4);
+    engine.game->high_LOD_quadrant_count = (unsigned short)(amountX * amountY * 16);
 }
 
 void fill_quadrant_data(void) {
     bigQuadrant *bigQuad = engine.grids->GLLoD->bigQuad;
-    unsigned int amountX = engine.game->amountX;
-    unsigned int amountY = engine.game->amountY;
-    for (unsigned int i = 0; i < amountX * amountY; i++) {
+    unsigned short amountX = engine.game->amountX;
+    unsigned short amountY = engine.game->amountY;
+    for (unsigned short i = 0; i < amountX * amountY; i++) {
         bigQuad[i].id = i + 1;
     }
 }

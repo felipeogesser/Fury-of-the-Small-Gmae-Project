@@ -9,7 +9,7 @@ typedef struct bigQuadrant {
     unsigned short id;
     unsigned short local_entities_count;
     unsigned char smell;
-    unsigned short entitiesInsideQuadrantById[20];
+    unsigned int entitiesInsideQuadrantById[20];
 } bigQuadrant;
 
 typedef struct mediumQuadrant {

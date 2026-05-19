@@ -11,24 +11,32 @@
 #include <stdlib.h>
 #include <time.h>
 
+// prototypes
+static void bake_map(void);
+static void bake_player(void);
+static void bake_game_state(void);
+static void bake_armies(void);
+static void bake_grids(void);
+static void bake_entity_quad(void);
+
 // this file still mixes inits with baking. will change later
 
-void bake_map(void) {
+static void bake_map(void) {
     
     make_maps();
     engine.map = get_map(map_id[0]);
 
 }
 
-void bake_player(void) { // create_player. isso tem q sair dauqi pq n faz sentido bake player.
+static void bake_player(void) { // create_player. isso tem q sair dauqi pq n faz sentido bake player.
     
     //init_player();
-    int player_id = create_player(50 ,100, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
+    unsigned int player_id = create_player(50 ,100, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
     engine.player = get_player(player_id);
 
 }
 
-void bake_game_state(void) {
+static void bake_game_state(void) {
 
     engine.game = pass_pointer();
 
@@ -41,12 +49,12 @@ void bake_game_state(void) {
 
 }
 
-void bake_armies(void) {
+static void bake_armies(void) {
     init_armies_memory_arena();
     load_armies_into_arena();
 }
 
-void bake_grids(void) {
+static void bake_grids(void) {
     calculateAmountOfQuadrants();
     init_grids();
     fill_quadrant_data();
@@ -65,13 +73,13 @@ void bake_grids(void) {
     }
 }*/
 
-void bake_entity_quad(void) {
+static void bake_entity_quad(void) {
     initialCheckEntityQuadrant(engine.armies, engine.game, engine.grids);
     renderQuadrantsSetup(engine.armies, engine.game);
 }
 
 void data_baking(void) {
-    srand(time(NULL)); // init global RNG state
+    srand((unsigned int)time(NULL)); // init global RNG state
     bake_map();
     bake_player();
     bake_game_state();
