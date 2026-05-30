@@ -37,3 +37,7 @@ void team_red_entities(int iter) {
         entity_id[I-1] = I;
     }
 }
+/*
+void create_units(signed int ongoing_point_X, signed int ongoing_point_Y) {
+    create_entity()
+}*/

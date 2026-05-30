@@ -1,6 +1,8 @@
 #ifndef ENTITIES
 #define ENTITIES
 
+#include "gameState.h"
+#include "armies.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
@@ -40,6 +42,8 @@ Entity *get_entity(int id);
 void init_entities(void);
 
 void create_entities(Entity *entities, float ongoing_point_X, float ongoing_point_Y, unsigned int i);
+
+void update_units(Armies *armies, GameState *game);
 
 
 #endif

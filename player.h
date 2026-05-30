@@ -15,6 +15,8 @@ typedef struct Player {
     int current_hp;
     int current_st;
     char name[32];
+    float vx, vy, vxdt, vydt, va, vb;
+    float dir_left, dir_right, dir_up, dir_down;
     float playerSpawnX, playerSpawnY;
     float playerPositionX, playerPositionY;
     float playerPositionOnScreenX, playerPositionOnScreenY;
@@ -36,5 +38,7 @@ unsigned int create_player(int max_hp, int max_st, const char *name,
 Player *get_player(unsigned int playerId);
 
 void calculate_player_movement(GameState *game);
+
+void update_player(GameState *game);
 
 #endif

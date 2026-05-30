@@ -28,6 +28,7 @@ SDLFLAGS = $(shell pkg-config --cflags --libs sdl2 SDL2_ttf)
 
 SRC = \
 	baking.c \
+	battlefield.c \
 	calculateEntityQuadrant.c \
 	engine.c \
 	entities.c \
@@ -49,8 +50,7 @@ SRC = \
 	scene_handler.c \
 	scene_registry.c \
 	setArmiesPosition.c \
-	shutdown.c \
-	update_data.c \
+	game_shutdown.c \
 	window.c \
 
 OBJ = $(SRC:.c=.o)

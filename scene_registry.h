@@ -7,12 +7,14 @@
 typedef void (*function_pointer)(void);
 
 struct SceneCallbacks {
-    function_pointer init;
+    void (*init)(void);
     void (*input)(SDL_Event *e);
-    function_pointer update;
-    function_pointer render;
-    function_pointer destroy;
+    void (*update)(void);
+    void (*render)(void);
+    void (*destroy)(void);
 };
+
+struct SceneCallbacks;
 
 extern const struct SceneCallbacks scene_registry[SCENE_COUNT];
 

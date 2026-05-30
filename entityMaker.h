@@ -2,7 +2,6 @@
 #define ENTITYMAKER
 
 #include "entities.h"
-#include <stdio.h>
 
 //extern int entity_id[MAX_ENTITIES];
 extern int *entity_id;

@@ -1,10 +1,11 @@
 #ifndef SCENES_H
 #define SCENES_H
 
-enum SceneState {
-    MAIN_MENU,
     //VILLAGE,
     //BATTLEPLAN,
+    
+enum SceneState {
+    MAIN_MENU,
     BATTLEFIELD,
     SCENE_COUNT
 };

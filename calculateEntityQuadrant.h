@@ -6,6 +6,7 @@
 #include "entities.h"
 #include "gameState.h"
 #include "grids.h"
+#include "player.h"
 
 #define QUAD1 ((unsigned char)(1u << 0))
 #define QUAD2 ((unsigned char)(1u << 1))
@@ -19,6 +20,6 @@
 void initialCheckEntityQuadrant(Armies *armies, GameState *game, Grids *grids);
 void check_entity_quadrant(Armies *armies, GameState *game, Grids *grids);
 void renderQuadrantsSetup(Armies *armies, GameState *game);
-void renderQuadrants(Entity *entities, GameState *game, SDL_Renderer *renderer);
+void renderQuadrants(Entity *entities, GameState *game, Player *player, SDL_Renderer *renderer);
 
 #endif

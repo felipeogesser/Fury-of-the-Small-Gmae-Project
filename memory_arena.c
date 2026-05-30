@@ -132,6 +132,13 @@ void *memory_arena_push(size_t size, size_t alignment) {
 
     arena.current = p + size;
 
+    if (arena.current > arena.base + arena.capacity) {
+        
+        fprintf(stderr, "memory allocated bigger than limit\n");
+        exit(EXIT_FAILURE);
+        
+    }
+
     return p;
 
 }

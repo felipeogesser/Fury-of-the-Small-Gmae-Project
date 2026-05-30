@@ -1,6 +1,7 @@
 #include "grids.h"
 #include "engine.h"
 #include "memory_arena.h"
+#include <assert.h>
 
 size_t grids_total_memory_size;
 
@@ -13,7 +14,7 @@ void init_grids(void) {
     size_t number_of_grids = 3;
 
     grids_total_memory_size =
-        sizeof(Grids) +
+        sizeof(Grids) + (_Alignof(Grids) - 1) +
         sizeof(GridLowLOD) + (_Alignof(GridLowLOD) - 1) +
         sizeof(GridMediumLOD) + (_Alignof(GridMediumLOD) - 1) +
         sizeof(GridHighLOD) + (_Alignof(GridHighLOD) - 1) +
@@ -32,7 +33,47 @@ void init_grids(void) {
 
     engine.grid_memory_ptr = memory_arena_current_pointer();
 
-    char *p = engine.grid_memory_ptr;
+    Grids *grids = memory_arena_push(sizeof(Grids), _Alignof(Grids));
+
+    GridLowLOD *GLLoD = memory_arena_push(sizeof(GridLowLOD), _Alignof(GridLowLOD));
+
+    GridMediumLOD *GMLoD = memory_arena_push(sizeof(GridMediumLOD), _Alignof(GridMediumLOD));
+
+    GridHighLOD *GHLoD = memory_arena_push(sizeof(GridHighLOD), _Alignof(GridHighLOD));
+
+    bigQuadrant *bigQuad = memory_arena_push(sizeof(bigQuadrant) * bigCount, _Alignof(bigQuadrant));
+    
+    mediumQuadrant *mediumQuad = memory_arena_push(sizeof(mediumQuadrant) * mediumCount, _Alignof(mediumQuadrant));
+    
+    smallQuadrant *smallQuad = memory_arena_push(sizeof(smallQuadrant) * smallCount, _Alignof(smallQuadrant));
+    
+    Occupied *occupied_GLLoD = memory_arena_push(sizeof(Occupied) + sizeof(unsigned int) * bigCount, _Alignof(Occupied));
+    
+    Occupied *occupied_GMLoD = memory_arena_push(sizeof(Occupied) + sizeof(unsigned int) * mediumCount, _Alignof(Occupied));
+    
+    Occupied *occupied_GHLoD = memory_arena_push(sizeof(Occupied) + sizeof(unsigned int) * smallCount, _Alignof(Occupied));
+    
+    engine.grids = grids;
+    
+    engine.grids->GLLoD = GLLoD;
+
+    engine.grids->GLLoD->bigQuad = bigQuad;
+
+    engine.grids->GLLoD->occupied = occupied_GLLoD;
+
+    engine.grids->GMLoD = GMLoD;
+
+    engine.grids->GMLoD->mediumQuad = mediumQuad;
+
+    engine.grids->GMLoD->occupied = occupied_GMLoD;
+
+    engine.grids->GHLoD = GHLoD;
+    
+    engine.grids->GHLoD->smallQuad = smallQuad;
+
+    engine.grids->GHLoD->occupied = occupied_GHLoD;
+   
+    /*char *p = engine.grid_memory_ptr;
     
     engine.grids = (Grids *)p;
     
@@ -93,7 +134,7 @@ void init_grids(void) {
     p += sizeof(mediumQuadrant) * mediumCount;
 
     p = (char *)(((uintptr_t)p + _Alignof(smallQuadrant) - 1) & ~(_Alignof(smallQuadrant) - 1));
-    grids->GHLoD->smallQuad = (smallQuadrant *)p;
+    grids->GHLoD->smallQuad = (smallQuadrant *)p;*/
 
 }
 

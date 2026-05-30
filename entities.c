@@ -47,3 +47,14 @@ void create_entities(Entity *entities, float ongoing_point_X, float ongoing_poin
     entities[i].dimensionX = 4;
     entities[i].dimensionY = 4;
 }
+
+void update_units(Armies *armies, GameState *game) {
+    
+    Entity *entities = armies->army->battalions->entities;
+
+    for (unsigned int i = 0; i < game->entities_created_count; i++) {
+        entities[i].positionX += entities[i].vectorX * game->delta;
+        entities[i].positionY += entities[i].vectorY * game->delta;
+    }
+
+}

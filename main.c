@@ -1,7 +1,7 @@
 #include "baking.h"
 #include "gameLoop.h"
+#include "game_shutdown.h"
 #include "init.h"
-#include "shutdown.h"
 #include "window.h"
 
 int main(void) {
@@ -14,6 +14,6 @@ int main(void) {
 
     game_loop();
 
-    shutdown();
+    game_shutdown();
 
 }

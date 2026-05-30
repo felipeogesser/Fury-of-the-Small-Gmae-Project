@@ -10,9 +10,6 @@ typedef struct GameState {
     float LX, LY;
     float KX, KY;
     float offSetX, offSetY;
-    float vxdt, vydt;
-    float dirUp, dirDown, dirLeft, dirRight;
-    float vx, vy, va, vb;
     float delta;
     float decay_rate;
     unsigned int entities_created_count, objects_created_count;
@@ -26,5 +23,9 @@ typedef struct GameState {
 } GameState;
 
 GameState *pass_pointer(void);
+
+typedef struct Player Player;
+
+void update_game_state(Player *player);
 
 #endif

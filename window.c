@@ -1,6 +1,6 @@
 #include "window.h"
 #include "engine.h"
-#include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL.h>
 
 static void create_SDL_window(void) {
     
@@ -53,7 +53,7 @@ void create_window(void) {
 }
 
 static void destroy_SDL_window(void) {
-    
+
     SDL_DestroyRenderer(engine.renderer);
     SDL_DestroyWindow(engine.window);
     SDL_Quit();
@@ -62,7 +62,6 @@ static void destroy_SDL_window(void) {
 
 void destroy_window(void) {
 
-    TTF_Quit();
     destroy_SDL_window();
 
 }

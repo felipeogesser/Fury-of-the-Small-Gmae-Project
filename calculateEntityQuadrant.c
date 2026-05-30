@@ -80,7 +80,7 @@ void initialCheckEntityQuadrant(Armies *armies, GameState *game, Grids *grids) {
 
 // entities goes into indexes = to their id -1
 void check_entity_quadrant(Armies *armies, GameState *game, Grids *grids) {
-    
+
     Entity *entities = armies->army->battalions->entities;
     signed int amountX = game->amountX;
     signed int amountY = game->amountY;
@@ -217,7 +217,7 @@ void renderQuadrantsSetup(Armies *armies, GameState *game) {
 }
 
 // change quadrant rendering from entity rendering it to wuadrant itself be the renderer
-void renderQuadrants(Entity *entities, GameState *game, SDL_Renderer *renderer) {
+void renderQuadrants(Entity *entities, GameState *game, Player *player, SDL_Renderer *renderer) {
 // trocaar dps pra pesquisar por quads ocupados, noa calcular por entity
     for (unsigned int i = 0; i < game->entities_created_count; i++) {
         
@@ -233,8 +233,8 @@ void renderQuadrants(Entity *entities, GameState *game, SDL_Renderer *renderer) 
             entities[i].quadrantOccupiedY += (float)(Y - (signed int)entities[i].previousY);
         }
 
-        entities[i].quadrantOccupiedX -= game->vxdt + game->LX + game->KX;
-        entities[i].quadrantOccupiedY -= game->vydt + game->LY + game->KY;
+        entities[i].quadrantOccupiedX -= player->vxdt + game->LX + game->KX;
+        entities[i].quadrantOccupiedY -= player->vydt + game->LY + game->KY;
 
         entities[i].previousCol = column;
         entities[i].previousRow = row;

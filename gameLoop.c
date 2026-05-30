@@ -14,24 +14,21 @@
 #include "renderer.h"
 #include "scene_handler.h"
 #include "scenes.h"
-#include "update_data.h"
 #include "window.h"
 #include <SDL2/SDL.h>
 
 void game_loop(void) {
 
-    Armies *armies = engine.armies;
+    //Armies *armies = engine.armies;
     //Battalion *battalions = engine.armies->army->battalions;
-    Entity *entities = engine.armies->army->battalions->entities;
+    //Entity *entities = engine.armies->army->battalions->entities;
     GameState *game = engine.game;
-    Grids *grids = engine.grids;
-    Map *map = engine.map;
-    Player *player = engine.player;
-    SDL_Renderer *renderer = engine.renderer;
+    //Grids *grids = engine.grids;
+    //Map *map = engine.map;
+    //Player *player = engine.player;
+    //SDL_Renderer *renderer = engine.renderer;
 
-    game->scene_state = MAIN_MENU;
-
-    scene_switch(MAIN_MENU);
+    scene_init(MAIN_MENU);
 
     Uint64 FrameStart = SDL_GetPerformanceCounter();
     engine.FrameStart = FrameStart;
@@ -63,6 +60,12 @@ void game_loop(void) {
                 
                 process_peripherals(window_running);
 
+                scene_update();
+
+                scene_render();
+
+
+                /*
                 calculate_player_movement(game);
                 
                 player_map_edge_collision(game, map, player);
@@ -71,7 +74,7 @@ void game_loop(void) {
 
                 update_game_data(entities, game, player);
 
-                render(armies, game, map, player, renderer);
+                render(armies, game, map, player, renderer);*/
 
                 continue;
 
@@ -81,6 +84,7 @@ void game_loop(void) {
 
     }
     
+    scene_destroy();
     destroy_window();
 
 }
