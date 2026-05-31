@@ -40,10 +40,21 @@ Entity *get_entity(int entityId) {
 
     }*/
 
-void create_entities(Entity *entities, unsigned int ongoing_point_X, unsigned int ongoing_point_Y, unsigned int i) {
+void create_entities(Entity *entities, float ongoing_point_X, float ongoing_point_Y, unsigned int i) {
     entities[i].id = i + 1;
     entities[i].positionX = ongoing_point_X;
     entities[i].positionY = ongoing_point_Y;
-    entities[i].dimensionX = 10;
-    entities[i].dimensionY = 10;
+    entities[i].dimensionX = 4;
+    entities[i].dimensionY = 4;
+}
+
+void update_units(Armies *armies, GameState *game) {
+    
+    Entity *entities = armies->army->battalions->entities;
+
+    for (unsigned int i = 0; i < game->entities_created_count; i++) {
+        entities[i].positionX += entities[i].vectorX * game->delta;
+        entities[i].positionY += entities[i].vectorY * game->delta;
+    }
+
 }

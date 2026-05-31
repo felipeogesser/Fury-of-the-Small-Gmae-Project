@@ -1,18 +1,16 @@
 #ifndef MAPS
 #define MAPS
 
-#include <stdio.h>
-
 #define MAX_MAPS 10
 
 typedef struct Map {
-    int id;
-    float mapSizeX, mapSizeY;
-    float mapLeftLimit, mapRightLimit, mapTopLimit, mapBottomLimit;
+    unsigned int id;
+    signed short mapSizeX, mapSizeY;
+    signed short mapLeftLimit, mapRightLimit, mapTopLimit, mapBottomLimit;
 } Map;
 
-int create_map(float mapSizeX, float mapSizeY);
+unsigned int create_map(signed short mapSizeX, signed short mapSizeY);
 
-Map *get_map(int mapIndex);
+Map *get_map(unsigned int mapId);
 
 #endif

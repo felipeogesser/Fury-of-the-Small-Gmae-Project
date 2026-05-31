@@ -1,4 +1,4 @@
-#include "teamsPositionAssembler.h"
+/*#include "teamsPositionAssembler.h"
 //#include "windowSettings.h"
 //#include "maps.h"
 #include "entities.h"
@@ -44,3 +44,4 @@ void set_team_position(Entity *entities) {
 
 
 }
+*/

@@ -3,27 +3,50 @@
 #include "battalion.h"
 #include "engine.h"
 #include "entities.h"
+#include "memory_arena.h"
 #include "setArmiesPosition.h"
 
-size_t armies_total;
-
-size_t battalion_size = 50;
-size_t number_of_battalions = 3;
-size_t number_of_armies = 2;
+size_t armies_total_memory_size;
+unsigned int  number_of_armies = 2;
+unsigned int number_of_battalions = 3;
+unsigned int  battalion_size = 50;
 
 void init_armies_memory_arena(void) {
 
     engine.game->entities_created_count = (unsigned int)(battalion_size * number_of_battalions * number_of_armies);
 
-    armies_total =
-        sizeof(Armies) + (_Alignof(Army) - 1) +
-        number_of_armies * sizeof(Army) + (_Alignof(Battalion) - 1) +
-        number_of_armies * number_of_battalions * sizeof(Battalion) + (_Alignof(Entity) - 1) +
-        number_of_armies * number_of_battalions * battalion_size * sizeof(Entity);
+    armies_total_memory_size =
+        (_Alignof(Armies) - 1) + sizeof(Armies) +
+        (_Alignof(Army) - 1) + number_of_armies * sizeof(Army) +
+        (_Alignof(Battalion) - 1) + number_of_armies * number_of_battalions * sizeof(Battalion) +
+        (_Alignof(Entity) - 1) + number_of_armies * number_of_battalions * battalion_size * sizeof(Entity);
         
-    engine.army_memory = calloc(1, armies_total);
+    if (memory_arena_memory_remainder() < armies_total_memory_size) {
 
-    char *p = engine.army_memory;
+        fprintf(stderr, "Armies memory allocation failed. Not enough memory available.\n");
+        exit(EXIT_FAILURE);
+
+    }
+    
+    engine.army_memory_ptr = memory_arena_current_pointer();
+
+    Armies *armies = memory_arena_push(sizeof(Armies), _Alignof(Armies));
+
+    Army *army = memory_arena_push(
+        sizeof(Army) * number_of_armies, _Alignof(Army));
+
+    Battalion *battalions = memory_arena_push(
+        sizeof(Battalion) * number_of_armies * number_of_battalions,
+        _Alignof(Battalion));
+
+    Entity *entities = memory_arena_push(
+        sizeof(Entity) * number_of_armies * number_of_battalions * battalion_size,
+        _Alignof(Entity));
+
+    //
+    /*engine.army_memory_ptr = memory_arena_current_pointer();
+
+    char *p = engine.army_memory_ptr;
     
     engine.armies = (Armies *)p;
 
@@ -44,16 +67,19 @@ void init_armies_memory_arena(void) {
     p = (char *)(((uintptr_t)p + _Alignof(Entity) - 1) & ~(_Alignof(Entity) - 1));
     Entity *entities = (Entity *)p;
 
-    armies->army = army;
+    armies->army = army;*/
+
+    engine.armies = armies;
+    engine.armies->army = army;
     for (size_t i = 0; i < number_of_armies; i++) {
-        
-        army[i].battalions = &battalions[i * number_of_battalions];
+
+        engine.armies->army[i].battalions = &battalions[i * number_of_battalions];
         size_t entity_offset_per_army = number_of_battalions * battalion_size * i;
         
         for (size_t j = 0; j < number_of_battalions; j++) {
             
-            army[i].battalions[j].entities = &entities[battalion_size * j + entity_offset_per_army];
-            army[i].battalions[j].entities_count = (unsigned int)battalion_size;
+            engine.armies->army[i].battalions[j].entities = &entities[battalion_size * j + entity_offset_per_army];
+            engine.armies->army[i].battalions[j].entities_count = (unsigned int)battalion_size;
         
         }
     }
@@ -79,8 +105,10 @@ void load_armies_into_arena(void) { //funcao precisa ser melhorada dps, mt desor
 }
 
 void free_army_memory(void) {
-    free(engine.army_memory);
-    engine.army_memory = NULL;
+    
+    memset(engine.army_memory_ptr, 0, armies_total_memory_size);
+    engine.army_memory_ptr = NULL;
+
 }
 
 /*void load_armies_into_arena(void) {

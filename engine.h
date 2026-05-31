@@ -4,10 +4,10 @@
 #include "armies.h"
 #include "gameState.h"
 #include "grids.h"
+#include "main_menu.h"
 #include "maps.h"
 #include "player.h"
 #include <SDL2/SDL.h>
-
 
 typedef struct Engine {
     
@@ -15,6 +15,7 @@ typedef struct Engine {
     Armies *armies;
     GameState *game;
     Grids *grids;
+    struct MainMenu *main_menu;
     Map *map;
     Player *player;
 
@@ -40,8 +41,8 @@ typedef struct Engine {
     // memory arenas
         //Arena permanentArena;
         //Arena frameArena;
-    void *grid_memory;
-    void *army_memory;
+    void *grid_memory_ptr;
+    void *army_memory_ptr;
     
     // rendering systems
         //Camera camera;

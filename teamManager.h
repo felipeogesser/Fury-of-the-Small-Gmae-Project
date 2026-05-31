@@ -1,4 +1,4 @@
-#ifndef TEAM_MANAGER_H
+/*#ifndef TEAM_MANAGER_H
 #define TEAM_MANAGER_H
 
 typedef struct Teams {
@@ -22,4 +22,4 @@ typedef struct Team {
 
 
 
-#endif
+#endif*/

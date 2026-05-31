@@ -9,12 +9,14 @@
 #include "gameState.h"
 
 typedef struct Player {
-    int id;
+    unsigned int id;
     int max_hp;
     int max_st;
     int current_hp;
     int current_st;
     char name[32];
+    float vx, vy, vxdt, vydt, va, vb;
+    float dir_left, dir_right, dir_up, dir_down;
     float playerSpawnX, playerSpawnY;
     float playerPositionX, playerPositionY;
     float playerPositionOnScreenX, playerPositionOnScreenY;
@@ -27,14 +29,16 @@ typedef struct Player {
 
 //void init_player(void);
 
-int create_player(int max_hp, int max_st, const char *name,
+unsigned int create_player(int max_hp, int max_st, const char *name,
                    float playerSpawnX, float playerSpawnY,
                    float playerDimensionX, float playerDimensionY,
                    bool collision, int quadrant,
                    float speed, float runSpeed);
 
-Player *get_player(int playerId);
+Player *get_player(unsigned int playerId);
 
 void calculate_player_movement(GameState *game);
+
+void update_player(GameState *game);
 
 #endif

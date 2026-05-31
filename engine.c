@@ -2,6 +2,8 @@
 
 Engine engine = {0};
 
-/*void game_context(void) {
+/*void engine_init(void) {
+
+    engine.game = NULL;
 
 }*/

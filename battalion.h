@@ -1,7 +1,7 @@
 #ifndef BATTALION_H
 #define BATTALION_H
 
-#include "entities.h"
+typedef struct Entity entity;
 
 typedef struct Battalion {
     struct Entity *entities;
