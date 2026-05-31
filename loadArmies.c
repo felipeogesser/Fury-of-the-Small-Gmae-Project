@@ -43,7 +43,6 @@ void init_armies_memory_arena(void) {
         sizeof(Entity) * number_of_armies * number_of_battalions * battalion_size,
         _Alignof(Entity));
 
-
     //
     /*engine.army_memory_ptr = memory_arena_current_pointer();
 

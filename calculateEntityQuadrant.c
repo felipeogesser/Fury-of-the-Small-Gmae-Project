@@ -144,11 +144,13 @@ void check_entity_quadrant(Armies *armies, GameState *game, Grids *grids) {
 
         if (indexer + amountX + 1 < amountX * amountY && indexer + amountX + 1 != (row + 2) * amountX) {
             entities[i].quadrantOutOfBounds &= (unsigned char)(~OOBQUAD4);
-            if ((entities[i].currentQuadrants[3] != 0 && entities[i].currentQuadrants[3] != quadrant[indexer + amountX + 1].id) ||
-                (entities[i].currentQuadrants[1] == 0 || entities[i].currentQuadrants[2] == 0)) {
-                quadrant[entities[i].currentQuadrants[3] - 1].entitiesInsideQuadrantById[entities[i].id - 1] = 0;
-                entities[i].currentQuadrants[3] = 0;
-                //entities[i].alreadyInQuadrant &= ~QUAD4;
+            if (entities[i].currentQuadrants[3] != 0) {
+                if ((entities[i].currentQuadrants[3] != quadrant[indexer + amountX + 1].id) ||
+                    (entities[i].currentQuadrants[1] == 0 || entities[i].currentQuadrants[2] == 0)) {
+                    quadrant[entities[i].currentQuadrants[3] - 1].entitiesInsideQuadrantById[entities[i].id - 1] = 0;
+                    entities[i].currentQuadrants[3] = 0;
+                    //entities[i].alreadyInQuadrant &= ~QUAD4;
+                }
             }
         } else {
             if(entities[i].currentQuadrants[3] != 0) {

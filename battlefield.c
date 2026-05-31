@@ -17,15 +17,15 @@ void battlefield_init(void) {
 
     make_maps();
     engine.map = get_map(map_id[0]);
-    unsigned int player_id = create_player(50 ,100, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
+    unsigned int player_id = create_player(50 ,1000, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
     engine.player = get_player(player_id);
     engine.game->offSetX = engine.player->playerPositionX - WINDOW_SIZE_X / 2 + engine.player->playerDimensionX / 2;
     engine.game->offSetY = engine.player->playerPositionY - WINDOW_SIZE_Y / 2 + engine.player->playerDimensionY / 2;
 
     init_armies_memory_arena();
     load_armies_into_arena();
-    init_grids();
     calculateAmountOfQuadrants();
+    init_grids();
     fill_quadrant_data();
     initialCheckEntityQuadrant(engine.armies, engine.game, engine.grids);
     renderQuadrantsSetup(engine.armies, engine.game);
@@ -35,37 +35,32 @@ void battlefield_init(void) {
 void battlefield_input(SDL_Event *e) {
 
     Player *player = engine.player;
-    
-    while (SDL_PollEvent(e)) {
         
-        if (e->type == SDL_KEYUP) {
-            switch (e->key.keysym.sym) {
-                case SDLK_UP    : player->dir_up    = 0;
-                    break;
-                case SDLK_DOWN  : player->dir_down  = 0;
-                    break;
-                case SDLK_LEFT  : player->dir_left  = 0;
-                    break;
-                case SDLK_RIGHT : player->dir_right = 0;
-                    break;
-            }
+    if (e->type == SDL_KEYUP) {
+        switch (e->key.keysym.sym) {
+            case SDLK_UP    : player->dir_up    = 0;
+                break;
+            case SDLK_DOWN  : player->dir_down  = 0;
+                break;
+            case SDLK_LEFT  : player->dir_left  = 0;
+                break;
+            case SDLK_RIGHT : player->dir_right = 0;
+                break;
         }
-        
-        if (e->type == SDL_KEYDOWN){
-            switch (e->key.keysym.sym) {
-                case SDLK_UP    : player->dir_up    = -player->speed;
-                    break;
-                case SDLK_DOWN  : player->dir_down  =  player->speed;
-                    break;
-                case SDLK_LEFT  : player->dir_left  = -player->speed;
-                    break;
-                case SDLK_RIGHT : player->dir_right =  player->speed;
-                    break;
-            }
-        }
-    
     }
-
+    
+    if (e->type == SDL_KEYDOWN){
+        switch (e->key.keysym.sym) {
+            case SDLK_UP    : player->dir_up    = -player->speed;
+                break;
+            case SDLK_DOWN  : player->dir_down  =  player->speed;
+                break;
+            case SDLK_LEFT  : player->dir_left  = -player->speed;
+                break;
+            case SDLK_RIGHT : player->dir_right =  player->speed;
+                break;
+        }
+    }
 }
 
 void battlefield_update(void) {

@@ -27,6 +27,7 @@ static void create_SDL_window(void) {
 
     SDL_Renderer *ren = SDL_CreateRenderer(
         win, -1,
+        //SDL_RENDERER_SOFTWARE
         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
     );
 
