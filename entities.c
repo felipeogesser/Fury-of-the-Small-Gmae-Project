@@ -1,4 +1,8 @@
 #include "entities.h"
+#include "entities_internal.h"
+#include "armies_internal.h"
+#include "battalion_internal.h"
+#include "game_state_internal.h"
 
 /*Entity *entities = NULL;
 void init_entities(void)

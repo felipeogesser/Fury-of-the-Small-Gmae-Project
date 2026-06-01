@@ -1,41 +1,12 @@
 #ifndef ENTITIES
 #define ENTITIES
 
-#include "gameState.h"
-#include "armies.h"
-#include <stdbool.h>
-#include <stdio.h>
-#include <SDL2/SDL.h>
-
-#define MAX_ENTITIES 1024
-
-typedef struct Entity {
-    unsigned int id;
-    char name[32];
-    char team[32];
-    float positionX, positionY;
-    float dimensionX, dimensionY;
-    float quadrantOccupiedX, quadrantOccupiedY;
-    int previousCol, previousRow;
-    int previousX, previousY;
-    bool collision;
-    float speed;
-    float vectorX, vectorY;
-    Uint32 lastTick;
-    int nextMoveDelay;
-    int currentQuadrants[4];
-    //unsigned char alreadyInQuadrant;
-    unsigned char quadrantOutOfBounds;
-    int enemyEntityId;
-    bool pathFound;
-    float constMovX, constMovY;
-    float health;
-} Entity;
-
-//extern Entity *entities;
+#include "armies_types.h"
+#include "entities_types.h"
+#include "game_state_types.h"
 
 int create_entity(const char *name, const char *team, float positionX, float positionY,
-    float dimensionX, float dimensionY, bool collision, int speed);
+    float dimensionX, float dimensionY, _Bool collision, int speed);
     
 Entity *get_entity(int id);
 
@@ -44,6 +15,5 @@ void init_entities(void);
 void create_entities(Entity *entities, float ongoing_point_X, float ongoing_point_Y, unsigned int i);
 
 void update_units(Armies *armies, GameState *game);
-
 
 #endif

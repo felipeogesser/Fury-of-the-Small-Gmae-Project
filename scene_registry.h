@@ -6,16 +6,14 @@
 
 typedef void (*function_pointer)(void);
 
-struct SceneCallbacks {
+typedef struct SceneCallbacks {
     void (*init)(void);
     void (*input)(SDL_Event *e);
     void (*update)(void);
     void (*render)(void);
     void (*destroy)(void);
-};
+} SceneCallbacks;
 
-struct SceneCallbacks;
-
-extern const struct SceneCallbacks scene_registry[SCENE_COUNT];
+extern const SceneCallbacks scene_registry[SCENE_COUNT];
 
 #endif

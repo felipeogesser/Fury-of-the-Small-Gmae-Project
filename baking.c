@@ -1,13 +1,7 @@
 #include "baking.h"
-#include "calculateEntityQuadrant.h"
-#include "engine.h"
-#include "grids.h"
-#include "loadArmies.h"
-#include "mapMaker.h"
-#include "maps.h"
-#include "player.h"
-#include "quadrant.h"
-#include "windowSettings.h"
+#include "engine_internal.h"
+#include "game_state.h"
+#include "game_state_internal.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>

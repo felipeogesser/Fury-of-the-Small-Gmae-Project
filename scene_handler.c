@@ -1,5 +1,6 @@
 #include "scene_handler.h"
-#include "engine.h"
+#include "engine_internal.h"
+#include "game_state_internal.h"
 #include "scene_registry.h"
 
 /*void scene_handler_init(void) {

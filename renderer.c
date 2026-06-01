@@ -1,7 +1,10 @@
 #include "renderer.h"
-#include "battalion.h"
-#include "calculateEntityQuadrant.h"
-#include "entities.h"
+#include "armies_internal.h"
+#include "battalion_internal.h"
+#include "entities_internal.h"
+#include "game_state_internal.h"
+#include "maps_internal.h"
+#include "player_internal.h"
 //#include "scene_handler.h"
 
 

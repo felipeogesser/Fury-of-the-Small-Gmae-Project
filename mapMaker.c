@@ -1,4 +1,5 @@
 #include "mapMaker.h"
+#include "maps.h"
 
 unsigned int map_id[MAX_MAPS];
 

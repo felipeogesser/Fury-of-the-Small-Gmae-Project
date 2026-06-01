@@ -1,7 +1,10 @@
 #include "grids.h"
-#include "engine.h"
+#include "grids_internal.h"
+#include "game_state_internal.h"
+#include "engine_internal.h"
 #include "memory_arena.h"
-#include <assert.h>
+#include "quadrant_internal.h"
+#include <stddef.h>
 
 size_t grids_total_memory_size;
 

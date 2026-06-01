@@ -1,2 +1,2 @@
-#include "armies.h"
+#include "armies_types.h"
 

@@ -29,14 +29,14 @@ SDLFLAGS = $(shell pkg-config --cflags --libs sdl2 SDL2_ttf)
 SRC = \
 	baking.c \
 	battlefield.c \
-	calculateEntityQuadrant.c \
 	engine.c \
 	entities.c \
+	entity_collision.c \
 	gameLoop.c \
-	gameState.c \
+	game_state.c \
 	grids.c \
 	init.c \
-	loadArmies.c \
+	load_armies.c \
 	main.c \
 	main_menu.c \
 	mapMaker.c \
@@ -44,12 +44,11 @@ SRC = \
 	memory_arena.c \
 	peripherals.c \
 	player.c \
-	playerMapEdgeCollisionFunc.c \
+	player_collision.c \
 	quadrant.c \
-	renderer.c \
 	scene_handler.c \
 	scene_registry.c \
-	setArmiesPosition.c \
+	set_armies_position.c \
 	game_shutdown.c \
 	window.c \
 

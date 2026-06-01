@@ -1,0 +1,4 @@
+#ifndef BATTLEFIELD_TYPES_H
+#define BATTLEFIELD_TYPES_H
+
+#endif

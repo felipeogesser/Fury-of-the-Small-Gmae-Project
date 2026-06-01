@@ -1,16 +1,10 @@
 #include "gameLoop.h"
-#include "armies.h"
-#include "battalion.h"
-#include "calculateEntityQuadrant.h"
-#include "engine.h"
-#include "entities.h"
-#include "gameState.h"
-#include "grids.h"
-#include "main_menu.h"
-#include "maps.h"
+#include "armies_types.h"
+#include "battalion_types.h"
+#include "entity_collision.h"
+#include "engine_internal.h"
+#include "game_state_internal.h"
 #include "peripherals.h"
-#include "player.h"
-#include "playerMapEdgeCollisionFunc.h"
 #include "renderer.h"
 #include "scene_handler.h"
 #include "scenes.h"
@@ -63,18 +57,6 @@ void game_loop(void) {
                 scene_update();
 
                 scene_render();
-
-
-                /*
-                calculate_player_movement(game);
-                
-                player_map_edge_collision(game, map, player);
-
-                check_entity_quadrant(armies, game, grids);
-
-                update_game_data(entities, game, player);
-
-                render(armies, game, map, player, renderer);*/
 
                 continue;
 

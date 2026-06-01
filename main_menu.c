@@ -1,13 +1,14 @@
 #include "main_menu.h"
-#include "engine.h"
+#include "main_menu_internal.h"
+#include "engine_internal.h"
 #include "scene_handler.h"
 #include "scenes.h"
-#include "windowSettings.h"
-#include <SDL2/SDL.h>
+#include "window_settings.h"
 #include <SDL2/SDL_ttf.h>
+#include <stddef.h>
 #include <string.h>
 
-struct MainMenu main_menu = {0};
+MainMenu main_menu = {0};
 
 TTF_Font *font = NULL;
 

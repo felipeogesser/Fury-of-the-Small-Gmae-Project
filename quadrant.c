@@ -1,6 +1,9 @@
 #include "quadrant.h"
-#include "engine.h"
-#include "gameState.h"
+#include "quadrant_internal.h"
+#include "engine_internal.h"
+#include "game_state_internal.h"
+#include "grids_internal.h"
+#include "maps_internal.h"
 
 //Quadrant *quadrant = NULL;
 

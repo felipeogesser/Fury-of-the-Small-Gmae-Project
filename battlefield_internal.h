@@ -1,0 +1,5 @@
+#ifndef BATTLEFIELD_INTERNAL_H
+#define BATTLEFIELD_INTERNAL_H
+
+
+#endif

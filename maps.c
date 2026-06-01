@@ -1,9 +1,11 @@
 #include "maps.h"
+#include "maps_internal.h"
 #include <stddef.h>
 
 static Map maps[MAX_MAPS];
 static unsigned int map_count = 0;
 static unsigned int mapIndex;
+
 unsigned int create_map(signed short mapSizeX, signed short mapSizeY) {
     if (map_count >= MAX_MAPS) return 1;
     mapIndex = map_count;

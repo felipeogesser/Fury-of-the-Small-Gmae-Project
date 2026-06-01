@@ -1,2 +1,2 @@
-#include "battalion.h"
+#include "battalion_types.h"
 

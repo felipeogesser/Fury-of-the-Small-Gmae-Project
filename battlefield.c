@@ -1,17 +1,26 @@
 #include "battlefield.h"
-#include "calculateEntityQuadrant.h"
-#include "engine.h"
+#include "armies_internal.h"
+#include "battalion_internal.h"
+#include "engine_internal.h"
+#include "entity_collision.h"
 #include "entities.h"
-#include "gameState.h"
+#include "entities_internal.h"
+#include "game_state.h"
+#include "game_state_internal.h"
 #include "grids.h"
-#include "loadArmies.h"
+#include "load_armies.h"
 #include "memory_arena.h"
 #include "mapMaker.h"
 #include "maps.h"
+#include "maps_internal.h"
 #include "player.h"
-#include "playerMapEdgeCollisionFunc.h"
+#include "player_internal.h"
+#include "player_collision.h"
 #include "quadrant.h"
-#include "windowSettings.h"
+#include "quadrant_internal.h"
+#include "window_settings.h"
+#include <SDL2/SDL.h>
+#include <stdbool.h>
 
 void battlefield_init(void) {
 

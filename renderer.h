@@ -2,10 +2,10 @@
 #define RENDERER_H
 
 #include <SDL2/SDL.h>
-#include "armies.h"
-#include "gameState.h"
-#include "maps.h"
-#include "player.h"
+#include "armies_types.h"
+#include "game_state_types.h"
+#include "maps_types.h"
+#include "player_types.h"
 
 void render(Armies *armies, GameState *game, Map *map, Player *player, SDL_Renderer *renderer);
 
