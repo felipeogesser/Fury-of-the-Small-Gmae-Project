@@ -34,6 +34,7 @@ SRC = \
 	entity_collision.c \
 	gameLoop.c \
 	game_state.c \
+	general.c \
 	grids.c \
 	init.c \
 	load_armies.c \

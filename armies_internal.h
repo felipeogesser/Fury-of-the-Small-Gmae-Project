@@ -9,6 +9,7 @@ typedef struct Armies {
 } Armies;
 
 typedef struct Army {
+    struct General *general;
     struct Battalion *battalions;
     unsigned int battalion_count;
     unsigned int army_size;

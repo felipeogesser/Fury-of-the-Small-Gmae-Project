@@ -4,6 +4,7 @@
 #include "entities_types.h"
 
 typedef struct Battalion {
+    struct General *general;
     struct Entity *entities;
     unsigned int entities_count;
     unsigned char R_Color;

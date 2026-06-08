@@ -4,6 +4,7 @@
 #include "engine_internal.h"
 #include "entities_internal.h"
 #include "game_state_internal.h"
+#include "general_internal.h"
 #include "memory_arena.h"
 #include "set_armies_position.h"
 #include <stddef.h>
@@ -20,6 +21,7 @@ void init_armies_memory_arena(void) {
     armies_total_memory_size =
         (_Alignof(Armies) - 1) + sizeof(Armies) +
         (_Alignof(Army) - 1) + number_of_armies * sizeof(Army) +
+        (_Alignof(General) - 1) + number_of_armies * number_of_battalions * sizeof(General) +
         (_Alignof(Battalion) - 1) + number_of_armies * number_of_battalions * sizeof(Battalion) +
         (_Alignof(Entity) - 1) + number_of_armies * number_of_battalions * battalion_size * sizeof(Entity);
         
@@ -36,6 +38,10 @@ void init_armies_memory_arena(void) {
 
     Army *army = memory_arena_push(
         sizeof(Army) * number_of_armies, _Alignof(Army));
+
+    General *general = memory_arena_push(
+        sizeof(General) * number_of_armies * number_of_battalions,
+        _Alignof(General));
 
     Battalion *battalions = memory_arena_push(
         sizeof(Battalion) * number_of_armies * number_of_battalions,
@@ -73,13 +79,17 @@ void init_armies_memory_arena(void) {
 
     engine.armies = armies;
     engine.armies->army = army;
+    engine.armies->number_of_armies = (unsigned int)number_of_armies;
+
     for (size_t i = 0; i < number_of_armies; i++) {
 
+        engine.armies->army[i].general = &general[i * number_of_battalions];
         engine.armies->army[i].battalions = &battalions[i * number_of_battalions];
         size_t entity_offset_per_army = number_of_battalions * battalion_size * i;
-        
+
         for (size_t j = 0; j < number_of_battalions; j++) {
             
+            engine.armies->army[i].general[j].battalions = &battalions[j + i * number_of_battalions];
             engine.armies->army[i].battalions[j].entities = &entities[battalion_size * j + entity_offset_per_army];
             engine.armies->army[i].battalions[j].entities_count = (unsigned int)battalion_size;
         
@@ -91,7 +101,6 @@ void init_armies_memory_arena(void) {
 
 void load_armies_into_arena(void) { //funcao precisa ser melhorada dps, mt desorganizado
     
-    engine.armies->number_of_armies = (unsigned int)number_of_armies;
     Army *army = engine.armies->army;
     
     for (unsigned int i = 0; i < number_of_armies; i++) {

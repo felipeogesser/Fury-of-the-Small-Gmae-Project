@@ -26,8 +26,8 @@ typedef struct GridHighLOD {
 } GridHighLOD;
 
 typedef struct Occupied {
-    unsigned int quads_occupied_count;
-    unsigned int index[];
+    unsigned int occupied_quads_count;
+    unsigned int occupied_quads_indexes[];
 } Occupied;
 
 #endif

@@ -4,6 +4,7 @@
 #include "engine_internal.h"
 #include "entities_internal.h"
 #include "game_state_internal.h"
+#include "general_internal.h"
 #include "grids_internal.h"
 #include "load_armies.h"
 #include "player_internal.h"
@@ -37,11 +38,11 @@ void initialCheckEntityQuadrant(Armies *armies, GameState *game, Grids *grids) {
  
         signed int indexer = row * amountX + column;
 
-        /*if (indexer < 0 || indexer >= amountX * amountY) {
+        if (indexer < 0 || indexer >= amountX * amountY) {
             printf("indexer = %d, column = %d, X = %d, row = %d, Y = %d\n", indexer, column, X, row, Y);
-        }*/
+        }
         
-        quadrant[indexer].entitiesInsideQuadrantById[entities[i].id - 1] = entities[i].id;
+        quadrant[indexer].entities_inside_quad[entities[i].id - 1] = entities[i].id;
         entities[i].currentQuadrants[0] = quadrant[indexer].id;
         //entities[i].alreadyInQuadrant |= QUAD1;
 
@@ -71,20 +72,20 @@ void initialCheckEntityQuadrant(Armies *armies, GameState *game, Grids *grids) {
         }
 
         if (!(entities[i].quadrantOutOfBounds & QUAD2) && entities[i].positionX + entities[i].dimensionX > X + game->low_LOD_quadrant_size) {
-            quadrant[indexer + 1].entitiesInsideQuadrantById[entities[i].id - 1] = entities[i].id;
+            quadrant[indexer + 1].entities_inside_quad[entities[i].id - 1] = entities[i].id;
             entities[i].currentQuadrants[1] = quadrant[indexer + 1].id;
             //entities[i].alreadyInQuadrant |= QUAD2;
         }
 
         if (!(entities[i].quadrantOutOfBounds & QUAD3) && entities[i].positionY + entities[i].dimensionY > Y + game->low_LOD_quadrant_size) {
-            quadrant[indexer + amountX].entitiesInsideQuadrantById[entities[i].id - 1] = entities[i].id;
+            quadrant[indexer + amountX].entities_inside_quad[entities[i].id - 1] = entities[i].id;
             entities[i].currentQuadrants[2] = quadrant[indexer + amountX].id;
             //entities[i].alreadyInQuadrant |= QUAD3;
         }
 
         if (entities[i].currentQuadrants[1] != 0 &&
             entities[i].currentQuadrants[2] != 0) {
-            quadrant[indexer + amountX + 1].entitiesInsideQuadrantById[entities[i].id - 1] = entities[i].id;
+            quadrant[indexer + amountX + 1].entities_inside_quad[entities[i].id - 1] = entities[i].id;
             entities[i].currentQuadrants[3] = quadrant[indexer + amountX + 1].id;
             //entities[i].alreadyInQuadrant |= QUAD4;
         }
@@ -126,13 +127,13 @@ void check_entity_quadrant(Armies *armies, GameState *game, Grids *grids) {
                 entities[i].currentQuadrants[1] != quadrant[indexer + 1].id) ||
                 (entities[i].currentQuadrants[1] != 0 &&
                 entities[i].positionX + entities[i].dimensionX < X + game->low_LOD_quadrant_size)) {
-                quadrant[entities[i].currentQuadrants[1] - 1].entitiesInsideQuadrantById[entities[i].id - 1] = 0;
+                quadrant[entities[i].currentQuadrants[1] - 1].entities_inside_quad[entities[i].id - 1] = 0;
                 entities[i].currentQuadrants[1] = 0;
                 //entities[i].alreadyInQuadrant &= ~QUAD2;
             }
         } else {
             if(entities[i].currentQuadrants[1] != 0) {
-                quadrant[entities[i].currentQuadrants[1] - 1].entitiesInsideQuadrantById[entities[i].id - 1] = 0;
+                quadrant[entities[i].currentQuadrants[1] - 1].entities_inside_quad[entities[i].id - 1] = 0;
                 entities[i].currentQuadrants[1] = 0;
                 entities[i].quadrantOutOfBounds |= OOBQUAD2;
                 //entities[i].alreadyInQuadrant &= ~QUAD2;
@@ -145,13 +146,13 @@ void check_entity_quadrant(Armies *armies, GameState *game, Grids *grids) {
                 entities[i].currentQuadrants[2] != quadrant[indexer + amountX].id) ||
                 (entities[i].currentQuadrants[2] != 0 &&
                 entities[i].positionY + entities[i].dimensionY < Y + game->low_LOD_quadrant_size)) {
-                quadrant[entities[i].currentQuadrants[2] - 1].entitiesInsideQuadrantById[entities[i].id - 1] = 0;
+                quadrant[entities[i].currentQuadrants[2] - 1].entities_inside_quad[entities[i].id - 1] = 0;
                 entities[i].currentQuadrants[2] = 0;
                 //entities[i].alreadyInQuadrant &= ~QUAD3;
             }
         } else {
             if(entities[i].currentQuadrants[2] != 0) {
-                quadrant[entities[i].currentQuadrants[2] - 1].entitiesInsideQuadrantById[entities[i].id - 1] = 0;
+                quadrant[entities[i].currentQuadrants[2] - 1].entities_inside_quad[entities[i].id - 1] = 0;
                 entities[i].currentQuadrants[2] = 0;
                 entities[i].quadrantOutOfBounds |= OOBQUAD3;
                 //entities[i].alreadyInQuadrant &= ~QUAD3;
@@ -163,14 +164,14 @@ void check_entity_quadrant(Armies *armies, GameState *game, Grids *grids) {
             if (entities[i].currentQuadrants[3] != 0) {
                 if ((entities[i].currentQuadrants[3] != quadrant[indexer + amountX + 1].id) ||
                     (entities[i].currentQuadrants[1] == 0 || entities[i].currentQuadrants[2] == 0)) {
-                    quadrant[entities[i].currentQuadrants[3] - 1].entitiesInsideQuadrantById[entities[i].id - 1] = 0;
+                    quadrant[entities[i].currentQuadrants[3] - 1].entities_inside_quad[entities[i].id - 1] = 0;
                     entities[i].currentQuadrants[3] = 0;
                     //entities[i].alreadyInQuadrant &= ~QUAD4;
                 }
             }
         } else {
             if(entities[i].currentQuadrants[3] != 0) {
-                quadrant[entities[i].currentQuadrants[3] - 1].entitiesInsideQuadrantById[entities[i].id - 1] = 0;
+                quadrant[entities[i].currentQuadrants[3] - 1].entities_inside_quad[entities[i].id - 1] = 0;
                 entities[i].currentQuadrants[3] = 0;
                 entities[i].quadrantOutOfBounds |= OOBQUAD4;
                 //entities[i].alreadyInQuadrant &= ~QUAD4;
@@ -179,7 +180,7 @@ void check_entity_quadrant(Armies *armies, GameState *game, Grids *grids) {
 
         // if first time entering quadrant
         if (entities[i].currentQuadrants[0] == 0) {
-            quadrant[indexer].entitiesInsideQuadrantById[entities[i].id - 1] = entities[i].id;
+            quadrant[indexer].entities_inside_quad[entities[i].id - 1] = entities[i].id;
             entities[i].currentQuadrants[0] = quadrant[indexer].id;
             //entities[i].alreadyInQuadrant |= QUAD1;
             //quadrant[indexer].entitiesInQuadrantCount++;
@@ -188,7 +189,7 @@ void check_entity_quadrant(Armies *armies, GameState *game, Grids *grids) {
         if (entities[i].currentQuadrants[1] == 0 &&
             !(entities[i].quadrantOutOfBounds & OOBQUAD2) &&
             entities[i].positionX + entities[i].dimensionX > X + game->low_LOD_quadrant_size) {
-            quadrant[indexer + 1].entitiesInsideQuadrantById[entities[i].id - 1] = entities[i].id;
+            quadrant[indexer + 1].entities_inside_quad[entities[i].id - 1] = entities[i].id;
             entities[i].currentQuadrants[1] = quadrant[indexer + 1].id;
             //entities[i].alreadyInQuadrant |= QUAD2;
         }
@@ -196,7 +197,7 @@ void check_entity_quadrant(Armies *armies, GameState *game, Grids *grids) {
         if (entities[i].currentQuadrants[2] == 0 &&
             !(entities[i].quadrantOutOfBounds & OOBQUAD3) &&
             entities[i].positionY + entities[i].dimensionY > Y + game->low_LOD_quadrant_size) {
-            quadrant[indexer + amountX].entitiesInsideQuadrantById[entities[i].id - 1] = entities[i].id;
+            quadrant[indexer + amountX].entities_inside_quad[entities[i].id - 1] = entities[i].id;
             entities[i].currentQuadrants[2] = quadrant[indexer + amountX].id;
             //entities[i].alreadyInQuadrant |= QUAD3;
         }
@@ -205,7 +206,7 @@ void check_entity_quadrant(Armies *armies, GameState *game, Grids *grids) {
             !(entities[i].quadrantOutOfBounds & OOBQUAD4) &&
             entities[i].currentQuadrants[1] != 0 &&
             entities[i].currentQuadrants[2] != 0) {
-            quadrant[indexer + amountX + 1].entitiesInsideQuadrantById[entities[i].id - 1] = entities[i].id;
+            quadrant[indexer + amountX + 1].entities_inside_quad[entities[i].id - 1] = entities[i].id;
             entities[i].currentQuadrants[3] = quadrant[indexer + amountX + 1].id;
             //entities[i].alreadyInQuadrant |= QUAD4;
         }

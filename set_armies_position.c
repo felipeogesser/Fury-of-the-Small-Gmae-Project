@@ -3,10 +3,11 @@
 #include "battalion_internal.h"
 #include "entities.h"
 #include "entities_internal.h"
+#include "general.h"
+#include "general_internal.h"
 
 void set_armies_in_the_battlefield(Armies *armies) {
 
-    unsigned int battalion_size = 50;
     unsigned int number_of_battalions = 3;
     unsigned int number_of_armies = 2;
     float starting_point_X = 50;
@@ -19,6 +20,7 @@ void set_armies_in_the_battlefield(Armies *armies) {
     unsigned int i = 0;
     for (unsigned int j = 0; j < number_of_armies; j++) {
 
+        General *general = army[j].general;
         Battalion *battalions = army[j].battalions;
 
         for (unsigned int k = 0; k < number_of_battalions; k++) {
@@ -29,16 +31,23 @@ void set_armies_in_the_battlefield(Armies *armies) {
             unsigned char g = (x >>  8) & 255u;
             unsigned char b = (x >> 16) & 255u;
 
+            general[k].R_color = r;
+            general[k].G_color = g;
+            general[k].B_color = b;
+            general[k].Alpha = (unsigned char)255;
+
             battalions[k].R_Color = r;
             battalions[k].G_Color = g;
             battalions[k].B_Color = b;
             battalions[k].Alpha = (unsigned char)255;
+
+            create_generals(general, ongoing_point_X, ongoing_point_Y, k);
+
             Entity *entities = battalions[k].entities;
 
             for (unsigned int l = 0; l < 5; l++) {
 
                 for (unsigned int m = 0; m < 10; m++) {
-
                     create_entities(entities, ongoing_point_X, ongoing_point_Y, i);
                     ongoing_point_Y += 6;
                     i++;
@@ -60,17 +69,7 @@ void set_armies_in_the_battlefield(Armies *armies) {
         starting_point_Y = 50;
     }
 
-    unsigned int entities_created_count = (unsigned int)(battalion_size * number_of_battalions * number_of_armies);
-
-    Entity *entities = army->battalions->entities;
-
-    for (i = 0; i < entities_created_count; i++) {
-        entities[i].id = i + 1;
-    }
-
-} //talvez da pra remover Entity *entities = battalions[k].entities;
-// e calulcar direto so entities do i = 0 ate o final, sem precisar resetar o i
-
+}
 
 /*void set_armies_in_the_battlefield(Armies *armies) {
 

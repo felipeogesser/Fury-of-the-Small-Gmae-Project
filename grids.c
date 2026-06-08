@@ -3,6 +3,7 @@
 #include "game_state_internal.h"
 #include "engine_internal.h"
 #include "memory_arena.h"
+#include "quadrant.h"
 #include "quadrant_internal.h"
 #include <stddef.h>
 
@@ -22,7 +23,7 @@ void init_grids(void) {
         sizeof(GridMediumLOD) + (_Alignof(GridMediumLOD) - 1) +
         sizeof(GridHighLOD) + (_Alignof(GridHighLOD) - 1) +
         (sizeof(Occupied) + (_Alignof(Occupied) - 1)) * number_of_grids +
-        sizeof(*((Occupied *)0)->index) * (bigCount + mediumCount + smallCount) +
+        sizeof(*((Occupied *)0)->occupied_quads_indexes) * (bigCount + mediumCount + smallCount) +
         bigCount * sizeof(bigQuadrant) + (_Alignof(bigQuadrant) - 1) +
         mediumCount * sizeof(mediumQuadrant) + (_Alignof(mediumQuadrant) - 1) +
         smallCount * sizeof(smallQuadrant) + (_Alignof(smallQuadrant) - 1);
@@ -76,6 +77,10 @@ void init_grids(void) {
 
     engine.grids->GHLoD->occupied = occupied_GHLoD;
    
+    fill_quadrant_data();
+
+
+
     /*char *p = engine.grid_memory_ptr;
     
     engine.grids = (Grids *)p;

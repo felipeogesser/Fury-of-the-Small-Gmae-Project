@@ -7,6 +7,8 @@
 #include "entities_internal.h"
 #include "game_state.h"
 #include "game_state_internal.h"
+#include "general.h"
+#include "general_internal.h"
 #include "grids.h"
 #include "load_armies.h"
 #include "memory_arena.h"
@@ -24,6 +26,8 @@
 
 void battlefield_init(void) {
 
+    init_general_battalion_taxonomy();
+
     make_maps();
     engine.map = get_map(map_id[0]);
     unsigned int player_id = create_player(50 ,1000, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
@@ -35,7 +39,7 @@ void battlefield_init(void) {
     load_armies_into_arena();
     calculateAmountOfQuadrants();
     init_grids();
-    fill_quadrant_data();
+    //fill_quadrant_data();
     initialCheckEntityQuadrant(engine.armies, engine.game, engine.grids);
     renderQuadrantsSetup(engine.armies, engine.game);
 
@@ -84,6 +88,8 @@ void battlefield_update(void) {
 
     update_units(engine.armies, engine.game);
 
+    update_generals(engine.armies, engine.game);
+
     update_game_state(engine.player);
 
 }
@@ -117,7 +123,12 @@ void battlefield_render(void) {
     for (unsigned int i = 0; i < number_of_armies * battalion_count; i++) {
         
         Entity *entities = battalions[i].entities;
+        General *general = armies->army->general;
         
+            SDL_Rect general_render = { (signed int)(general[i].positionX - game->offSetX), (signed int)(general[i].positionY - game->offSetY), (signed int)general[i].dimensionX, (signed int)general[i].dimensionY};
+            SDL_SetRenderDrawColor(renderer, general[i].R_color, general[i].G_color, general[i].B_color, general[i].Alpha);
+            SDL_RenderFillRect(renderer, &general_render);
+
         for (unsigned int j = 0; j < entities_count; j++) {
             
             SDL_Rect entities_render = { (signed int)(entities[j].positionX - game->offSetX), (signed int)(entities[j].positionY - game->offSetY), (signed int)entities[j].dimensionX, (signed int)entities[j].dimensionY};
@@ -125,7 +136,7 @@ void battlefield_render(void) {
             SDL_RenderFillRect(renderer, &entities_render);
 
         }
-
+    
     }
 
     SDL_Rect hp_bar = { 28, 28, player->max_hp + 4, 19 };

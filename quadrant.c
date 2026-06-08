@@ -34,7 +34,14 @@ void fill_quadrant_data(void) {
     unsigned short amountY = engine.game->amountY;
     for (unsigned short i = 0; i < amountX * amountY; i++) {
         bigQuad[i].id = i + 1;
+        //for (unsigned int j; j < 100; j++) {
+            //bigQuad[i].entities_inside_quad[j] = (unsigned int)-1;
+        //}
     }
+
+    /*for (unsigned int i = 0; i < engine.game->low_LOD_quadrant_count; i++) {
+        engine.grids->GLLoD->occupied_quads_indexes[i] = (unsigned int)-1;
+    }*/
 }
 
 /*Quadrant *get_quadrant(int id) {
