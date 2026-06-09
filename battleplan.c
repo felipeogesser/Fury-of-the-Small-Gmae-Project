@@ -134,6 +134,8 @@ void battleplan_render(void) {
 
     SDL_RenderCopy(renderer, battleplan_message, NULL, &battleplan_button);
 
+    battleplan_render_grid(renderer);
+
     SDL_RenderPresent(renderer);
 
 }
@@ -146,4 +148,69 @@ void battleplan_destroy(void) {
     }
 
     TTF_Quit();
+}
+
+
+
+void battleplan_render_grid(SDL_Renderer *renderer) {
+
+    signed int grid_dimension_x = 11;
+    signed int grid_dimension_y = 11;
+
+    signed int offset = 100;
+    SDL_Rect battleplan_grid = {
+        offset,
+        offset,
+        (signed int)WINDOW_SIZE_X - offset,
+        (signed int)WINDOW_SIZE_Y - offset
+    };
+    SDL_SetRenderDrawColor(
+        renderer,
+        128,
+        128,
+        128,
+        255
+    );
+    SDL_RenderFillRect(renderer, &battleplan_grid);
+
+    signed int cell_position_x = 120;
+    signed int cell_position_y = 120;
+    signed int cell_width_x = 30;
+    signed int cell_width_y = 30;
+    for (unsigned int i = 0; i < 2; i++) {
+
+        for (signed int j = 0; j < grid_dimension_x; j++) {
+
+            for (signed int k = 0; k < grid_dimension_y; k++) {
+
+
+
+                SDL_Rect battleplan_grid_cell = {
+                    cell_position_x,
+                    cell_position_y,
+                    cell_width_x,
+                    cell_width_y
+                };
+                SDL_SetRenderDrawColor(
+                    renderer,
+                    200,
+                    200,
+                    200,
+                    255
+                );
+                SDL_RenderFillRect(renderer, &battleplan_grid_cell);
+
+                cell_position_y += cell_width_y + 10;
+
+            }
+
+            cell_position_x += cell_width_x + 10;
+            cell_position_y = 120;
+        }
+
+        cell_position_x += 100;
+        cell_position_y = 120;
+
+    }
+
 }

@@ -13,4 +13,6 @@ void battleplan_render(void);
 
 void battleplan_destroy(void);
 
+void battleplan_render_grid(SDL_Renderer *renderer);
+
 #endif
