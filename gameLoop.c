@@ -50,6 +50,14 @@ void game_loop(void) {
 
                 continue;
 
+            case BATTLEPLAN:
+
+                process_peripherals(window_running);
+
+                scene_render();
+
+                continue;
+
             case BATTLEFIELD:
                 
                 process_peripherals(window_running);

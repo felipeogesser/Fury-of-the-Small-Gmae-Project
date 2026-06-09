@@ -6,6 +6,7 @@
     
 enum SceneState {
     MAIN_MENU,
+    BATTLEPLAN,
     BATTLEFIELD,
     SCENE_COUNT
 };

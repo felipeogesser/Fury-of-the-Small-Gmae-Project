@@ -1,5 +1,6 @@
 #include "scene_registry.h"
 #include "battlefield.h"
+#include "battleplan.h"
 #include "main_menu.h"
 #include <SDL2/SDL.h>
 
@@ -46,6 +47,14 @@ const SceneCallbacks scene_registry[SCENE_COUNT] = {
         void_function,
         main_menu_render,
         main_menu_destroy
+    },
+
+    {
+        battleplan_init,
+        battleplan_input,
+        void_function,
+        battleplan_render,
+        battleplan_destroy
     },
 
     {

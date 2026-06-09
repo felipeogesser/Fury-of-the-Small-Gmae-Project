@@ -10,13 +10,13 @@
 
 MainMenu main_menu = {0};
 
-TTF_Font *font = NULL;
+TTF_Font *main_menu_font = NULL;
 
-SDL_Color white = {255, 255, 255, 255};
+SDL_Color main_menu_white = {255, 255, 255, 255};
 
-SDL_Surface *surface = NULL; 
+SDL_Surface *main_menu_surface = NULL; 
 
-SDL_Texture *message = NULL;
+SDL_Texture *main_menu_message = NULL;
 
 void main_menu_init(void) {
 
@@ -43,25 +43,25 @@ void main_menu_init(void) {
     main_menu.start_button_Alpha = 255;
     main_menu.start_button_text = "start game";
 
-    font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24);
-    if (!font) {
+    main_menu_font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24);
+    if (!main_menu_font) {
         SDL_Log("TTF_OpenFont failed: %s", TTF_GetError());
         return;
     }
 
-    surface = TTF_RenderText_Solid(font, "play button", white);
-    if (!surface) {
+    main_menu_surface = TTF_RenderText_Solid(main_menu_font, "play button", main_menu_white);
+    if (!main_menu_surface) {
         SDL_Log("TTF_RenderText_Solid failed: %s", TTF_GetError());
         return;
     }
 
-    message = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = NULL;
-    TTF_CloseFont(font);
-    font = NULL;
+    main_menu_message = SDL_CreateTextureFromSurface(renderer, main_menu_surface);
+    SDL_FreeSurface(main_menu_surface);
+    main_menu_surface = NULL;
+    TTF_CloseFont(main_menu_font);
+    main_menu_font = NULL;
 
-    if (!message) {
+    if (!main_menu_message) {
         SDL_Log("SDL_CreateTextureFromSurface failed: %s", SDL_GetError());
         return;
     }
@@ -86,7 +86,7 @@ void main_menu_input(SDL_Event *e) {
 
         if (button_clicked) {
             
-            scene_switch(BATTLEFIELD);
+            scene_switch(BATTLEPLAN);
     
         }
 
@@ -96,7 +96,7 @@ void main_menu_input(SDL_Event *e) {
 
 void main_menu_render(void) {
     
-    if (message == NULL) return;
+    if (main_menu_message == NULL) return;
 
     SDL_Renderer *renderer = engine.renderer;
 
@@ -128,7 +128,7 @@ void main_menu_render(void) {
     );
     SDL_RenderFillRect(renderer, &main_menu_start_button);
 
-    SDL_RenderCopy(renderer, message, NULL, &main_menu_start_button);
+    SDL_RenderCopy(renderer, main_menu_message, NULL, &main_menu_start_button);
 
     SDL_RenderPresent(renderer);
 
@@ -137,9 +137,9 @@ void main_menu_render(void) {
 
 void main_menu_destroy(void) {
 
-    if (message) {
-        SDL_DestroyTexture(message);
-        message = NULL;
+    if (main_menu_message) {
+        SDL_DestroyTexture(main_menu_message);
+        main_menu_message = NULL;
     }
 
     TTF_Quit();

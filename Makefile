@@ -29,6 +29,7 @@ SDLFLAGS = $(shell pkg-config --cflags --libs sdl2 SDL2_ttf)
 SRC = \
 	baking.c \
 	battlefield.c \
+	battleplan.c \
 	engine.c \
 	entities.c \
 	entity_collision.c \

@@ -2,6 +2,7 @@
 #define ENGINE_INTERNAL_H
 
 #include "armies_types.h"
+#include "battleplan_types.h"
 #include "game_state_types.h"
 #include "grids_types.h"
 #include "main_menu_types.h"
@@ -13,6 +14,7 @@ typedef struct Engine {
     
     // core systems
     Armies *armies;
+    Battleplan *battleplan;
     GameState *game;
     Grids *grids;
     MainMenu *main_menu;
