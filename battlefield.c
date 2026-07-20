@@ -102,9 +102,9 @@ void battlefield_render(void) {
     Player *player = engine.player;
     SDL_Renderer *renderer = engine.renderer;
             
-    SDL_SetRenderDrawColor(renderer, 120, 80, 80, 255);
+    //SDL_SetRenderDrawColor(renderer, 120, 80, 80, 255);
 
-    SDL_RenderClear(renderer);
+    //SDL_RenderClear(renderer);
 
     SDL_Rect map_rect = {map->mapLeftLimit - (signed int)game->offSetX, map->mapTopLimit - (signed int)game->offSetY, map->mapSizeX, map->mapSizeY};
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -167,7 +167,7 @@ void battlefield_render(void) {
 
     //renderQuadrants(entities, game, renderer);
 
-    SDL_RenderPresent(renderer);
+    //SDL_RenderPresent(renderer);
 
 }
 

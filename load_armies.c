@@ -92,7 +92,8 @@ void init_armies_memory_arena(void) {
             engine.armies->army[i].general[j].battalions = &battalions[j + i * number_of_battalions];
             engine.armies->army[i].battalions[j].entities = &entities[battalion_size * j + entity_offset_per_army];
             engine.armies->army[i].battalions[j].entities_count = (unsigned int)battalion_size;
-        
+            engine.armies->army[i].battalions[j].entities_screen_width = 20;
+            engine.armies->army[i].battalions[j].entities_screen_height = 20;
         }
     }
     //engine.armies->army->battalions->entities_count = (unsigned int)battalion_size;

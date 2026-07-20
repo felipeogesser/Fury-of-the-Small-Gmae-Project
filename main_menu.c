@@ -86,7 +86,7 @@ void main_menu_input(SDL_Event *e) {
 
         if (button_clicked) {
             
-            scene_switch(BATTLEPLAN);
+            scene_switch(BATTLEFIELD);
     
         }
 
@@ -100,8 +100,8 @@ void main_menu_render(void) {
 
     SDL_Renderer *renderer = engine.renderer;
 
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
+    //SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    //SDL_RenderClear(renderer);
 
     SDL_Rect main_menu_background = {0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y};
     SDL_SetRenderDrawColor(
@@ -130,7 +130,7 @@ void main_menu_render(void) {
 
     SDL_RenderCopy(renderer, main_menu_message, NULL, &main_menu_start_button);
 
-    SDL_RenderPresent(renderer);
+    //SDL_RenderPresent(renderer);
 
 }
 

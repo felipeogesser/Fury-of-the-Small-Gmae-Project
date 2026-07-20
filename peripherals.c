@@ -19,7 +19,6 @@ void process_peripherals(_Bool *window_running) {
         }
         
         scene_input(&e);
-
     }
 
 }

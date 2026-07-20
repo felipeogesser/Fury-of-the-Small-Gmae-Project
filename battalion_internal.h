@@ -7,6 +7,8 @@ typedef struct Battalion {
     struct General *general;
     struct Entity *entities;
     unsigned int entities_count;
+    unsigned int entities_screen_width;
+    unsigned int entities_screen_height;
     unsigned char R_Color;
     unsigned char G_Color;
     unsigned char B_Color;

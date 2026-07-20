@@ -1,6 +1,7 @@
 #ifndef ENGINE_INTERNAL_H
 #define ENGINE_INTERNAL_H
 
+#include "animation_types.h"
 #include "armies_types.h"
 #include "battleplan_types.h"
 #include "game_state_types.h"
@@ -32,6 +33,10 @@ typedef struct Engine {
     Uint64 FrameEnd;
     Uint64 FrameTicks;
     Uint64 perfFreq;
+
+    // animation
+    Animation *animation;
+    AnimationState *animationState;
 
     // engine state
     _Bool running;

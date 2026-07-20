@@ -23,10 +23,10 @@ CFLAGS_DEBUG = -g3 -O0 \
 -fno-common \
 -fstack-protector-strong
 
-
-SDLFLAGS = $(shell pkg-config --cflags --libs sdl2 SDL2_ttf)
+SDLFLAGS = $(shell pkg-config --cflags --libs sdl2 SDL2_ttf SDL2_image)
 
 SRC = \
+	animation.c \
 	baking.c \
 	battlefield.c \
 	battleplan.c \
