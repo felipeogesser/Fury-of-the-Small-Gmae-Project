@@ -27,9 +27,6 @@ void scene_input(SDL_Event *e) {
 
         scene_registry[current_scene].input(e);
 
-        if (current_scene == BATTLEFIELD) {
-            animation_input(e);
-        }
     }
 }
 
@@ -41,9 +38,6 @@ void scene_update(void) {
 
         scene_registry[current_scene].update();
 
-        if (current_scene == BATTLEFIELD) {
-            animation_update();
-        }
     }
 }
 
@@ -61,10 +55,6 @@ void scene_render(void) {
 
         scene_registry[current_scene].render();
 
-        if (current_scene == BATTLEFIELD) {
-            animation_render();
-        }
-
         SDL_RenderPresent(renderer);
 
     }
@@ -75,10 +65,6 @@ void scene_destroy(void) {
     enum SceneState current_scene = engine.game->scene_state;
 
     scene_registry[current_scene].destroy();
-
-    if (current_scene == BATTLEFIELD) {
-        animation_destroy();
-    }
 
 }
 
@@ -93,11 +79,6 @@ void scene_switch(enum SceneState next_scene) {
         scene_registry[next_scene].init();
 
         engine.game->scene_state = next_scene;
-
-        //
-        if (next_scene == BATTLEFIELD) {
-            animation_init();
-        }
 
     }
 }

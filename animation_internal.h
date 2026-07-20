@@ -21,6 +21,7 @@ typedef struct AnimationState {
     unsigned int frame_w;
     unsigned int frame_h;
     unsigned char sprite_frame;
+    unsigned char unit_sprite_state[8];
 } AnimationState;
 
 #endif

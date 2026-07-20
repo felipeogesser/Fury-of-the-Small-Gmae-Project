@@ -1,4 +1,5 @@
 #include "battlefield.h"
+#include "animation.h"
 #include "armies_internal.h"
 #include "battalion_internal.h"
 #include "engine_internal.h"
@@ -25,6 +26,8 @@
 #include <stdbool.h>
 
 void battlefield_init(void) {
+
+    animation_init();
 
     init_general_battalion_taxonomy();
 
@@ -74,6 +77,9 @@ void battlefield_input(SDL_Event *e) {
                 break;
         }
     }
+
+    animation_input(e);
+
 }
 
 void battlefield_update(void) {
@@ -89,6 +95,8 @@ void battlefield_update(void) {
     update_units(engine.armies, engine.game);
 
     update_generals(engine.armies, engine.game);
+
+    animation_update();
 
     update_game_state(engine.player);
 
@@ -163,6 +171,8 @@ void battlefield_render(void) {
     SDL_SetRenderDrawColor(renderer, 102, 255, 51, 255);
     SDL_RenderFillRect(renderer, &st);
 
+    animation_render();
+
     //Entity *entities = battalions->entities;
 
     //renderQuadrants(entities, game, renderer);
@@ -172,6 +182,8 @@ void battlefield_render(void) {
 }
 
 void battlefield_destroy(void) {
+
+    animation_destroy();
 
     memory_arena_reset();
 

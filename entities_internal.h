@@ -26,6 +26,7 @@ typedef struct Entity {
     _Bool pathFound;
     float constMovX, constMovY;
     float health;
+    unsigned char *sprite_state;
 } Entity;
 
 //extern Entity *entities;
