@@ -2,6 +2,7 @@
 #include "animation.h"
 #include "armies_internal.h"
 #include "battalion_internal.h"
+#include "camera.h"
 #include "engine_internal.h"
 #include "entity_collision.h"
 #include "entities.h"
@@ -27,6 +28,7 @@
 
 void battlefield_init(void) {
 
+    camera_init();
     animation_init();
 
     init_general_battalion_taxonomy();
@@ -78,12 +80,13 @@ void battlefield_input(SDL_Event *e) {
         }
     }
 
+    camera_input(e);
     animation_input(e);
 
 }
 
 void battlefield_update(void) {
-
+    
     calculate_player_movement(engine.game);
     
     player_map_edge_collision(engine.game, engine.map, engine.player);
@@ -95,6 +98,8 @@ void battlefield_update(void) {
     update_units(engine.armies, engine.game);
 
     update_generals(engine.armies, engine.game);
+
+    camera_update();
 
     animation_update();
 
@@ -144,7 +149,7 @@ void battlefield_render(void) {
             SDL_RenderFillRect(renderer, &entities_render);
 
         }
-    
+    //mudar dps. fazer todos o generais antes, dps todas as units para n perder pre fetch
     }
 
     SDL_Rect hp_bar = { 28, 28, player->max_hp + 4, 19 };

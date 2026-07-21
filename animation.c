@@ -2,6 +2,8 @@
 #include "animation_internal.h"
 #include "armies_internal.h"
 #include "battalion_internal.h"
+#include "camera.h"
+#include "camera_internal.h"
 #include "entities_internal.h"
 #include "game_state_internal.h"
 #include "general_internal.h"
@@ -96,6 +98,8 @@ void animation_render(void) {
     for (unsigned int i = 0; i < engine.game->entities_created_count; i++) {
 
         SDL_Renderer *renderer = engine.renderer;
+        Battalion *battalions = engine.armies->army->general->battalions;
+        Entity *entities = engine.armies->army->general->battalions->entities;
 
         unsigned int png_width = 1536;
         unsigned int png_height = 192;
@@ -104,17 +108,23 @@ void animation_render(void) {
 
         SDL_Rect sprite_slice = {
             (signed int)(sprite_frame_width *
-                *engine.armies->army->general->battalions->entities[i].sprite_state),
+                *entities[i].sprite_state),
             0,
             (signed int)sprite_frame_width,
             (signed int)sprite_frame_height
         };
         
+        float screen_pos_x, screen_pos_y;
+
+        camera_world_to_screen(
+            entities[i].positionX, entities[i].positionY,
+            &screen_pos_x, &screen_pos_y);
+
         SDL_Rect sprite_screen_position = {
-            (signed int)engine.armies->army->general->battalions->entities[i].positionX - (signed int)engine.game->offSetX - 10,
-            (signed int)engine.armies->army->general->battalions->entities[i].positionY - (signed int)engine.game->offSetY - 10,
-            (signed int)engine.armies->army->general->battalions->entities_screen_width,
-            (signed int)engine.armies->army->general->battalions->entities_screen_height
+            (signed int)screen_pos_x,
+            (signed int)screen_pos_y,
+            (signed int)(battalions->entities_screen_width * engine.camera->zoom),
+            (signed int)(battalions->entities_screen_height * engine.camera->zoom)
         };
         
         const SDL_Rect *rect1 = &sprite_slice;

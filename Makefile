@@ -30,6 +30,7 @@ SRC = \
 	baking.c \
 	battlefield.c \
 	battleplan.c \
+	camera.c \
 	engine.c \
 	entities.c \
 	entity_collision.c \

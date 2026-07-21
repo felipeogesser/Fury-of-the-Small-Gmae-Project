@@ -4,6 +4,7 @@
 #include "animation_types.h"
 #include "armies_types.h"
 #include "battleplan_types.h"
+#include "camera_types.h"
 #include "game_state_types.h"
 #include "grids_types.h"
 #include "main_menu_types.h"
@@ -51,8 +52,8 @@ typedef struct Engine {
     void *grid_memory_ptr;
     void *army_memory_ptr;
     
-    // rendering systems
-        //Camera camera;
+    //  rendering systems
+    Camera *camera;
 
     // debugging/profiling
         //DebugInfo debug;
