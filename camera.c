@@ -3,6 +3,7 @@
 #include "engine_internal.h"
 #include "game_state_internal.h"
 #include "player_internal.h"
+#include "window_settings.h"
 #include <SDL2/SDL.h>
 
 #define MIN_ZOOM 0.25f
@@ -62,8 +63,8 @@ float clampf(float value, float min, float max) {
 
 void camera_update(void) {
 
-    camera.position_x = engine.player->playerPositionY;
-    camera.position_y = engine.player->playerPositionY;
+    camera.position_x = engine.player->playerPositionX + engine.player->playerDimensionX / 2.0f;
+    camera.position_y = engine.player->playerPositionY + engine.player->playerDimensionY / 2.0f;
     camera.zoom = clampf(camera.zoom, MIN_ZOOM, MAX_ZOOM);
 
 }
@@ -71,9 +72,9 @@ void camera_update(void) {
 void camera_world_to_screen(
     float world_pos_x, float world_pos_y,
     float *screen_pos_x, float *screen_pos_y) {
-    
-    *screen_pos_x = ((world_pos_x - camera.position_x) * camera.zoom) - engine.game->offSetX - 10 +engine.player->playerPositionX;
-    *screen_pos_y = ((world_pos_y - camera.position_y) * camera.zoom) - engine.game->offSetY - 10 +engine.player->playerPositionY;
+
+    *screen_pos_x = (world_pos_x - camera.position_x) * camera.zoom + WINDOW_SIZE_X / 2.0f;
+    *screen_pos_y = (world_pos_y - camera.position_y) * camera.zoom + WINDOW_SIZE_Y / 2.0f;
 
 }
 

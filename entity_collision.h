@@ -6,11 +6,11 @@
 #include "entities_types.h"
 #include "game_state_types.h"
 #include "grids_types.h"
-#include "player_types.h"
+//#include "player_types.h"
 
 void initialCheckEntityQuadrant(Armies *armies, GameState *game, Grids *grids);
 void check_entity_quadrant(Armies *armies, GameState *game, Grids *grids);
 void renderQuadrantsSetup(Armies *armies, GameState *game);
-void renderQuadrants(Entity *entities, GameState *game, Player *player, SDL_Renderer *renderer);
+void renderQuadrants(Entity *entities, GameState *game, /*Player *player,*/ SDL_Renderer *renderer);
 
 #endif

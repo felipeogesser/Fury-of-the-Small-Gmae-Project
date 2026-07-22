@@ -1,6 +1,8 @@
 #include "entity_collision.h"
 #include "armies_internal.h"
 #include "battalion_internal.h"
+#include "camera.h"
+#include "camera_internal.h"
 #include "engine_internal.h"
 #include "entities_internal.h"
 #include "game_state_internal.h"
@@ -229,14 +231,14 @@ void renderQuadrantsSetup(Armies *armies, GameState *game) {
         entities[i].previousX = X;
         entities[i].previousY = Y;
 
-        entities[i].quadrantOccupiedX += (float)X - game->offSetX;
-        entities[i].quadrantOccupiedY += (float)Y - game->offSetY;
+        entities[i].quadrantOccupiedX += (float)X;// - game->offSetX;
+        entities[i].quadrantOccupiedY += (float)Y;// - game->offSetY;
 
     }
 }
 
 // change quadrant rendering from entity rendering it to wuadrant itself be the renderer
-void renderQuadrants(Entity *entities, GameState *game, Player *player, SDL_Renderer *renderer) {
+void renderQuadrants(Entity *entities, GameState *game, /*Player *player,*/ SDL_Renderer *renderer) {
 // trocaar dps pra pesquisar por quads ocupados, noa calcular por entity
     for (unsigned int i = 0; i < game->entities_created_count; i++) {
         
@@ -252,33 +254,38 @@ void renderQuadrants(Entity *entities, GameState *game, Player *player, SDL_Rend
             entities[i].quadrantOccupiedY += (float)(Y - (signed int)entities[i].previousY);
         }
 
-        entities[i].quadrantOccupiedX -= player->vxdt + game->LX + game->KX;
-        entities[i].quadrantOccupiedY -= player->vydt + game->LY + game->KY;
+        //entities[i].quadrantOccupiedX -= player->vxdt + game->LX + game->KX;
+        //entities[i].quadrantOccupiedY -= player->vydt + game->LY + game->KY;
 
         entities[i].previousCol = column;
         entities[i].previousRow = row;
         entities[i].previousX = X;
         entities[i].previousY = Y;
 
-        SDL_Rect quadrants1 = { (signed int)entities[i].quadrantOccupiedX, (signed int)entities[i].quadrantOccupiedY, 100, 100 };
+        float screen_pos_x, screen_pos_y;
+        camera_world_to_screen(
+            entities[i].quadrantOccupiedX, entities[i].quadrantOccupiedY,
+            &screen_pos_x, &screen_pos_y);
+
+        SDL_Rect quadrants1 = { (signed int)screen_pos_x, (signed int)screen_pos_y, (signed int)(100 * engine.camera->zoom), (signed int)(100 * engine.camera->zoom)};
         SDL_SetRenderDrawColor(renderer, 0, 255, 0, 100);
         SDL_RenderFillRect(renderer, &quadrants1);
 
 
         if (entities[i].currentQuadrants[1] != 0) {
-            SDL_Rect quadrants2 = { (signed int)entities[i].quadrantOccupiedX + 100, (signed int)entities[i].quadrantOccupiedY, 100, 100 };
+            SDL_Rect quadrants2 = { (signed int)(screen_pos_x + 100 * engine.camera->zoom), (signed int)screen_pos_y, (signed int)(100 * engine.camera->zoom), (signed int)(100 * engine.camera->zoom)};
             SDL_SetRenderDrawColor(renderer, 0, 255, 0, 100);
             SDL_RenderFillRect(renderer, &quadrants2);
         }
         
         if (entities[i].currentQuadrants[2] != 0) {
-            SDL_Rect quadrants3 = { (signed int)entities[i].quadrantOccupiedX, (signed int)entities[i].quadrantOccupiedY + 100, 100, 100 };
+            SDL_Rect quadrants3 = { (signed int)screen_pos_x, (signed int)(screen_pos_y + 100 * engine.camera->zoom), (signed int)(100 * engine.camera->zoom), (signed int)(100 * engine.camera->zoom)};
             SDL_SetRenderDrawColor(renderer, 0, 255, 0, 100);
             SDL_RenderFillRect(renderer, &quadrants3);
         }
         
         if (entities[i].currentQuadrants[3] != 0) {
-            SDL_Rect quadrants4 = { (signed int)entities[i].quadrantOccupiedX + 100, (signed int)entities[i].quadrantOccupiedY + 100, 100, 100 };
+            SDL_Rect quadrants4 = { (signed int)(screen_pos_x + 100 * engine.camera->zoom), (signed int)(screen_pos_y + 100 * engine.camera->zoom), (signed int)(100 * engine.camera->zoom), (signed int)(100 * engine.camera->zoom)};
             SDL_SetRenderDrawColor(renderer, 0, 255, 0, 100);
             SDL_RenderFillRect(renderer, &quadrants4);
         }

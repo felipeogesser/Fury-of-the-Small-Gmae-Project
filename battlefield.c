@@ -3,6 +3,7 @@
 #include "armies_internal.h"
 #include "battalion_internal.h"
 #include "camera.h"
+#include "camera_internal.h"
 #include "engine_internal.h"
 #include "entity_collision.h"
 #include "entities.h"
@@ -37,14 +38,13 @@ void battlefield_init(void) {
     engine.map = get_map(map_id[0]);
     unsigned int player_id = create_player(50 ,1000, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
     engine.player = get_player(player_id);
-    engine.game->offSetX = engine.player->playerPositionX - WINDOW_SIZE_X / 2 + engine.player->playerDimensionX / 2;
-    engine.game->offSetY = engine.player->playerPositionY - WINDOW_SIZE_Y / 2 + engine.player->playerDimensionY / 2;
+    //engine.game->offSetX = engine.player->playerPositionX - WINDOW_SIZE_X / 2 + engine.player->playerDimensionX / 2;
+    //engine.game->offSetY = engine.player->playerPositionY - WINDOW_SIZE_Y / 2 + engine.player->playerDimensionY / 2;
 
     init_armies_memory_arena();
     load_armies_into_arena();
     calculateAmountOfQuadrants();
     init_grids();
-    //fill_quadrant_data();
     initialCheckEntityQuadrant(engine.armies, engine.game, engine.grids);
     renderQuadrantsSetup(engine.armies, engine.game);
 
@@ -110,7 +110,7 @@ void battlefield_update(void) {
 void battlefield_render(void) {
 
     Armies *armies = engine.armies;
-    GameState *game = engine.game;
+    //GameState *game = engine.game;
     Map *map = engine.map;
     Player *player = engine.player;
     SDL_Renderer *renderer = engine.renderer;
@@ -119,11 +119,21 @@ void battlefield_render(void) {
 
     //SDL_RenderClear(renderer);
 
-    SDL_Rect map_rect = {map->mapLeftLimit - (signed int)game->offSetX, map->mapTopLimit - (signed int)game->offSetY, map->mapSizeX, map->mapSizeY};
+    float screen_pos_x1, screen_pos_y1;
+    camera_world_to_screen(
+        map->mapLeftLimit, map->mapTopLimit,
+        &screen_pos_x1, &screen_pos_y1);
+
+    SDL_Rect map_rect = {(signed int)screen_pos_x1/* - (signed int)game->offSetX*/, (signed int)screen_pos_y1/* - (signed int)game->offSetY*/, (signed int)(map->mapSizeX * engine.camera->zoom), (signed int)(map->mapSizeY * engine.camera->zoom)};
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderFillRect(renderer, &map_rect);
 
-    SDL_Rect PlayerRender = { (signed int)player->playerPositionOnScreenX, (signed int)player->playerPositionOnScreenY, (signed int)player->playerDimensionX, (signed int)player->playerDimensionY };
+    float screen_pos_x, screen_pos_y;
+    camera_world_to_screen(
+        player->playerPositionX, player->playerPositionY,
+        &screen_pos_x, &screen_pos_y);
+
+    SDL_Rect PlayerRender = { (signed int)screen_pos_x, (signed int)screen_pos_y, (signed int)(player->playerDimensionX * engine.camera->zoom), (signed int)(player->playerDimensionY * engine.camera->zoom)};
     SDL_SetRenderDrawColor(renderer, 255, 104, 230, 255);
     SDL_RenderFillRect(renderer, &PlayerRender);
 
@@ -138,13 +148,23 @@ void battlefield_render(void) {
         Entity *entities = battalions[i].entities;
         General *general = armies->army->general;
         
-            SDL_Rect general_render = { (signed int)(general[i].positionX - game->offSetX), (signed int)(general[i].positionY - game->offSetY), (signed int)general[i].dimensionX, (signed int)general[i].dimensionY};
+            float screen_pos_x2, screen_pos_y2;
+            camera_world_to_screen(
+                general[i].positionX, general[i].positionY,
+                &screen_pos_x2, &screen_pos_y2);
+
+            SDL_Rect general_render = { (signed int)(screen_pos_x2 /*- game->offSetX*/), (signed int)(screen_pos_y2 /*- game->offSetY*/), (signed int)(general[i].dimensionX * engine.camera->zoom), (signed int)(general[i].dimensionY * engine.camera->zoom)};
             SDL_SetRenderDrawColor(renderer, general[i].R_color, general[i].G_color, general[i].B_color, general[i].Alpha);
             SDL_RenderFillRect(renderer, &general_render);
 
         for (unsigned int j = 0; j < entities_count; j++) {
             
-            SDL_Rect entities_render = { (signed int)(entities[j].positionX - game->offSetX), (signed int)(entities[j].positionY - game->offSetY), (signed int)entities[j].dimensionX, (signed int)entities[j].dimensionY};
+            float screen_pos_x3, screen_pos_y3;
+            camera_world_to_screen(
+                entities[j].positionX, entities[j].positionY,
+                &screen_pos_x3, &screen_pos_y3);
+
+            SDL_Rect entities_render = { (signed int)(screen_pos_x3 + 10 * engine.camera->zoom/* - game->offSetX*/), (signed int)(screen_pos_y3 + 10 * engine.camera->zoom/* - game->offSetY*/), (signed int)(entities[j].dimensionX * engine.camera->zoom), (signed int)(entities[j].dimensionY * engine.camera->zoom)};
             SDL_SetRenderDrawColor(renderer, battalions[i].R_Color, battalions[i].G_Color, battalions[i].B_Color, battalions[i].Alpha);
             SDL_RenderFillRect(renderer, &entities_render);
 
@@ -179,7 +199,7 @@ void battlefield_render(void) {
     animation_render();
 
     //Entity *entities = battalions->entities;
-
+    //GameState *game = engine.game;
     //renderQuadrants(entities, game, renderer);
 
     //SDL_RenderPresent(renderer);

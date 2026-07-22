@@ -10,8 +10,8 @@ GameState *pass_pointer(void) {
 
 void update_game_state(Player *player) {
     
-    game.offSetX += player->vxdt + game.LX + game.KX;
-    game.offSetY += player->vydt + game.LY + game.KY;
+    //game.offSetX += player->vxdt + game.LX + game.KX;
+    //game.offSetY += player->vydt + game.LY + game.KY;
 
     game.KX = 0;
     game.KY = 0;
