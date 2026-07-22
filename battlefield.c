@@ -38,9 +38,6 @@ void battlefield_init(void) {
     engine.map = get_map(map_id[0]);
     unsigned int player_id = create_player(50 ,1000, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
     engine.player = get_player(player_id);
-    //engine.game->offSetX = engine.player->playerPositionX - WINDOW_SIZE_X / 2 + engine.player->playerDimensionX / 2;
-    //engine.game->offSetY = engine.player->playerPositionY - WINDOW_SIZE_Y / 2 + engine.player->playerDimensionY / 2;
-
     init_armies_memory_arena();
     load_armies_into_arena();
     calculateAmountOfQuadrants();
@@ -110,7 +107,6 @@ void battlefield_update(void) {
 void battlefield_render(void) {
 
     Armies *armies = engine.armies;
-    //GameState *game = engine.game;
     Map *map = engine.map;
     Player *player = engine.player;
     SDL_Renderer *renderer = engine.renderer;
@@ -120,8 +116,8 @@ void battlefield_render(void) {
     //SDL_RenderClear(renderer);
 
     SDL_Rect map_rect = {
-        (signed int)map->mapLeftLimit/* - (signed int)game->offSetX*/,
-        (signed int)map->mapTopLimit/* - (signed int)game->offSetY*/,
+        (signed int)map->mapLeftLimit,
+        (signed int)map->mapTopLimit,
         (signed int)map->mapSizeX,
         (signed int)map->mapSizeY};
     camera_world_to_screen(&map_rect);
@@ -149,8 +145,8 @@ void battlefield_render(void) {
         General *general = armies->army->general;
         
             SDL_Rect general_render = {
-                (signed int)(general[i].positionX /*- game->offSetX*/),
-                (signed int)(general[i].positionY /*- game->offSetY*/),
+                (signed int)general[i].positionX,
+                (signed int)general[i].positionY,
                 (signed int)general[i].dimensionX,
                 (signed int)general[i].dimensionY};
             camera_world_to_screen(&general_render);
@@ -160,8 +156,8 @@ void battlefield_render(void) {
         for (unsigned int j = 0; j < entities_count; j++) {
 
             SDL_Rect entities_render = {
-                (signed int)(entities[j].positionX /*+ 10 - game->offSetX*/),
-                (signed int)(entities[j].positionY /*+ 10 - game->offSetY*/),
+                (signed int)entities[j].positionX,
+                (signed int)entities[j].positionY,
                 (signed int)entities[j].dimensionX,
                 (signed int)entities[j].dimensionY};
             camera_world_to_screen(&entities_render);
@@ -201,8 +197,6 @@ void battlefield_render(void) {
     Entity *entities = battalions->entities;
     GameState *game = engine.game;
     renderQuadrants(entities, game, renderer);
-
-    //SDL_RenderPresent(renderer);
 
 }
 

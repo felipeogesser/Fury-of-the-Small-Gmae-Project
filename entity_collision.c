@@ -9,7 +9,6 @@
 #include "general_internal.h"
 #include "grids_internal.h"
 #include "load_armies.h"
-#include "player_internal.h"
 #include "quadrant_internal.h"
 #include <SDL2/SDL.h>
 
@@ -231,14 +230,14 @@ void renderQuadrantsSetup(Armies *armies, GameState *game) {
         entities[i].previousX = X;
         entities[i].previousY = Y;
 
-        entities[i].quadrantOccupiedX += (float)X;// - game->offSetX;
-        entities[i].quadrantOccupiedY += (float)Y;// - game->offSetY;
+        entities[i].quadrantOccupiedX += (float)X;
+        entities[i].quadrantOccupiedY += (float)Y;
 
     }
 }
 
-// change quadrant rendering from entity rendering it to wuadrant itself be the renderer
-void renderQuadrants(Entity *entities, GameState *game, /*Player *player,*/ SDL_Renderer *renderer) {
+// change quadrant rendering from entity rendering it to quadrant itself be the renderer
+void renderQuadrants(Entity *entities, GameState *game, SDL_Renderer *renderer) {
 // trocaar dps pra pesquisar por quads ocupados, noa calcular por entity
     for (unsigned int i = 0; i < game->entities_created_count; i++) {
         
@@ -253,9 +252,6 @@ void renderQuadrants(Entity *entities, GameState *game, /*Player *player,*/ SDL_
         if (entities[i].previousRow != row) {
             entities[i].quadrantOccupiedY += (float)(Y - (signed int)entities[i].previousY);
         }
-
-        //entities[i].quadrantOccupiedX -= player->vxdt + game->LX + game->KX;
-        //entities[i].quadrantOccupiedY -= player->vydt + game->LY + game->KY;
 
         entities[i].previousCol = column;
         entities[i].previousRow = row;

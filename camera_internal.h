@@ -6,7 +6,6 @@
 typedef struct Camera {
     float zoom;
     float position_x, position_y;
-//    unsigned int scale;
 } Camera;
 
 #endif
