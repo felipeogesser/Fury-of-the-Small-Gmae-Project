@@ -4,7 +4,7 @@
 #include "camera_types.h"
 
 typedef struct Camera {
-    float zoom, zoom_min, zoom_max;
+    float zoom;
     float position_x, position_y;
 //    unsigned int scale;
 } Camera;

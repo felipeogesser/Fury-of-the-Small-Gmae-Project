@@ -69,12 +69,12 @@ void camera_update(void) {
 
 }
 
-void camera_world_to_screen(
-    float world_pos_x, float world_pos_y,
-    float *screen_pos_x, float *screen_pos_y) {
-
-    *screen_pos_x = (world_pos_x - camera.position_x) * camera.zoom + WINDOW_SIZE_X / 2.0f;
-    *screen_pos_y = (world_pos_y - camera.position_y) * camera.zoom + WINDOW_SIZE_Y / 2.0f;
+void camera_world_to_screen(SDL_Rect *sdl_rect) {
+    
+    sdl_rect->x = (signed int)(((float)sdl_rect->x - camera.position_x) * camera.zoom + WINDOW_SIZE_X / 2.0f);
+    sdl_rect->y = (signed int)(((float)sdl_rect->y - camera.position_y) * camera.zoom + WINDOW_SIZE_Y / 2.0f);
+    sdl_rect->w = (signed int)((float)sdl_rect->w * camera.zoom);
+    sdl_rect->h = (signed int)((float)sdl_rect->h * camera.zoom);
 
 }
 

@@ -6,6 +6,6 @@
 
 GameState *pass_pointer(void);
 
-void update_game_state(Player *player);
+void update_game_state(void);
 
 #endif

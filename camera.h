@@ -13,9 +13,7 @@ void camera_update(void);
 
 void camera_render(void);
 
-void camera_world_to_screen(
-    float world_pos_x, float world_pos_y,
-    float *screen_pos_x, float *screen_pos_y);
+void camera_world_to_screen(SDL_Rect *sdl_rect);
 
 void camera_destroy(void);
 

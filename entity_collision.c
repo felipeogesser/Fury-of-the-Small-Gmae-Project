@@ -262,30 +262,45 @@ void renderQuadrants(Entity *entities, GameState *game, /*Player *player,*/ SDL_
         entities[i].previousX = X;
         entities[i].previousY = Y;
 
-        float screen_pos_x, screen_pos_y;
-        camera_world_to_screen(
-            entities[i].quadrantOccupiedX, entities[i].quadrantOccupiedY,
-            &screen_pos_x, &screen_pos_y);
-
-        SDL_Rect quadrants1 = { (signed int)screen_pos_x, (signed int)screen_pos_y, (signed int)(100 * engine.camera->zoom), (signed int)(100 * engine.camera->zoom)};
+        SDL_Rect quadrants1 = {
+            (signed int)entities[i].quadrantOccupiedX,
+            (signed int)entities[i].quadrantOccupiedY,
+            100,
+            100};
+        camera_world_to_screen(&quadrants1);
         SDL_SetRenderDrawColor(renderer, 0, 255, 0, 100);
         SDL_RenderFillRect(renderer, &quadrants1);
 
 
         if (entities[i].currentQuadrants[1] != 0) {
-            SDL_Rect quadrants2 = { (signed int)(screen_pos_x + 100 * engine.camera->zoom), (signed int)screen_pos_y, (signed int)(100 * engine.camera->zoom), (signed int)(100 * engine.camera->zoom)};
+            SDL_Rect quadrants2 = {
+                (signed int)entities[i].quadrantOccupiedX + 100,
+                (signed int)entities[i].quadrantOccupiedY,
+                100,
+                100};
+            camera_world_to_screen(&quadrants2);
             SDL_SetRenderDrawColor(renderer, 0, 255, 0, 100);
             SDL_RenderFillRect(renderer, &quadrants2);
         }
         
         if (entities[i].currentQuadrants[2] != 0) {
-            SDL_Rect quadrants3 = { (signed int)screen_pos_x, (signed int)(screen_pos_y + 100 * engine.camera->zoom), (signed int)(100 * engine.camera->zoom), (signed int)(100 * engine.camera->zoom)};
+            SDL_Rect quadrants3 = {
+                (signed int)entities[i].quadrantOccupiedX,
+                (signed int)entities[i].quadrantOccupiedY + 100,
+                100,
+                100};
+            camera_world_to_screen(&quadrants3);
             SDL_SetRenderDrawColor(renderer, 0, 255, 0, 100);
             SDL_RenderFillRect(renderer, &quadrants3);
         }
         
         if (entities[i].currentQuadrants[3] != 0) {
-            SDL_Rect quadrants4 = { (signed int)(screen_pos_x + 100 * engine.camera->zoom), (signed int)(screen_pos_y + 100 * engine.camera->zoom), (signed int)(100 * engine.camera->zoom), (signed int)(100 * engine.camera->zoom)};
+            SDL_Rect quadrants4 = {
+                (signed int)entities[i].quadrantOccupiedX + 100,
+                (signed int)entities[i].quadrantOccupiedY + 100,
+                100,
+                100};
+            camera_world_to_screen(&quadrants4);
             SDL_SetRenderDrawColor(renderer, 0, 255, 0, 100);
             SDL_RenderFillRect(renderer, &quadrants4);
         }

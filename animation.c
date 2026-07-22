@@ -113,22 +113,18 @@ void animation_render(void) {
             (signed int)sprite_frame_width,
             (signed int)sprite_frame_height
         };
-        
-        float screen_pos_x, screen_pos_y;
 
-        camera_world_to_screen(
-            entities[i].positionX, entities[i].positionY,
-            &screen_pos_x, &screen_pos_y);
-
-        SDL_Rect sprite_screen_position = {
-            (signed int)screen_pos_x,
-            (signed int)screen_pos_y,
-            (signed int)(battalions->entities_screen_width * engine.camera->zoom),
-            (signed int)(battalions->entities_screen_height * engine.camera->zoom)
+        SDL_Rect sprite_position = {
+            (signed int)entities[i].positionX - 10,
+            (signed int)entities[i].positionY - 10,
+            (signed int)battalions->entities_screen_width,
+            (signed int)battalions->entities_screen_height
         };
         
+        camera_world_to_screen(&sprite_position);
+
         const SDL_Rect *rect1 = &sprite_slice;
-        const SDL_Rect *rect2 = &sprite_screen_position;
+        const SDL_Rect *rect2 = &sprite_position;
 
         SDL_RenderCopy(renderer, texture, rect1, rect2);
     
