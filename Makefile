@@ -35,6 +35,7 @@ SRC = \
 	entities.c \
 	entity_collision.c \
 	gameLoop.c \
+	game_shutdown.c \
 	game_state.c \
 	general.c \
 	grids.c \
@@ -52,7 +53,7 @@ SRC = \
 	scene_handler.c \
 	scene_registry.c \
 	set_armies_position.c \
-	game_shutdown.c \
+	sprites.c \
 	window.c \
 
 OBJ = $(SRC:.c=.o)
