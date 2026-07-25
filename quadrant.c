@@ -19,6 +19,7 @@
 }*/
 
 void calculateAmountOfQuadrants(void) {
+    engine.game->low_LOD_quadrant_size = 64U;
     unsigned short amountX = (unsigned short)(engine.map->mapSizeX / engine.game->low_LOD_quadrant_size);
     unsigned short amountY = (unsigned short)(engine.map->mapSizeY / engine.game->low_LOD_quadrant_size);
     engine.game->amountX = amountX;

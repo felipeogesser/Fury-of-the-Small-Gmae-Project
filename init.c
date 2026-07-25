@@ -1,13 +1,16 @@
 #include "init.h"
-
-void memory_arena_init(void);
-//void engine_init(void);
-//void scene_handler_init(void);
+#include "game_state.h"
+#include "memory_arena.h"
+#include "window.h"
+#include <stdbool.h>
+#include <stdlib.h>
+#include <time.h>
 
 void init(void) {
-    
+
+    srand((unsigned int)time(NULL)); 
     memory_arena_init();
-    //engine_init();
-    //scene_handler_init();
+    create_window();
+    init_game_state();
 
 }

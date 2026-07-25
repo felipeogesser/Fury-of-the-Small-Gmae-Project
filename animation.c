@@ -4,10 +4,10 @@
 #include "battalion_internal.h"
 #include "camera.h"
 #include "camera_internal.h"
+#include "engine_internal.h"
 #include "entities_internal.h"
 #include "game_state_internal.h"
 #include "general_internal.h"
-#include "engine_internal.h"
 #include <SDL2/SDL.h>
 #include <SDL_image.h>
 #include <stddef.h>
@@ -15,16 +15,14 @@
 
 #define ANIMATION_FPS 3
 #define FRAME_DURATION (1000 / ANIMATION_FPS)
-#define SPRITE_FRAME_END 7 // each png has 8 frames
 
 Animation animation = {0};
 AnimationState animationState = { .unit_sprite_state = {0, 1, 2, 3, 4, 5, 6, 7}};
 
-//unsigned char unit_sprite_state = {0, 1, 2, 3, 4, 5, 6, 7};
-    // Because there are only 8 possible frame states of an animation,
-    // units will start pointing to a random state from this array, from 0 to 7.
+
+    // units will start pointing to a random state from this arrays.
     // Then we update this array instead of updating each unit,
-    // and the unitw will read from this array to get their current sprite state.
+    // and the unit will read from this array to get their current sprite state.
 
 SDL_Surface *surface = NULL;
 SDL_Texture *texture = NULL;
@@ -43,12 +41,6 @@ void animation_init(void) {
 
     engine.animation = &animation;
     engine.animationState = &animationState;
-    
-    SDL_Renderer *renderer = engine.renderer;
-    surface = IMG_Load("assets/sprites/Warrior/Warrior_Idle.png");
-    texture = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
-    surface = NULL;
     
 }
 
@@ -76,18 +68,6 @@ void animation_update(void) {
             animationState.unit_sprite_state[i] = 0 :
             animationState.unit_sprite_state[i]++;
         }
-
-        /*if (change_sprite_state && sprite_frame == 0) {
-            animationState.sprite_state = new_sprite_state;
-            change_sprite_state = false;
-        }*/
-
-        //animationState.sprite_frame = sprite_frame;
-
-        //sprite_frame++;
-        /*if (!(sprite_frame & SPRITE_FRAME_END)) {
-            sprite_frame = 0;
-        }*/
 
     }
 

@@ -1,4 +1,5 @@
 #include "sprites.h"
+#include "sprites_internal.h"
 #include "engine_internal.h"
 #include "memory_arena.h"
 #include <dirent.h>
@@ -10,14 +11,14 @@
 #include <SDL2/SDL.h>
 #include <SDL_image.h>
 
-int count_pngs_in_folder(const char *path);
-int count_pngs_in_folder(const char *path) {
+signed int count_pngs_in_folder(const char *path);
+signed int count_pngs_in_folder(const char *path) {
     DIR *dir = opendir(path);
     if (!dir) {
         return -1;
     }
 
-    int count = 0;
+    signed int count = 0;
     struct dirent *entry;
 
     while ((entry = readdir(dir)) != NULL) {
@@ -72,16 +73,6 @@ unsigned int parse_frame_count_from_path(const char *path) {
 
     return (unsigned int)frames;
 }
-
-typedef struct Sprite {
-    unsigned int frames_count;
-    SDL_Texture *texture;
-} Sprite;
-
-typedef struct SpritePack {
-    Sprite *sprite;
-    unsigned int sprite_count;
-} SpritePack;
 
 SpritePack sprite_pack = {0};
 

@@ -8,7 +8,6 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "sprites.h"
 MainMenu main_menu = {0};
 
 TTF_Font *main_menu_font = NULL;
@@ -67,7 +66,6 @@ void main_menu_init(void) {
         return;
     }
 
-    load_sprites_into_memory();
 }
 
 void main_menu_input(SDL_Event *e) {

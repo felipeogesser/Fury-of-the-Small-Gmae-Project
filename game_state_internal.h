@@ -9,7 +9,6 @@ typedef struct GameState {
     enum SceneState scene_state;
     float LX, LY;
     float KX, KY;
-    //float offSetX, offSetY;
     float delta;
     float decay_rate;
     unsigned int entities_created_count, objects_created_count;

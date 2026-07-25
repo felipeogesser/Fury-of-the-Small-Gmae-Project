@@ -2,7 +2,7 @@
 #include "gameLoop.h"
 #include "game_shutdown.h"
 #include "init.h"
-#include "window.h"
+//#include "window.h"
 
 int main(void) {
 
@@ -10,7 +10,7 @@ int main(void) {
     
     data_baking();
     
-    create_window();
+    //create_window();
 
     game_loop();
 
