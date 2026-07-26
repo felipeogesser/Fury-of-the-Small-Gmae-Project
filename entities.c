@@ -6,6 +6,7 @@
 #include "engine_internal.h"
 #include "game_state_internal.h"
 #include "general_internal.h"
+#include "sprites_internal.h"
 
 /*Entity *entities = NULL;
 void init_entities(void)
@@ -54,8 +55,9 @@ void create_entities(Entity *entities, General *general, float ongoing_point_X, 
     entities[i].dimensionX = 4;
     entities[i].dimensionY = 4;
     entities[i].animation = IDLE;
-    entities[i].sprite_current_frame = (unsigned char)(rand() % 8);
-    entities[i].sprite_frames_count = sprite_pack.sprite[general[k].units_type][IDLE].frames_count;
+    entities[i].sprite_frames_count = engine.sprite_pack->sprite[general[k].units_type][IDLE].frames_count;
+    entities[i].sprite_current_frame = (unsigned char)(rand() % entities[i].sprite_frames_count);
+    entities[i].unit_type = general[k].units_type;
 }
 
 void update_units(Armies *armies, GameState *game) {

@@ -48,6 +48,14 @@ void animation_input(SDL_Event *e) {
 
     }
 
+    if (e->type == SDL_MOUSEBUTTONDOWN &&
+        e->button.button == SDL_BUTTON_LEFT) {
+
+        change_animation = true;
+        new_animation = IDLE;
+
+    }
+
 }
 
 void animation_update(void) {
@@ -60,14 +68,26 @@ void animation_update(void) {
         Entity *entities = engine.armies->army->general->battalions->entities;
 
         for (unsigned int i = 0; i < engine.game->entities_created_count; i++) {
-            
+
+            if (entities[i].sprite_frames_count == 0) {
+                fprintf(stderr, "Frame count is 0.\n");
+                exit(EXIT_FAILURE);
+            }
+
+                        
             if (change_animation) {
                 entities[i].animation = new_animation;
-            }
+                entities[i].sprite_current_frame = 0;
+                entities[i].sprite_frames_count = engine.sprite_pack->sprite[entities[i].unit_type][new_animation].frames_count;
+            } else {
             entities[i].sprite_current_frame =
-                (entities[i].sprite_current_frame == entities[i].sprite_frames_count) ?
+                (entities[i].sprite_current_frame == entities[i].sprite_frames_count - 1) ?
                 0 : entities[i].sprite_current_frame + 1;
+            }
         }
+
+        change_animation = false;
+
     }
 
 }
@@ -78,41 +98,42 @@ void animation_render(void) {
     Battalion *battalions = engine.armies->army->general->battalions;
     Entity *entities = engine.armies->army->general->battalions->entities;
 
-    for (unsigned int i = 0; i < engine.armies->army->battalion_count; i++) {
+    enum Sprites unit_type;
+    enum Animation animation;
 
-        unsigned int units_type = engine.armies->army->general[i].units_type;
+    for (unsigned int i = 0; i < engine.game->entities_created_count; i++) {
 
-        for (unsigned int j = 0; j < engine.game->entities_created_count; j++) {
+        unit_type = entities[i].unit_type;
+        animation = entities[i].animation;
+        Sprite *sprite = &engine.sprite_pack->sprite[unit_type][animation];
 
-            signed int png_width = sprite_pack.sprite[units_type][entities[j].animation].width;
-            signed int png_height = sprite_pack.sprite[units_type][entities[j].animation].height;
-            signed int sprite_frame_width = png_width / sprite_pack.sprite[units_type][entities[j].animation].frames_count;
-            signed int sprite_frame_height = png_height;
+        signed int png_width = sprite->width;
+        signed int png_height = sprite->height;
+        signed int sprite_frame_width = png_width / sprite->frames_count;
+        signed int sprite_frame_height = png_height;
 
-            SDL_Rect sprite_slice = {
-                (sprite_frame_width * entities[j].sprite_current_frame),
-                0,
-                sprite_frame_width,
-                sprite_frame_height
-            };
+        SDL_Rect sprite_slice = {
+            (sprite_frame_width * entities[i].sprite_current_frame),
+            0,
+            sprite_frame_width,
+            sprite_frame_height
+        };
 
-            SDL_Rect sprite_position = {
-                (signed int)entities[j].positionX - 10,
-                (signed int)entities[j].positionY - 10,
-                (signed int)battalions->entities_screen_width,
-                (signed int)battalions->entities_screen_height
-            };
-            
-            camera_world_to_screen(&sprite_position);
-
-            const SDL_Rect *rect1 = &sprite_slice;
-            const SDL_Rect *rect2 = &sprite_position;
-
-            SDL_Texture *texture = sprite_pack.sprite[units_type][entities[j].animation].texture;
-            SDL_RenderCopy(renderer, texture, rect1, rect2);
+        SDL_Rect sprite_position = {
+            (signed int)entities[i].positionX - 10,
+            (signed int)entities[i].positionY - 10,
+            (signed int)battalions->entities_screen_width,
+            (signed int)battalions->entities_screen_height
+        };
         
-        }
+        camera_world_to_screen(&sprite_position);
 
+        const SDL_Rect *rect1 = &sprite_slice;
+        const SDL_Rect *rect2 = &sprite_position;
+
+        SDL_Texture *texture = sprite->texture;
+        SDL_RenderCopy(renderer, texture, rect1, rect2);
+    
     }
 
 }
@@ -122,7 +143,7 @@ void animation_destroy(void) {
     SDL_Texture *texture = NULL;
     for (unsigned int i = 0; i < SPRITES_COUNT; i++) {
         for (unsigned int j = 0; j < ANIMATION_COUNT; j++) {
-            texture = sprite_pack.sprite[i][j].texture;
+            texture = engine.sprite_pack->sprite[i][j].texture;
 
             if (texture != NULL) {
                 SDL_DestroyTexture(texture);

@@ -102,7 +102,7 @@ static signed int parse_animation_from_path(const char *path) {
     return -1;
 }
 
-SpritePack sprite_pack = {0};
+static SpritePack sprite_pack = {0};
 
 void load_sprites_into_memory(void) {
 

@@ -3,6 +3,7 @@
 
 #include "general_types.h"
 #include "battalion_types.h"
+#include "sprites_types.h"
 
 typedef struct General {
     unsigned int id;
@@ -22,7 +23,7 @@ typedef struct General {
     enum FatigueLevel fatigue_level;
     enum BattalionType battalion_type;
     Battalion *battalions;
-    unsigned int units_type;
+    enum Sprites units_type;
 } General;
 
 #endif

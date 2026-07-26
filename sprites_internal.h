@@ -16,6 +16,6 @@ typedef struct SpritePack {
     unsigned int sprite_count;
 } SpritePack;
 
-extern SpritePack sprite_pack;
+//extern SpritePack sprite_pack;
 
 #endif

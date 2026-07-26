@@ -2,7 +2,7 @@
 #define ENTITIES_INTERNAL_H
 
 #include "animation_types.h"
-#include "sprites_internal.h"
+#include "sprites_types.h"
 #include <SDL2/SDL.h>
 
 //#define MAX_ENTITIES 1024
@@ -28,10 +28,11 @@ typedef struct Entity {
     float constMovX, constMovY;
     float health;
     //unsigned char *sprite_current_frame;
-    unsigned char sprite_current_frame;
     unsigned char sprite_frames_count;
+    unsigned char sprite_current_frame;
     enum Animation animation;
-    Sprite sprite;
+    enum Sprites unit_type;
+    //Sprite sprite;
 } Entity;
 
 //extern Entity *entities;
