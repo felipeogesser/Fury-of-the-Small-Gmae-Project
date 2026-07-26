@@ -4,12 +4,12 @@
 #include "animation_types.h"
 #include <SDL2/SDL.h>
 
-typedef struct Animation {
+/*typedef struct Animation {
     char *animation_path;
 
-} Animation;
+} Animation;*/
 
-typedef struct AnimationState {
+/*typedef struct AnimationState {
     //SDL_Surface *surface;
     //SDL_Texture *texture;
     //Animation current;
@@ -22,6 +22,6 @@ typedef struct AnimationState {
     unsigned int frame_h;
     unsigned char sprite_frame;
     unsigned char unit_sprite_state[8];
-} AnimationState;
+} AnimationState;*/
 
 #endif

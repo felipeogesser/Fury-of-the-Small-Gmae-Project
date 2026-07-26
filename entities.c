@@ -1,10 +1,11 @@
 #include "entities.h"
 #include "entities_internal.h"
-#include "animation_internal.h"
+#include "animation_types.h"
 #include "armies_internal.h"
 #include "battalion_internal.h"
 #include "engine_internal.h"
 #include "game_state_internal.h"
+#include "general_internal.h"
 
 /*Entity *entities = NULL;
 void init_entities(void)
@@ -46,13 +47,15 @@ Entity *get_entity(int entityId) {
 
     }*/
 
-void create_entities(Entity *entities, float ongoing_point_X, float ongoing_point_Y, unsigned int i) {
+void create_entities(Entity *entities, General *general, float ongoing_point_X, float ongoing_point_Y, unsigned int i, unsigned int k) {
     entities[i].id = i + 1;
     entities[i].positionX = ongoing_point_X;
     entities[i].positionY = ongoing_point_Y;
     entities[i].dimensionX = 4;
     entities[i].dimensionY = 4;
-    entities[i].sprite_state = &engine.animationState->unit_sprite_state[rand() % 8];
+    entities[i].animation = IDLE;
+    entities[i].sprite_current_frame = (unsigned char)(rand() % 8);
+    entities[i].sprite_frames_count = sprite_pack.sprite[general[k].units_type][IDLE].frames_count;
 }
 
 void update_units(Armies *armies, GameState *game) {
@@ -65,3 +68,16 @@ void update_units(Armies *armies, GameState *game) {
     }
 
 }
+
+
+
+
+
+/*
+
+tem que add feature na unti pra ela saber qual e a sprite dela,
+referenciar com ponterio pra quando rocar de animacao saber quantos frames
+
+
+
+*/

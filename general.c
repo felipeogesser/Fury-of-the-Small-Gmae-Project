@@ -2,6 +2,7 @@
 #include "general_internal.h"
 #include "armies_internal.h"
 #include "game_state_internal.h"
+#include "sprites_types.h"
 
 #define BATTALION_LIST(X) \
     X(INFANTRY,  MELEE) \
@@ -28,6 +29,7 @@ void create_generals(General *general, float ongoing_point_X, float ongoing_poin
     general[i].positionY = ongoing_point_Y + 60;
     general[i].dimensionX = 8;
     general[i].dimensionY = 8;
+    general[i].units_type = WARRIOR;
 }
 
 void update_generals(Armies *armies, GameState *game) {

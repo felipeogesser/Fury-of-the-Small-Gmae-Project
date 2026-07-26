@@ -10,6 +10,7 @@
 #include "main_menu_types.h"
 #include "maps_types.h"
 #include "player_types.h"
+#include "sprites_types.h"
 #include <SDL2/SDL.h>
 
 typedef struct Engine {
@@ -36,8 +37,9 @@ typedef struct Engine {
     Uint64 perfFreq;
 
     // animation
-    Animation *animation;
-    AnimationState *animationState;
+    //Animation *animation;
+    //AnimationState *animation_state;
+    SpritePack *sprite_pack;
 
     // engine state
     _Bool running;

@@ -27,6 +27,8 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 
+_Bool show_quads = 0;
+
 void battlefield_init(void) {
 
     camera_init();
@@ -49,6 +51,7 @@ void battlefield_init(void) {
 
 void battlefield_input(SDL_Event *e) {
 
+    if (e->key.keysym.sym == SDLK_1) show_quads = !show_quads;
     Player *player = engine.player;
         
     if (e->type == SDL_KEYUP) {
@@ -194,9 +197,11 @@ void battlefield_render(void) {
 
     animation_render();
 
-    Entity *entities = battalions->entities;
-    GameState *game = engine.game;
-    renderQuadrants(entities, game, renderer);
+    if (show_quads) {
+        Entity *entities = battalions->entities;
+        GameState *game = engine.game;
+        renderQuadrants(entities, game, renderer);
+    }
 
 }
 

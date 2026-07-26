@@ -8,6 +8,7 @@
 #include "entities_internal.h"
 #include "game_state_internal.h"
 #include "general_internal.h"
+#include "sprites_internal.h"
 #include <SDL2/SDL.h>
 #include <SDL_image.h>
 #include <stddef.h>
@@ -16,22 +17,9 @@
 #define ANIMATION_FPS 3
 #define FRAME_DURATION (1000 / ANIMATION_FPS)
 
-Animation animation = {0};
-AnimationState animationState = { .unit_sprite_state = {0, 1, 2, 3, 4, 5, 6, 7}};
-
-
-    // units will start pointing to a random state from this arrays.
-    // Then we update this array instead of updating each unit,
-    // and the unit will read from this array to get their current sprite state.
-
-SDL_Surface *surface = NULL;
-SDL_Texture *texture = NULL;
-
 static Uint32 last_frame_time = 0;
-//static unsigned char sprite_frame = 0;
-static _Bool change_sprite_state = false;
-
-enum SpriteState new_sprite_state;
+static _Bool change_animation = false;
+static enum Animation new_animation = 0;
 
 void animation_init(void) {
 
@@ -39,9 +27,15 @@ void animation_init(void) {
         SDL_Log("IMG_Init failed");
     }
 
-    engine.animation = &animation;
-    engine.animationState = &animationState;
-    
+    //engine.animationState = &animationState;
+
+    /*for (unsigned int i = 0; i < engine.game->entities_created_count; i++) {
+
+        unsigned int unit_type = engine.armies->army->general->units_type;
+        entities[i].sprite->texture = sprite_pack->sprite[unit_type][IDLE];
+
+    }*/
+
 }
 
 void animation_input(SDL_Event *e) {
@@ -49,8 +43,8 @@ void animation_input(SDL_Event *e) {
     if (e->type == SDL_MOUSEBUTTONDOWN &&
         e->button.button == SDL_BUTTON_RIGHT) {
 
-        change_sprite_state = true;
-        new_sprite_state = RUN;
+        change_animation = true;
+        new_animation = RUN;
 
     }
 
@@ -63,58 +57,77 @@ void animation_update(void) {
 
         last_frame_time = current_time;
 
-        for (int i = 0; i < 8; i++) {
-            animationState.unit_sprite_state[i] == 7 ?
-            animationState.unit_sprite_state[i] = 0 :
-            animationState.unit_sprite_state[i]++;
-        }
+        Entity *entities = engine.armies->army->general->battalions->entities;
 
+        for (unsigned int i = 0; i < engine.game->entities_created_count; i++) {
+            
+            if (change_animation) {
+                entities[i].animation = new_animation;
+            }
+            entities[i].sprite_current_frame =
+                (entities[i].sprite_current_frame == entities[i].sprite_frames_count) ?
+                0 : entities[i].sprite_current_frame + 1;
+        }
     }
 
 }
 
 void animation_render(void) {
 
-    for (unsigned int i = 0; i < engine.game->entities_created_count; i++) {
+    SDL_Renderer *renderer = engine.renderer;
+    Battalion *battalions = engine.armies->army->general->battalions;
+    Entity *entities = engine.armies->army->general->battalions->entities;
 
-        SDL_Renderer *renderer = engine.renderer;
-        Battalion *battalions = engine.armies->army->general->battalions;
-        Entity *entities = engine.armies->army->general->battalions->entities;
+    for (unsigned int i = 0; i < engine.armies->army->battalion_count; i++) {
 
-        unsigned int png_width = 1536;
-        unsigned int png_height = 192;
-        unsigned int sprite_frame_width = png_width / 8;
-        unsigned int sprite_frame_height = png_height;
+        unsigned int units_type = engine.armies->army->general[i].units_type;
 
-        SDL_Rect sprite_slice = {
-            (signed int)(sprite_frame_width *
-                *entities[i].sprite_state),
-            0,
-            (signed int)sprite_frame_width,
-            (signed int)sprite_frame_height
-        };
+        for (unsigned int j = 0; j < engine.game->entities_created_count; j++) {
 
-        SDL_Rect sprite_position = {
-            (signed int)entities[i].positionX - 10,
-            (signed int)entities[i].positionY - 10,
-            (signed int)battalions->entities_screen_width,
-            (signed int)battalions->entities_screen_height
-        };
+            signed int png_width = sprite_pack.sprite[units_type][entities[j].animation].width;
+            signed int png_height = sprite_pack.sprite[units_type][entities[j].animation].height;
+            signed int sprite_frame_width = png_width / sprite_pack.sprite[units_type][entities[j].animation].frames_count;
+            signed int sprite_frame_height = png_height;
+
+            SDL_Rect sprite_slice = {
+                (sprite_frame_width * entities[j].sprite_current_frame),
+                0,
+                sprite_frame_width,
+                sprite_frame_height
+            };
+
+            SDL_Rect sprite_position = {
+                (signed int)entities[j].positionX - 10,
+                (signed int)entities[j].positionY - 10,
+                (signed int)battalions->entities_screen_width,
+                (signed int)battalions->entities_screen_height
+            };
+            
+            camera_world_to_screen(&sprite_position);
+
+            const SDL_Rect *rect1 = &sprite_slice;
+            const SDL_Rect *rect2 = &sprite_position;
+
+            SDL_Texture *texture = sprite_pack.sprite[units_type][entities[j].animation].texture;
+            SDL_RenderCopy(renderer, texture, rect1, rect2);
         
-        camera_world_to_screen(&sprite_position);
+        }
 
-        const SDL_Rect *rect1 = &sprite_slice;
-        const SDL_Rect *rect2 = &sprite_position;
-
-        SDL_RenderCopy(renderer, texture, rect1, rect2);
-    
     }
 
 }
 
 void animation_destroy(void) {
-    if (texture != NULL) {
-        SDL_DestroyTexture(texture);
-    }
-}
+    
+    SDL_Texture *texture = NULL;
+    for (unsigned int i = 0; i < SPRITES_COUNT; i++) {
+        for (unsigned int j = 0; j < ANIMATION_COUNT; j++) {
+            texture = sprite_pack.sprite[i][j].texture;
 
+            if (texture != NULL) {
+                SDL_DestroyTexture(texture);
+            }
+        }
+    }
+
+}

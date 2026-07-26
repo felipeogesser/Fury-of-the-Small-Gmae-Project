@@ -22,6 +22,7 @@ typedef struct General {
     enum FatigueLevel fatigue_level;
     enum BattalionType battalion_type;
     Battalion *battalions;
+    unsigned int units_type;
 } General;
 
 #endif

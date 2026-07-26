@@ -48,7 +48,7 @@ void set_armies_in_the_battlefield(Armies *armies) {
             for (unsigned int l = 0; l < 5; l++) {
 
                 for (unsigned int m = 0; m < 10; m++) {
-                    create_entities(entities, ongoing_point_X, ongoing_point_Y, i);
+                    create_entities(entities, general, ongoing_point_X, ongoing_point_Y, i, k);
                     ongoing_point_Y += 6;
                     i++;
                 }
