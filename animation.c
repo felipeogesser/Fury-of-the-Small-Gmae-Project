@@ -14,7 +14,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#define ANIMATION_FPS 3
+#define ANIMATION_FPS 10
 #define FRAME_DURATION (1000 / ANIMATION_FPS)
 
 static Uint32 last_frame_time = 0;
@@ -74,15 +74,15 @@ void animation_update(void) {
                 exit(EXIT_FAILURE);
             }
 
-                        
-            if (change_animation) {
-                entities[i].animation = new_animation;
-                entities[i].sprite_current_frame = 0;
-                entities[i].sprite_frames_count = engine.sprite_pack->sprite[entities[i].unit_type][new_animation].frames_count;
-            } else {
+
             entities[i].sprite_current_frame =
                 (entities[i].sprite_current_frame == entities[i].sprite_frames_count - 1) ?
                 0 : entities[i].sprite_current_frame + 1;
+
+            if (change_animation && entities[i].animation != new_animation) {
+                entities[i].animation = new_animation;
+                entities[i].sprite_current_frame = 0;
+                entities[i].sprite_frames_count = engine.sprite_pack->sprite[entities[i].unit_type][new_animation].frames_count;
             }
         }
 
