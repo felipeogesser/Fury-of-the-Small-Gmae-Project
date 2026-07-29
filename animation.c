@@ -98,11 +98,10 @@ void animation_render(void) {
     Battalion *battalions = engine.armies->army->general->battalions;
     Entity *entities = engine.armies->army->general->battalions->entities;
 
-    enum Sprites unit_type;
-    enum Animation animation;
-
     for (unsigned int i = 0; i < engine.game->entities_created_count; i++) {
 
+        enum Sprites unit_type;
+        enum Animation animation;
         unit_type = entities[i].unit_type;
         animation = entities[i].animation;
         Sprite *sprite = &engine.sprite_pack->sprite[unit_type][animation];

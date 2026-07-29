@@ -8,15 +8,15 @@
 #include <stddef.h>
 #include <string.h>
 
-MainMenu main_menu = {0};
+static MainMenu main_menu = {0};
 
-TTF_Font *main_menu_font = NULL;
+static TTF_Font *main_menu_font = NULL;
 
-SDL_Color main_menu_white = {255, 255, 255, 255};
+static SDL_Color main_menu_white = {255, 255, 255, 255};
 
-SDL_Surface *main_menu_surface = NULL; 
+static SDL_Surface *main_menu_surface = NULL; 
 
-SDL_Texture *main_menu_message = NULL;
+static SDL_Texture *message = NULL;
 
 void main_menu_init(void) {
 
@@ -33,15 +33,25 @@ void main_menu_init(void) {
     main_menu.background_B_color = 142;
     main_menu.background_Alpha = 255;
 
-    main_menu.start_button_position_X = 400;
-    main_menu.start_button_position_Y = 400;
-    main_menu.start_button_width_X = 100;
-    main_menu.start_button_width_Y = 40;
-    main_menu.start_button_R_color = 255;
-    main_menu.start_button_G_color = 255;
-    main_menu.start_button_B_color = 255;
-    main_menu.start_button_Alpha = 255;
-    main_menu.start_button_text = "start game";
+    main_menu.button_battlefield_position_x = 400;
+    main_menu.button_battlefield_position_y = 400;
+    main_menu.button_battlefield_width_x = 100;
+    main_menu.button_battlefield_width_y = 40;
+    main_menu.button_battlefield_R_color = 255;
+    main_menu.button_battlefield_G_color = 255;
+    main_menu.button_battlefield_B_color = 255;
+    main_menu.button_battlefield_Alpha = 255;
+    main_menu.button_battlefield_text = "battlefield";
+
+    main_menu.button_battleplan_position_x = 800;
+    main_menu.button_battleplan_position_y = 800;
+    main_menu.button_battleplan_width_x = 100;
+    main_menu.button_battleplan_width_y = 40;
+    main_menu.button_battleplan_R_color = 255;
+    main_menu.button_battleplan_G_color = 255;
+    main_menu.button_battleplan_B_color = 255;
+    main_menu.button_battleplan_Alpha = 255;
+    main_menu.button_battlefield_text = "battleplan";
 
     main_menu_font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24);
     if (!main_menu_font) {
@@ -55,13 +65,13 @@ void main_menu_init(void) {
         return;
     }
 
-    main_menu_message = SDL_CreateTextureFromSurface(renderer, main_menu_surface);
+    message = SDL_CreateTextureFromSurface(renderer, main_menu_surface);
     SDL_FreeSurface(main_menu_surface);
     main_menu_surface = NULL;
     TTF_CloseFont(main_menu_font);
     main_menu_font = NULL;
 
-    if (!main_menu_message) {
+    if (!message) {
         SDL_Log("SDL_CreateTextureFromSurface failed: %s", SDL_GetError());
         return;
     }
@@ -76,18 +86,32 @@ void main_menu_input(SDL_Event *e) {
         int mouse_x = e->button.x;
         int mouse_y = e->button.y;
 
-        _Bool button_clicked =
-            mouse_x >= main_menu.start_button_position_X &&
-            mouse_x <  main_menu.start_button_position_X +
-            main_menu.start_button_width_X &&
-            mouse_y >= main_menu.start_button_position_Y &&
-            mouse_y <  main_menu.start_button_position_Y +
-            main_menu.start_button_width_Y;
+        _Bool button_battlefield_clicked =
+            mouse_x >= main_menu.button_battlefield_position_x &&
+            mouse_x <  main_menu.button_battlefield_position_x +
+            main_menu.button_battlefield_width_x &&
+            mouse_y >= main_menu.button_battlefield_position_y &&
+            mouse_y <  main_menu.button_battlefield_position_y +
+            main_menu.button_battlefield_width_y;
 
-        if (button_clicked) {
+        _Bool button_battleplan_clicked =
+            mouse_x >= main_menu.button_battleplan_position_x &&
+            mouse_x <  main_menu.button_battleplan_position_x +
+            main_menu.button_battleplan_width_x &&
+            mouse_y >= main_menu.button_battleplan_position_y &&
+            mouse_y <  main_menu.button_battleplan_position_y +
+            main_menu.button_battleplan_width_y;
+
+        if (button_battlefield_clicked) {
             
             scene_switch(BATTLEFIELD);
     
+        }
+
+        if (button_battleplan_clicked) {
+
+            scene_switch(BATTLEPLAN);
+        
         }
 
     }
@@ -96,14 +120,14 @@ void main_menu_input(SDL_Event *e) {
 
 void main_menu_render(void) {
     
-    if (main_menu_message == NULL) return;
+    if (message == NULL) return;
 
     SDL_Renderer *renderer = engine.renderer;
 
     //SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     //SDL_RenderClear(renderer);
 
-    SDL_Rect main_menu_background = {0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y};
+    SDL_Rect background = {0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y};
     SDL_SetRenderDrawColor(
         renderer,
         main_menu.background_R_color,
@@ -111,24 +135,41 @@ void main_menu_render(void) {
         main_menu.background_B_color,
         main_menu.background_Alpha
     );
-    SDL_RenderFillRect(renderer, &main_menu_background);
+    SDL_RenderFillRect(renderer, &background);
 
-    SDL_Rect main_menu_start_button = {
-        main_menu.start_button_position_X,
-        main_menu.start_button_position_Y,
-        main_menu.start_button_width_X,
-        main_menu.start_button_width_Y 
+    SDL_Rect button_battlefield = {
+        main_menu.button_battlefield_position_x,
+        main_menu.button_battlefield_position_y,
+        main_menu.button_battlefield_width_x,
+        main_menu.button_battlefield_width_y 
     };
     SDL_SetRenderDrawColor(
         renderer,
-        main_menu.start_button_R_color,
-        main_menu.start_button_G_color,
-        main_menu.start_button_B_color,
-        main_menu.start_button_Alpha
+        main_menu.button_battlefield_R_color,
+        main_menu.button_battlefield_G_color,
+        main_menu.button_battlefield_B_color,
+        main_menu.button_battlefield_Alpha
     );
-    SDL_RenderFillRect(renderer, &main_menu_start_button);
+    SDL_RenderFillRect(renderer, &button_battlefield);
 
-    SDL_RenderCopy(renderer, main_menu_message, NULL, &main_menu_start_button);
+    SDL_RenderCopy(renderer, message, NULL, &button_battlefield);
+
+        SDL_Rect button_battleplan = {
+        main_menu.button_battleplan_position_x,
+        main_menu.button_battleplan_position_y,
+        main_menu.button_battleplan_width_x,
+        main_menu.button_battleplan_width_y 
+    };
+    SDL_SetRenderDrawColor(
+        renderer,
+        main_menu.button_battleplan_R_color,
+        main_menu.button_battleplan_G_color,
+        main_menu.button_battleplan_B_color,
+        main_menu.button_battleplan_Alpha
+    );
+    SDL_RenderFillRect(renderer, &button_battleplan);
+
+    SDL_RenderCopy(renderer, message, NULL, &button_battleplan);
 
     //SDL_RenderPresent(renderer);
 
@@ -137,9 +178,9 @@ void main_menu_render(void) {
 
 void main_menu_destroy(void) {
 
-    if (main_menu_message) {
-        SDL_DestroyTexture(main_menu_message);
-        main_menu_message = NULL;
+    if (message) {
+        SDL_DestroyTexture(message);
+        message = NULL;
     }
 
     TTF_Quit();

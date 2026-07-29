@@ -8,15 +8,25 @@ typedef struct MainMenu {
     unsigned char background_B_color;
     unsigned char background_Alpha;
 
-    unsigned short start_button_position_X;
-    unsigned short start_button_position_Y;
-    unsigned short start_button_width_X;
-    unsigned short start_button_width_Y;
-    unsigned char start_button_R_color;
-    unsigned char start_button_G_color;
-    unsigned char start_button_B_color;
-    unsigned char start_button_Alpha;
-    const char *start_button_text;
+    unsigned short button_battlefield_position_x;
+    unsigned short button_battlefield_position_y;
+    unsigned short button_battlefield_width_x;
+    unsigned short button_battlefield_width_y;
+    unsigned char button_battlefield_R_color;
+    unsigned char button_battlefield_G_color;
+    unsigned char button_battlefield_B_color;
+    unsigned char button_battlefield_Alpha;
+    const char *button_battlefield_text;
+
+    unsigned short button_battleplan_position_x;
+    unsigned short button_battleplan_position_y;
+    unsigned short button_battleplan_width_x;
+    unsigned short button_battleplan_width_y;
+    unsigned char button_battleplan_R_color;
+    unsigned char button_battleplan_G_color;
+    unsigned char button_battleplan_B_color;
+    unsigned char button_battleplan_Alpha;
+    const char *button_battleplan_text;
 
 } MainMenu;
 
