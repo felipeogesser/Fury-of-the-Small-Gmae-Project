@@ -1,7 +1,9 @@
 #include "battleplan.h"
 #include "battleplan_internal.h"
+#include "armies_internal.h"
 #include "engine_internal.h"
 #include "game_state_internal.h"
+#include "general_internal.h"
 #include "scene_handler.h"
 #include "scenes.h"
 #include "window_settings.h"
@@ -137,6 +139,16 @@ void battleplan_input(SDL_Event *e) {
 }
 
 void battleplan_update(void) {
+
+
+    /*General *general = engine.armies->army->general;
+
+    for (unsigned int i = 0; i < engine.game->generals_created_count; i++) {
+
+        general
+
+
+    }*/
 
 }
 

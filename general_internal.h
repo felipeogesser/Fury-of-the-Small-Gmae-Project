@@ -2,6 +2,7 @@
 #define GENERAL_INTERNAL_H
 
 #include "general_types.h"
+#include "animation_types.h"
 #include "battalion_types.h"
 #include "sprites_types.h"
 
@@ -24,6 +25,8 @@ typedef struct General {
     enum BattalionType battalion_type;
     Battalion *battalions;
     enum Sprites units_type;
+    enum Sprites sprite;
+    enum Animation animation; 
 } General;
 
 #endif

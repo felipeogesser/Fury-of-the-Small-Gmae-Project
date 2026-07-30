@@ -7,7 +7,7 @@
 #include <SDL2/SDL.h>
 
 #define MIN_ZOOM 0.25f
-#define MAX_ZOOM 4.0f
+#define MAX_ZOOM 10.0f
 #define ZOOM_SPEED 0.1f 
 
 Camera camera = {0};

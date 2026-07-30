@@ -110,6 +110,7 @@ void load_sprites_into_memory(void) {
     count += count_pngs_in_folder("assets/sprites/Archer");
     count += count_pngs_in_folder("assets/sprites/Lancer");
     count += count_pngs_in_folder("assets/sprites/Warrior");
+    count += count_pngs_in_folder("assets/sprites/rafa");
 
     SpritesPath *sprites_string = calloc((size_t)count, sizeof(SpritesPath));
     if (!sprites_string) {
@@ -121,12 +122,13 @@ void load_sprites_into_memory(void) {
     idx = fill_pngs_from_folder("assets/sprites/Archer",  sprites_string, idx, ARCHER);
     idx = fill_pngs_from_folder("assets/sprites/Lancer",  sprites_string, idx, LANCER);
     idx = fill_pngs_from_folder("assets/sprites/Warrior", sprites_string, idx, WARRIOR);
+    idx = fill_pngs_from_folder("assets/sprites/rafa", sprites_string, idx, RAFA);
 
     sprite_pack.sprite_count = (unsigned int)idx;
 
     SDL_Renderer *renderer = engine.renderer;
     engine.sprite_pack = &sprite_pack;
-    for (int k = 0; k < idx; k++) {
+    for (signed int k = 0; k < idx; k++) {
 
         SDL_RWops *rw = SDL_RWFromFile(sprites_string[k].file_path, "rb");
         SDL_Surface *surface = IMG_Load_RW(rw, 1);
@@ -141,7 +143,7 @@ void load_sprites_into_memory(void) {
             exit(EXIT_FAILURE);
         }
 
-        int anim = parse_animation_from_path(sprites_string[k].file_path);
+        signed int anim = parse_animation_from_path(sprites_string[k].file_path);
         if (anim < 0) {
             fprintf(stderr, "Sprite '%s' has unrecognized animation name.\n", sprites_string[k].file_path);
             exit(EXIT_FAILURE);

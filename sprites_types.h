@@ -8,6 +8,7 @@ enum Sprites {
     ARCHER,
     LANCER,
     WARRIOR,
+    RAFA,
     SPRITES_COUNT
 };
 

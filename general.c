@@ -1,5 +1,6 @@
 #include "general.h"
 #include "general_internal.h"
+#include "animation_types.h"
 #include "armies_internal.h"
 #include "game_state_internal.h"
 #include "sprites_types.h"
@@ -30,6 +31,8 @@ void create_generals(General *general, float ongoing_point_X, float ongoing_poin
     general[i].dimensionX = 8;
     general[i].dimensionY = 8;
     general[i].units_type = WARRIOR;
+    general[i].sprite = WARRIOR;
+    general[i].animation = IDLE;
 }
 
 void update_generals(Armies *armies, GameState *game) {

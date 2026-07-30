@@ -56,6 +56,21 @@ void animation_input(SDL_Event *e) {
 
     }
 
+    /*if (e->type == SDL_MOUSEBUTTONDOWN &&
+        e->button.button == SDL_BUTTON_LEFT) {
+
+        Entity *entities = engine.armies->army->general->battalions->entities;
+
+        change_animation = true;
+        new_animation = IDLE;
+
+        for (unsigned int i = 0; i < engine.game->entities_created_count; i++) {
+        
+            entities[i].unit_type = RAFA;
+        }
+
+    }*/
+
 }
 
 void animation_update(void) {
@@ -121,8 +136,8 @@ void animation_render(void) {
         SDL_Rect sprite_position = {
             (signed int)entities[i].positionX - 10,
             (signed int)entities[i].positionY - 10,
-            (signed int)battalions->entities_screen_width,
-            (signed int)battalions->entities_screen_height
+            (signed int)battalions->entities_screen_width - 8,
+            (signed int)battalions->entities_screen_height - 8
         };
         
         camera_world_to_screen(&sprite_position);
