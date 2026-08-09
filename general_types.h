@@ -2,30 +2,36 @@
 #define GENERAL_TYPES_H
 
 enum GeneralType {
+    GENERAL_TYPE_UNKNOWN = -1,
     MELEE,
     RANGED,
-    SPELLCASTER,
     GENERAL_TYPE_COUNT
 };
 
 enum BattalionType {
+    BATTALION_TYPE_UNKNOWN = -1,
     INFANTRY,
     CAVALRY,
     SPEARMEN,
     ARCHERS,
-    CROSSBOWS,
-    WIZARDS,
-    HEALERS,
     BATTALION_TYPE_COUNT = 32
 };
 
 enum FatigueLevel {
-    FRESH,
+    FRESH = 0,
     ACTIVE,
     WINDED,
     TIRED,
     VERY_TIRED,
     EXHAUSTED
+};
+
+enum Rarity {
+    RARITY_UNKNOWN = -1,
+    UNIQUE,
+    RARE,
+    COMMON,
+    RARITY_TYPES_COUNT
 };
 
 typedef struct General General;

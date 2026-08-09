@@ -3,4 +3,8 @@
 
 typedef struct Battleplan Battleplan;
 
+typedef struct Background Background;
+
+typedef struct Button Button;
+
 #endif

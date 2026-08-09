@@ -80,7 +80,8 @@ void init_armies_memory_arena(void) {
     engine.armies = armies;
     engine.armies->army = army;
     engine.armies->number_of_armies = (unsigned int)number_of_armies;
-
+    engine.armies->generals_screen_width = 24;
+    engine.armies->generals_screen_height = 24;
     for (size_t i = 0; i < number_of_armies; i++) {
 
         engine.armies->army[i].general = &general[i * number_of_battalions];

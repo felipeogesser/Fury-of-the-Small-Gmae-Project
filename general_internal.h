@@ -8,6 +8,9 @@
 
 typedef struct General {
     unsigned int id;
+    enum Rarity rarity;
+    unsigned char drawer_slot_index;
+    _Bool render;
     signed int hp;
     signed int vigour;
     signed int attack;
@@ -20,6 +23,8 @@ typedef struct General {
     float vectorX, vectorY;
     unsigned char R_color, G_color, B_color, Alpha;
     char name[32];
+    unsigned char sprite_frames_count;
+    unsigned char sprite_current_frame;
     enum GeneralType general_type;
     enum FatigueLevel fatigue_level;
     enum BattalionType battalion_type;
