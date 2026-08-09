@@ -7,6 +7,7 @@
 #include "camera_types.h"
 #include "game_state_types.h"
 #include "grids_types.h"
+#include "inventory_types.h"
 #include "main_menu_types.h"
 #include "maps_types.h"
 #include "player_types.h"
@@ -56,6 +57,10 @@ typedef struct Engine {
     
     //  rendering systems
     Camera *camera;
+
+    // storage
+    Inventory *inventory;
+
 
     // debugging/profiling
         //DebugInfo debug;

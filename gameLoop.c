@@ -54,6 +54,8 @@ void game_loop(void) {
 
                 process_peripherals(window_running);
 
+                scene_update();
+
                 scene_render();
 
                 continue;

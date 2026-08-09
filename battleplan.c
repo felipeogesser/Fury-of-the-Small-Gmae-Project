@@ -1,23 +1,44 @@
 #include "battleplan.h"
 #include "battleplan_internal.h"
-#include "armies_internal.h"
+#include "animation.h"
+#include "animation_types.h"
 #include "engine_internal.h"
 #include "game_state_internal.h"
 #include "general_internal.h"
+#include "inventory.h"
+#include "inventory_internal.h"
 #include "scene_handler.h"
 #include "scenes.h"
+#include "sprites_internal.h"
 #include "window_settings.h"
+#include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <math.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include <string.h>
+#include <stdio.h>
 
 // private prototypes
-
+static void initialize_generals(General *general);
+static void set_generals_drawer_slot_index(General *general);
+static void set_generals_stats(General *general);
+//static void battleplan_animation_update(General *general);
 static void battleplan_render_deployment_area(SDL_Renderer *renderer);
 static void battleplan_render_general_drawer(SDL_Renderer *renderer);
+static void render_drawer_generals(SDL_Renderer *renderer);
+static void render_grid_generals(SDL_Renderer *renderer);
+static void render_dragged_general(SDL_Renderer *renderer);
+//static void render_generals_in_grid(SDL_Renderer *renderer);
 static void open_general_drawer(void);
+static void close_general_drawer(void);
 static float ease_out_elastic(float x);
+//static float ease_in_elastic(float x);
+static void place_general_on_grid(General **grid_cell, General **general_to_place);
+static void swap_generals(General **general_in_grid, General **general_to_swap);
+static void insert_general_into_drawer(General **general_to_insert);
+
+//static void set_generals_drawer_slot_x_y_position(void);
 
 static Battleplan battleplan = {0};
 
@@ -29,18 +50,82 @@ static SDL_Surface *battleplan_surface = NULL;
 
 static SDL_Texture *battleplan_message = NULL;
 
+static General *general_being_dragged = NULL;
+
 static SDL_Rect drawer_handle = {0};
 static SDL_Rect drawer = {0};
 
-static _Bool drawer_opened = 0;
+static _Bool mouse_pressed = false;
+static _Bool mouse_released = false;
+static _Bool holding_mouse = false;
+static _Bool open_drawer = false;
+static _Bool close_drawer = false;
+static _Bool drawer_opened = false;
+static _Bool drawer_closed = true;
+static _Bool mouse_panning_drawer = false;
+static _Bool dragging_general = false;
+static _Bool is_general_released_inside_deploy_area = false;
+//static _Bool is_general_release_valid = false;
+static _Bool general_placement_invalid = false;
+
+static unsigned int mouse_left_button_holding_down_counter = 0;
+
+//static signed int general_being_dragged_origin_position_x = 0;
+//static signed int general_being_dragged_origin_position_y = 0;
+
+static signed int mouse_x = 0;
+static signed int mouse_y = 0;
+static float mouse_dragging_origin_x = 0.0f;
+//static float mouse_dragging_current_x = 0.0f;
 
 static float elapsed = 0.0f;
 static float duration = 1.5f;
-static float a = WINDOW_SIZE_Y;
-static float b = WINDOW_SIZE_Y - 200.0f;
+//static float a = WINDOW_SIZE_Y - 200.0f;
+//static float b = WINDOW_SIZE_Y;
 static float t = 0.0f;
 
+static SDL_Rect battleplan_grid = {
+    0,
+    0,
+    (signed int)WINDOW_SIZE_X,
+    (signed int)WINDOW_SIZE_Y
+};
+
+static signed int const window_edge_padding_x = 150;
+static signed int const window_edge_padding_y = 100;
+#define GRID_DIMENSION_X 5
+#define GRID_DIMENSION_Y 6
+static signed int const grid_cell_width_y = (signed int)(WINDOW_SIZE_Y - 300) / GRID_DIMENSION_Y;
+static signed int const grid_cell_width_x = grid_cell_width_y + 20;
+
+static SDL_Rect deployment_area = {
+    window_edge_padding_x,
+    window_edge_padding_y,
+    grid_cell_width_x * GRID_DIMENSION_X,
+    grid_cell_width_y * GRID_DIMENSION_Y
+};
+
+static General *grid[GRID_DIMENSION_X][GRID_DIMENSION_Y];
+//static unsigned char grid_general_count = 0;
+static DrawerSlot drawer_slot[10]; // size needs to be established by general count in inventory
+
+#define DRAWER_HANDLE_THICKNESS 40
+
+#define GENERAL_SCREEN_WIDTH 100
+#define GENERAL_SCREEN_HEIGHT 100
+
+
+//static signed int drawer_padding_x = 50;
+static signed int drawer_padding_y = 25;
+static signed int padding_between_generals_x = GENERAL_SCREEN_WIDTH + 50;
+
+
+static signed int pan_offset = 0;
+//static signed int scroll_offset = 0;
+
 void battleplan_init(void) {
+
+    animation_init();
 
     signed int drawer_compartment_size = 200;
     drawer = (SDL_Rect){
@@ -50,12 +135,12 @@ void battleplan_init(void) {
         drawer_compartment_size
     };
 
-    signed int drawer_handle_thickness = 40;
+    //signed int drawer_handle_thickness = 40;
     drawer_handle = (SDL_Rect){
         0,
-        (signed int)WINDOW_SIZE_Y - drawer_handle_thickness,
+        (signed int)WINDOW_SIZE_Y - DRAWER_HANDLE_THICKNESS,
         (signed int)WINDOW_SIZE_X,
-        drawer_handle_thickness
+        DRAWER_HANDLE_THICKNESS
     };
 
     SDL_Renderer *renderer = engine.renderer;
@@ -66,20 +151,20 @@ void battleplan_init(void) {
         SDL_Log("TTF_Init failed: %s", TTF_GetError());
     }
     
-    battleplan.background_R_color = 130;
-    battleplan.background_G_color = 43;
-    battleplan.background_B_color = 95;
-    battleplan.background_Alpha = 255;
+    battleplan.background.r = 130;
+    battleplan.background.g = 43;
+    battleplan.background.b = 95;
+    battleplan.background.a = 255;
 
-    battleplan.button_main_menu_position_x = 400;
-    battleplan.button_main_menu_position_y = 400;
-    battleplan.button_main_menu_width_x = 100;
-    battleplan.button_main_menu_width_y = 40;
-    battleplan.button_main_menu_R_color = 255;
-    battleplan.button_main_menu_G_color = 255;
-    battleplan.button_main_menu_B_color = 255;
-    battleplan.button_main_menu_Alpha = 255;
-    battleplan.button_main_menu_text = "Go back to main menu";
+    battleplan.button_main_menu.x = 400;
+    battleplan.button_main_menu.y = 400;
+    battleplan.button_main_menu.w = 100;
+    battleplan.button_main_menu.h = 40;
+    battleplan.button_main_menu.r = 255;
+    battleplan.button_main_menu.g = 255;
+    battleplan.button_main_menu.b = 255;
+    battleplan.button_main_menu.a = 255;
+    battleplan.button_main_menu.text = "Go back to main menu";
 
     battleplan_font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24);
     if (!battleplan_font) {
@@ -104,35 +189,196 @@ void battleplan_init(void) {
         return;
     }
 
+    General *general = inventory_init();
+
+    initialize_generals(general);
+
 }
 
 void battleplan_input(SDL_Event *e) {
 
+    if (e->button.x != 0 && e->button.y != 0) {
+
+        mouse_x = e->button.x;
+        mouse_y = e->button.y;
+
+    }
+
     if (e->type == SDL_MOUSEBUTTONDOWN &&
         e->button.button == SDL_BUTTON_LEFT) {
 
-        int mouse_x = e->button.x;
-        int mouse_y = e->button.y;
+        mouse_pressed = true;
+        mouse_released = false;
 
-        _Bool button_clicked =
-            mouse_x >= battleplan.button_main_menu_position_x &&
-            mouse_x <  battleplan.button_main_menu_position_x +
-            battleplan.button_main_menu_width_x &&
-            mouse_y >= battleplan.button_main_menu_position_y &&
-            mouse_y <  battleplan.button_main_menu_position_y +
-            battleplan.button_main_menu_width_y;
+        _Bool button_main_menu_clicked =
+            mouse_x >= battleplan.button_main_menu.x &&
+            mouse_x <  battleplan.button_main_menu.x +
+            battleplan.button_main_menu.w &&
+            mouse_y >= battleplan.button_main_menu.y &&
+            mouse_y <  battleplan.button_main_menu.y +
+            battleplan.button_main_menu.h;
 
-        if (button_clicked) {
+        if (button_main_menu_clicked) {
             
             scene_switch(MAIN_MENU);
     
         }
 
-        drawer_opened =
-            mouse_x >= drawer_handle.x &&
-            mouse_x <  drawer_handle.x + drawer_handle.w &&
-            mouse_y >= drawer_handle.y &&
-            mouse_y <  drawer_handle.y + drawer_handle.h;
+        if (drawer_closed && !holding_mouse) {
+
+            open_drawer =
+                mouse_x >= drawer_handle.x &&
+                mouse_x <  drawer_handle.x + drawer_handle.w &&
+                mouse_y >= drawer_handle.y &&
+                mouse_y <  drawer_handle.y + drawer_handle.h;
+
+        }
+
+        if (drawer_opened && !holding_mouse) {
+
+            close_drawer =
+                mouse_x >= drawer_handle.x &&
+                mouse_x <  drawer_handle.x + drawer_handle.w &&
+                mouse_y >= drawer_handle.y &&
+                mouse_y <  drawer_handle.y + drawer_handle.h;
+
+        }
+
+    }
+
+    if (mouse_pressed && !mouse_released) {
+
+        mouse_left_button_holding_down_counter++;
+
+        if (mouse_left_button_holding_down_counter >= 10) {
+
+            holding_mouse = true;
+
+        }
+        
+
+        if (holding_mouse) {
+            printf("eita\n");
+            if (!dragging_general && !mouse_panning_drawer) {
+                printf("eita2\n");
+                for (signed int i = 0; i < engine.inventory->general_count; i++){
+                    
+                    dragging_general =
+                        mouse_x >= i * padding_between_generals_x + padding_between_generals_x - pan_offset &&
+                        mouse_x <  GENERAL_SCREEN_WIDTH + i * padding_between_generals_x + padding_between_generals_x - pan_offset &&
+                        mouse_y >= drawer_padding_y + drawer.y &&
+                        mouse_y <  drawer_padding_y + drawer.y + drawer.h + GENERAL_SCREEN_HEIGHT;
+
+                    if (dragging_general) {
+                        printf("eita3\n");
+                        //mouse_dragging_origin_x = mouse_x;
+                        general_being_dragged = drawer_slot[i].general;
+                        general_being_dragged->render = false;
+                        //general_being_dragged_origin_position_x = i * padding_between_generals_x + padding_between_generals_x;
+                        //general_being_dragged_origin_position_y = drawer_handle.y + drawer_handle.h + drawer_padding_y;
+                        break;
+                    
+                    }
+                
+                }
+
+                if (!dragging_general) {
+                    printf("eita4\n");
+                    mouse_dragging_origin_x = mouse_x - pan_offset;
+                    mouse_panning_drawer =
+                        mouse_x >= drawer.x &&
+                        mouse_x <  drawer.x + drawer.w &&
+                        mouse_y >= drawer.y &&
+                        mouse_y <  drawer.y + drawer.h;
+
+                }
+
+            }
+
+        }
+        
+        // panning through generals
+        if (mouse_panning_drawer) {
+            printf("eita5\n");
+            pan_offset = mouse_x - mouse_dragging_origin_x;
+            // or branchless pan_offset += (e->button.x - mouse_dragging_origin_x) * mouse_panning_drawer;
+        }
+
+    }
+
+    if (e->type == SDL_MOUSEBUTTONUP &&
+        e->button.button == SDL_BUTTON_LEFT) {
+
+            mouse_pressed = false;
+            mouse_released = true;
+            holding_mouse = false;
+            // mouse_left_button_pressing_down = false; /////// remover
+            mouse_panning_drawer = false;
+            mouse_dragging_origin_x = 0;
+            mouse_left_button_holding_down_counter = 0;
+
+            if (dragging_general) {
+                printf("vish\n");
+                is_general_released_inside_deploy_area =
+                    mouse_x >= deployment_area.x &&
+                    mouse_x <  deployment_area.x + deployment_area.w &&
+                    mouse_y >= deployment_area.y &&
+                    mouse_y <  deployment_area.y + deployment_area.h;
+
+
+                if (is_general_released_inside_deploy_area) {
+                    printf("vish2\n");
+                    signed int column = floor((mouse_x - window_edge_padding_x) / grid_cell_width_x);
+                    signed int row = floor((mouse_y - window_edge_padding_y) / grid_cell_width_y);
+
+                    if (0 <= column && column < GRID_DIMENSION_X && 0 <= row && row < GRID_DIMENSION_Y) {
+                        printf("vish3\n");
+                        if (grid[column][row] == NULL) {
+                            printf("vish4\n");
+                            General **grid_cell = &grid[column][row];
+                            General **general_to_place = &general_being_dragged;
+                            place_general_on_grid(grid_cell, general_to_place);
+                            //grid[column][row] = general_being_dragged;
+
+                        } else {
+                            printf("vish5\n");
+                            General **general_in_grid = &grid[column][row];
+                            General **General_to_swap = &general_being_dragged;
+                            swap_generals(general_in_grid, General_to_swap);
+
+                        }
+
+                        //remove_general_from_drawer(general_being_dragged);
+
+                    } else {
+                        
+                        printf("pau\n");
+                        general_placement_invalid = true;
+                        general_being_dragged->render = true;
+
+                    }
+
+                } else {
+                    printf("vish6\n");
+                    general_placement_invalid = true;
+                    general_being_dragged->render = true;
+
+
+                    /*general_placement_invalid = true;
+
+                    General *general = general_being_dragged;
+                    general->positionX = general_being_dragged_origin_position_x;
+                    general->positionY = general_being_dragged_origin_position_y;*/
+
+                
+                }
+
+                general_being_dragged = NULL;
+                dragging_general = false;
+
+            }
+
+        mouse_panning_drawer = false;
 
     }
 
@@ -140,15 +386,35 @@ void battleplan_input(SDL_Event *e) {
 
 void battleplan_update(void) {
 
+    /*if (mouse_panning_drawer) {
+        
+        General *general = general_being_dragged;
+        float mouse_drag_delta_x = e->button.x - mouse_dragging_origin_x;
+        //float mouse_drag_delta_y = mouse_dragging_origin_y - mouse_dragging_current_y;
+        for (unsigned int i = 0; i < engine.game->generals_created_count; i++) {
 
-    /*General *general = engine.armies->army->general;
+            general[i].positionX += mouse_drag_delta_x;
+            //general[i].positionY += mouse_drag_delta_y;
 
-    for (unsigned int i = 0; i < engine.game->generals_created_count; i++) {
-
-        general
-
+        }
 
     }*/
+
+
+
+    if (open_drawer) {
+
+        open_general_drawer();
+
+    }
+
+    if (close_drawer) {
+
+        close_general_drawer();
+
+    }
+
+    battleplan_animation_update(engine.inventory->general);
 
 }
 
@@ -164,36 +430,37 @@ void battleplan_render(void) {
     SDL_Rect battleplan_background = {0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y};
     SDL_SetRenderDrawColor(
         renderer,
-        battleplan.background_R_color,
-        battleplan.background_G_color,
-        battleplan.background_B_color,
-        battleplan.background_Alpha
+        battleplan.background.r,
+        battleplan.background.g,
+        battleplan.background.b,
+        battleplan.background.a
     );
     SDL_RenderFillRect(renderer, &battleplan_background);
 
     battleplan_render_deployment_area(renderer);
     battleplan_render_general_drawer(renderer);
 
-    if (drawer_opened) {
-
-        open_general_drawer();
-
-    }
-
     SDL_Rect battleplan_button = {
-        battleplan.button_main_menu_position_x,
-        battleplan.button_main_menu_position_y,
-        battleplan.button_main_menu_width_x,
-        battleplan.button_main_menu_width_y 
+        battleplan.button_main_menu.x,
+        battleplan.button_main_menu.y,
+        battleplan.button_main_menu.w,
+        battleplan.button_main_menu.h 
     };
     SDL_SetRenderDrawColor(
         renderer,
-        battleplan.button_main_menu_R_color,
-        battleplan.button_main_menu_G_color,
-        battleplan.button_main_menu_B_color,
-        battleplan.button_main_menu_Alpha
+        battleplan.button_main_menu.r,
+        battleplan.button_main_menu.g,
+        battleplan.button_main_menu.b,
+        battleplan.button_main_menu.a
     );
     SDL_RenderFillRect(renderer, &battleplan_button);
+
+    if (general_being_dragged != NULL) {
+
+        render_dragged_general(renderer);
+
+    }
+
 
     SDL_RenderCopy(renderer, battleplan_message, NULL, &battleplan_button);
 
@@ -211,16 +478,41 @@ void battleplan_destroy(void) {
     TTF_Quit();
 }
 
+/*static void battleplan_animation_update(General *general) {
 
+    Uint32 current_time = SDL_GetTicks();
+    if (current_time - last_frame_time >= FRAME_DURATION) {
+
+        last_frame_time = current_time;
+
+        for (unsigned int i = 0; i < engine.inventory->general_count; i++) {
+
+            if (general[i].sprite_frames_count == 0) {
+                fprintf(stderr, "Frame count is 0.\n");
+                exit(EXIT_FAILURE);
+            }
+
+
+            general[i].sprite_current_frame =
+                (general[i].sprite_current_frame == general[i].sprite_frames_count - 1) ?
+                0 : general[i].sprite_current_frame + 1;
+
+            if (change_animation && general[i].animation != new_animation) {
+                general[i].animation = new_animation;
+                general[i].sprite_current_frame = 0;
+                general[i].sprite_frames_count = engine.sprite_pack->sprite[general[i].sprite][new_animation].frames_count;
+            }
+        }
+
+        change_animation = false;
+
+    }
+
+
+}*/
 
 static void battleplan_render_deployment_area(SDL_Renderer *renderer) {
 
-    SDL_Rect battleplan_grid = {
-        0,
-        0,
-        (signed int)WINDOW_SIZE_X,
-        (signed int)WINDOW_SIZE_Y
-    };
     SDL_SetRenderDrawColor(
         renderer,
         128,
@@ -230,19 +522,6 @@ static void battleplan_render_deployment_area(SDL_Renderer *renderer) {
     );
     SDL_RenderFillRect(renderer, &battleplan_grid);
 
-
-    signed int window_edge_padding_x = 150;
-    signed int window_edge_padding_y = 100;
-    signed int grid_dimension_x = 5;
-    signed int grid_dimension_y = 6;
-    signed int grid_cell_dimension_y = (signed int)(WINDOW_SIZE_Y - 300) / grid_dimension_y;
-    signed int grid_cell_dimension_x = grid_cell_dimension_y + 20;
-    SDL_Rect deployment_area = {
-        window_edge_padding_x,
-        window_edge_padding_y,
-        grid_cell_dimension_x * grid_dimension_x,
-        grid_cell_dimension_y * grid_dimension_y
-    };
     SDL_SetRenderDrawColor(
         renderer,
         123,
@@ -253,9 +532,9 @@ static void battleplan_render_deployment_area(SDL_Renderer *renderer) {
     SDL_RenderFillRect(renderer, &deployment_area);
     
     signed int grid_fishnet_line_width = 6;
-    signed int x = deployment_area.x - grid_fishnet_line_width / 2/* + deployment_area.w / grid_dimension_x*/;
-    signed int offset_x = deployment_area.w / grid_dimension_x;
-    for (signed int i = 0; i < grid_dimension_x + 1; i++) {
+    signed int x = deployment_area.x - grid_fishnet_line_width / 2/* + deployment_area.w / GRID_DIMENSION_X*/;
+    signed int offset_x = deployment_area.w / GRID_DIMENSION_X;
+    for (signed int i = 0; i < GRID_DIMENSION_X + 1; i++) {
         
         SDL_Rect grid_line_vertical = {
             x + i * offset_x,
@@ -274,9 +553,9 @@ static void battleplan_render_deployment_area(SDL_Renderer *renderer) {
 
     }
 
-    signed int y = deployment_area.y - grid_fishnet_line_width / 2/* + deployment_area.h / grid_dimension_y*/;
-    signed int offset_y = deployment_area.h / grid_dimension_y;
-    for (signed int i = 0; i < grid_dimension_y + 1; i++) {
+    signed int y = deployment_area.y - grid_fishnet_line_width / 2/* + deployment_area.h / GRID_DIMENSION_Y*/;
+    signed int offset_y = deployment_area.h / GRID_DIMENSION_Y;
+    for (signed int i = 0; i < GRID_DIMENSION_Y + 1; i++) {
         
         SDL_Rect grid_line_horizontal = {
             deployment_area.x - 25,
@@ -297,8 +576,14 @@ static void battleplan_render_deployment_area(SDL_Renderer *renderer) {
 
 
     // second area
+    SDL_Rect copy_deployment_area = {
+        deployment_area.x,
+        deployment_area.y,
+        deployment_area.w,
+        deployment_area.h
+    };
 
-    deployment_area.x = (signed int)WINDOW_SIZE_X - deployment_area.x - grid_dimension_x * grid_cell_dimension_x;
+    copy_deployment_area.x = (signed int)WINDOW_SIZE_X - copy_deployment_area.x - GRID_DIMENSION_X * grid_cell_width_x;
     SDL_SetRenderDrawColor(
         renderer,
         123,
@@ -306,16 +591,16 @@ static void battleplan_render_deployment_area(SDL_Renderer *renderer) {
         123,
         255
     );
-    SDL_RenderFillRect(renderer, &deployment_area);
+    SDL_RenderFillRect(renderer, &copy_deployment_area);
     
-    x = deployment_area.x - grid_fishnet_line_width / 2/* + deployment_area.w / grid_dimension_x*/;
-    for (signed int i = 0; i < grid_dimension_x + 1; i++) {
+    x = copy_deployment_area.x - grid_fishnet_line_width / 2/* + deployment_area.w / GRID_DIMENSION_X*/;
+    for (signed int i = 0; i < GRID_DIMENSION_X + 1; i++) {
         
         SDL_Rect grid_line_vertical = {
             x + i * offset_x,
-            deployment_area.y - 25,
+            copy_deployment_area.y - 25,
             grid_fishnet_line_width,
-            deployment_area.h + 50
+            copy_deployment_area.h + 50
         };
         SDL_SetRenderDrawColor(
             renderer,
@@ -328,12 +613,12 @@ static void battleplan_render_deployment_area(SDL_Renderer *renderer) {
 
     }
 
-    for (signed int i = 0; i < grid_dimension_y + 1; i++) {
+    for (signed int i = 0; i < GRID_DIMENSION_Y + 1; i++) {
         
         SDL_Rect grid_line_horizontal = {
-            deployment_area.x - 25,
+            copy_deployment_area.x - 25,
             y + i * offset_y,
-            deployment_area.w + 50,
+            copy_deployment_area.w + 50,
             grid_fishnet_line_width
         };
         SDL_SetRenderDrawColor(
@@ -346,6 +631,8 @@ static void battleplan_render_deployment_area(SDL_Renderer *renderer) {
         SDL_RenderFillRect(renderer, &grid_line_horizontal);
 
     }
+
+    render_grid_generals(renderer);
 
 }
 
@@ -360,34 +647,418 @@ static void battleplan_render_general_drawer(SDL_Renderer *renderer) {
     );
     SDL_RenderFillRect(renderer, &drawer_handle);
 
-    SDL_SetRenderDrawColor(
-        renderer,
-        128,
-        128,
-        128,
-        255
-    );
-    SDL_RenderFillRect(renderer, &drawer);
+    if (!drawer_closed) {
+
+        SDL_SetRenderDrawColor(
+            renderer,
+            18,
+            142,
+            58,
+            255
+        );
+        SDL_RenderFillRect(renderer, &drawer);
+
+        render_drawer_generals(renderer);
+
+    }
+
+}
+
+static void render_drawer_generals(SDL_Renderer *renderer) {
+
+    Sprite (*sprites)[ANIMATION_COUNT] = engine.sprite_pack->sprite;
+    General *general = drawer_slot->general;
+    unsigned int mult = 0;
+    for (unsigned int i = 0; i < engine.inventory->general_count; i++) {
+
+        if (general[i].render) {
+
+            Sprite *sprite = &sprites[general[i].sprite][general[i].animation];
+            
+            signed int png_width = sprite->width;
+            signed int png_height = sprite->height;
+            signed int sprite_frame_width = png_width / sprite->frames_count;
+            signed int sprite_frame_height = png_height;
+
+            SDL_Rect sprite_slice = {
+                (sprite_frame_width * general[i].sprite_current_frame),
+                0,
+                sprite_frame_width,
+                sprite_frame_height
+            };
+
+            SDL_Rect sprite_position = {
+                (signed int) mult * padding_between_generals_x + padding_between_generals_x - pan_offset,
+                (signed int) drawer_padding_y + drawer.y,
+                (signed int) GENERAL_SCREEN_WIDTH,
+                (signed int) GENERAL_SCREEN_HEIGHT
+            };
+
+            //camera_world_to_screen(&sprite_position);
+
+            const SDL_Rect *rect1 = &sprite_slice;
+            const SDL_Rect *rect2 = &sprite_position;
+
+            SDL_Texture *texture = sprite->texture;
+            SDL_RenderCopy(renderer, texture, rect1, rect2);
+        
+            mult++;
+
+        }
+
+    }
+
+}
+
+static void render_dragged_general(SDL_Renderer *renderer) {
+
+    General *general = general_being_dragged;
+
+    Sprite *sprite = &engine.sprite_pack->sprite[general->sprite][general->animation];
+            
+    signed int png_width = sprite->width;
+    signed int png_height = sprite->height;
+    signed int sprite_frame_width = png_width / sprite->frames_count;
+    signed int sprite_frame_height = png_height;
+
+    SDL_Rect sprite_slice = {
+        (sprite_frame_width * general->sprite_current_frame),
+        0,
+        sprite_frame_width,
+        sprite_frame_height
+    };
+
+    SDL_Rect sprite_position = {
+        (signed int) mouse_x,
+        (signed int) mouse_y,
+        (signed int) GENERAL_SCREEN_WIDTH,
+        (signed int) GENERAL_SCREEN_HEIGHT
+    };
+
+    //camera_world_to_screen(&sprite_position);
+
+    const SDL_Rect *rect1 = &sprite_slice;
+    const SDL_Rect *rect2 = &sprite_position;
+
+    SDL_Texture *texture = sprite->texture;
+    SDL_RenderCopy(renderer, texture, rect1, rect2);
+
+}
+
+static void render_grid_generals(SDL_Renderer *renderer) {
+
+    Sprite (*sprites)[ANIMATION_COUNT] = engine.sprite_pack->sprite;
+
+    signed int x = deployment_area.x;
+    signed int offset_x = deployment_area.w / GRID_DIMENSION_X;
+    signed int y = deployment_area.y;
+    signed int offset_y = deployment_area.h / GRID_DIMENSION_Y;
+        
+    for (unsigned int i = 0; i < GRID_DIMENSION_X; i++) {
+
+        for (unsigned int j = 0; j < GRID_DIMENSION_Y; j++) {
+
+            if (grid[i][j] != NULL) {
+
+                General *general = grid[i][j];
+
+                Sprite *sprite = &sprites[general->sprite][general->animation];
+                        
+                signed int png_width = sprite->width;
+                signed int png_height = sprite->height;
+                signed int sprite_frame_width = png_width / sprite->frames_count;
+                signed int sprite_frame_height = png_height;
+
+                SDL_Rect sprite_slice = {
+                    (sprite_frame_width * general->sprite_current_frame),
+                    0,
+                    sprite_frame_width,
+                    sprite_frame_height
+                };
+
+                SDL_Rect sprite_position = {
+                    (signed int) x + i * offset_x,
+                    (signed int) y + j * offset_y,
+                    (signed int) grid_cell_width_x,
+                    (signed int) grid_cell_width_y
+                };
+
+                //camera_world_to_screen(&sprite_position);
+
+                const SDL_Rect *rect1 = &sprite_slice;
+                const SDL_Rect *rect2 = &sprite_position;
+
+                SDL_Texture *texture = sprite->texture;
+                SDL_RenderCopy(renderer, texture, rect1, rect2);
+
+            }
+
+        }
+
+    }
 
 }
 
 static void open_general_drawer(void) {
 
-    elapsed += engine.game->delta;
+    float a = WINDOW_SIZE_Y - 200;
+    float b = WINDOW_SIZE_Y;
+
     t = elapsed / duration;
+    elapsed += engine.game->delta;
     float y = ease_out_elastic(t);
-    drawer.y = (signed int)(a + (b - a) * y) + drawer_handle.h;
-    drawer_handle.y = (signed int)(a + (b - a) * y);
+
+    signed int result = (signed int)(b + (a - b) * y);
+    
+    drawer_handle.y = result - drawer_handle.h;
+    drawer.y = result;
+    
+    /*for (unsigned int i = 0; i < engine.game->generals_created_count; i++) {
+
+        general[i].positionY = (float)result + general[i].positionY - (float)drawer.y;
+
+    }*/
+
+}
+
+static void close_general_drawer(void) {
+
+    float a = WINDOW_SIZE_Y - 200;
+    float b = WINDOW_SIZE_Y;
+    //elapsed += engine.game->delta;
+    t = elapsed / duration;
+    elapsed += engine.game->delta;
+    float y = ease_out_elastic(t);
+
+    signed int result = (signed int)(a + (b - a) * y);
+    
+    drawer_handle.y = result - drawer_handle.h;
+    drawer.y = result;
+    
+    /*for (unsigned int i = 0; i < engine.game->generals_created_count; i++) {
+
+        general[i].positionY = (float)result + general[i].positionY - (float)drawer.y;
+
+    }*/
 
 }
 
 static float ease_out_elastic(float x) {
 
-    if (x == 0.0f) return 0.0f;
-    if (x >= 1.0f) {
-        return 1.0f;
-        drawer_opened = 0;
+    if (x == 0.0f) {
+
+        drawer_closed = false;
+        drawer_opened = false;
+        return 0.0f;
+
     }
+
+    if (x >= 1.0f) {
+
+        if (open_drawer) {
+
+            drawer_opened = true;
+            open_drawer = false;
+
+        }
+
+        if (close_drawer) {
+
+            drawer_closed = true;
+            close_drawer = false;
+
+        }
+
+        elapsed = 0.0f;
+        return 1.0f;
+
+    }
+
     return powf(2.0f, (-10.0f * x)) * sinf((x * 10.0f - 0.75f) * 2.094395f) + 1.0f; //2.094395f is 2 * pi / 3 approximately
 
 }
+
+/*static float ease_in_elastic(float x) {
+
+    if (x == 0.0f) {
+        printf("y = %f\n", (double)x);
+        drawer_opened = false;
+        return 0.0f;
+    }
+    if (x >= 1.0f) {
+        printf("yyyy = %f\n", (double)x);
+        close_drawer = false;
+        drawer_closed = true;
+        elapsed = 0.0f;
+        return 1.0f;
+    }
+    return -powf(2.0f, 10.0f * x - 10.0f) * sinf((x * 10.0f - 10.75f) * 2.094395f); //2.094395f is 2 * pi / 3 approximately
+
+}*/
+
+static void initialize_generals(General *general) {
+
+    set_generals_drawer_slot_index(general);
+
+    //set_generals_drawer_slot_x_y_position(general);
+
+    set_generals_stats(general);
+    
+}
+
+static void set_generals_drawer_slot_index(General *general) {
+
+    unsigned int index = 0;
+    for (enum Rarity i = 0; i < RARITY_TYPES_COUNT; i++) {
+
+        for (unsigned int j = 0; j < engine.inventory->general_count; j++) {
+
+            if (general[j].rarity == i) {
+
+                drawer_slot[index++].general = &general[j];
+            
+            }
+        
+        }
+
+    }
+
+}
+
+static void set_generals_stats(General *general) {
+
+    for (unsigned int i = 0; i < engine.inventory->general_count; i++) {
+
+        general[i].sprite_frames_count = engine.sprite_pack->sprite[general[i].sprite][IDLE].frames_count;
+
+    }
+
+}
+
+/*static void set_generals_drawer_slot_x_y_position(General *general) {
+    
+    float offset_x = (float)(50 + engine.armies->army->generals_screen_width);
+        // space from one general to the next;
+    float offset_y = (float)(drawer.y + 20);
+        // offset from drawer top side
+    for (unsigned int i = 0; i < engine.inventory->general_count; i++) {
+
+        drawer_slot[i]->positionX = offset_x;
+        drawer_slot[i]->positionY = offset_y;
+        offset_x *= offset_x;
+        offset_y *= offset_y;
+
+    }
+
+}*/
+
+static void place_general_on_grid(General **grid_cell, General **general_to_place) {
+
+    *grid_cell = *general_to_place;
+
+    //drawer_slot[general_to_place->drawer_slot_index] = NULL;
+
+}
+
+static void swap_generals(General **general_in_grid, General **general_to_swap) {
+
+    insert_general_into_drawer(general_in_grid);
+    place_general_on_grid(general_in_grid, general_to_swap);
+
+}
+
+/*static void remove_general_from_grid(General *general_to_remove_from_grid) {
+
+    insert_general_into_drawer(general_to_remove_from_grid);
+
+}*/
+
+/*static void remove_general_from_drawer(General *general_to_remove_from_drawer) {
+
+    drawer_slot[general_to_remove_from_drawer->id] = NULL;
+
+}*/
+
+static void insert_general_into_drawer(General **general_to_insert) {
+
+    (*general_to_insert)->render = true;
+
+    //drawer_slot[general_to_insert->drawer_slot_index] = general_to_insert;
+
+}
+
+
+/*static void battleplan_memory_arena(void) {
+
+    memory_arena_push(sizeof(Battleplan), _Alignof(Battleplan));
+
+}*/
+
+
+
+////
+
+
+/*
+        if (drawer_opened) {
+
+            if (!holding_mouse) {
+
+                close_drawer =
+                    mouse_x >= drawer_handle.x &&
+                    mouse_x <  drawer_handle.x + drawer_handle.w &&
+                    mouse_y >= drawer_handle.y &&
+                    mouse_y <  drawer_handle.y + drawer_handle.h;
+
+            }
+
+            if (holding_mouse) {
+
+                if (!dragging_general && !mouse_panning_drawer) {
+                    
+                    for (signed int i = 0; i < engine.inventory->general_count; i++){
+
+                        dragging_general =
+                            mouse_x >= i * padding_between_generals_x + padding_between_generals_x - pan_offset &&
+                            mouse_x <  GENERAL_SCREEN_WIDTH + i * padding_between_generals_x + padding_between_generals_x - pan_offset &&
+                            mouse_y >= drawer_padding_y + drawer.h &&
+                            mouse_y <  drawer_padding_y + drawer.h + GENERAL_SCREEN_HEIGHT;
+
+                        if (dragging_general) {
+                            
+                            //mouse_dragging_origin_x = mouse_x;
+                            general_being_dragged = drawer_slot[i].general;
+                            general_being_dragged->render = false;
+                            //general_being_dragged_origin_position_x = i * padding_between_generals_x + padding_between_generals_x;
+                            //general_being_dragged_origin_position_y = drawer_handle.y + drawer_handle.h + drawer_padding_y;
+                            break;
+                        
+                        }
+                    
+                    }
+
+                    if (!dragging_general) {
+
+                        mouse_dragging_origin_x = mouse_x;
+                        mouse_panning_drawer =
+                            mouse_x >= drawer.x &&
+                            mouse_x <  drawer.x + drawer.w &&
+                            mouse_y >= drawer.y &&
+                            mouse_y <  drawer.y + drawer.h;
+
+                    }
+
+                }
+
+            }
+
+        }
+        
+        // panning through generals
+        if (mouse_panning_drawer) {
+            
+            pan_offset += e->button.x - mouse_dragging_origin_x;
+            // or branchless pan_offset += (e->button.x - mouse_dragging_origin_x) * mouse_panning_drawer;
+        }
+
+    }*/

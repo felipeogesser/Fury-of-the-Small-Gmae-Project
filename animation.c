@@ -8,6 +8,7 @@
 #include "entities_internal.h"
 #include "game_state_internal.h"
 #include "general_internal.h"
+#include "inventory_internal.h"
 #include "sprites_internal.h"
 #include <SDL2/SDL.h>
 #include <SDL_image.h>
@@ -38,6 +39,7 @@ void animation_init(void) {
 
 }
 
+static unsigned int click_count = 0;
 void animation_input(SDL_Event *e) {
 
     if (e->type == SDL_MOUSEBUTTONDOWN &&
@@ -48,28 +50,38 @@ void animation_input(SDL_Event *e) {
 
     }
 
-    if (e->type == SDL_MOUSEBUTTONDOWN &&
+/*if (e->type == SDL_MOUSEBUTTONDOWN &&
         e->button.button == SDL_BUTTON_LEFT) {
 
         change_animation = true;
         new_animation = IDLE;
 
-    }
+    }*/
 
-    /*if (e->type == SDL_MOUSEBUTTONDOWN &&
+    if (e->type == SDL_MOUSEBUTTONDOWN &&
         e->button.button == SDL_BUTTON_LEFT) {
 
         Entity *entities = engine.armies->army->general->battalions->entities;
 
         change_animation = true;
-        new_animation = IDLE;
+        if (click_count == 0) {
+            new_animation = IDLE;
+        } else if (click_count == 1) {
+            new_animation = RUN;
+        } else if (click_count == 2) {
+            new_animation = ATTACK;
+        } else {
+            click_count = 0;
+            new_animation = IDLE;
+        }
 
+        click_count++;
         for (unsigned int i = 0; i < engine.game->entities_created_count; i++) {
         
             entities[i].unit_type = RAFA;
         }
 
-    }*/
+    }
 
 }
 
@@ -163,6 +175,45 @@ void animation_destroy(void) {
                 SDL_DestroyTexture(texture);
             }
         }
+    }
+
+}
+
+
+
+
+
+//////
+
+void battleplan_animation_update(General *general);
+void battleplan_animation_update(General *general) {
+
+    Uint32 current_time = SDL_GetTicks();
+    if (current_time - last_frame_time >= FRAME_DURATION) {
+
+        last_frame_time = current_time;
+
+        for (unsigned int i = 0; i < engine.inventory->general_count; i++) {
+
+            if (general[i].sprite_frames_count == 0) {
+                fprintf(stderr, "Frame count is 0.\n");
+                exit(EXIT_FAILURE);
+            }
+
+
+            general[i].sprite_current_frame =
+                (general[i].sprite_current_frame == general[i].sprite_frames_count - 1) ?
+                0 : general[i].sprite_current_frame + 1;
+
+            if (change_animation && general[i].animation != new_animation) {
+                general[i].animation = new_animation;
+                general[i].sprite_current_frame = 0;
+                general[i].sprite_frames_count = engine.sprite_pack->sprite[general[i].sprite][new_animation].frames_count;
+            }
+        }
+
+        change_animation = false;
+
     }
 
 }

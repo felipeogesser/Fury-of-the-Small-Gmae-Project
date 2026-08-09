@@ -2,6 +2,7 @@
 #include "general_internal.h"
 #include "animation_types.h"
 #include "armies_internal.h"
+#include "engine_internal.h"
 #include "game_state_internal.h"
 #include "sprites_types.h"
 
@@ -9,10 +10,7 @@
     X(INFANTRY,  MELEE) \
     X(CAVALRY,   MELEE) \
     X(SPEARMEN,  MELEE) \
-    X(ARCHERS,   RANGED) \
-    X(CROSSBOWS, RANGED) \
-    X(WIZARDS,   SPELLCASTER) \
-    X(HEALERS,   SPELLCASTER)
+    X(ARCHERS,   RANGED)
 
 static unsigned int internal_taxonomy_masks[GENERAL_TYPE_COUNT];
 
@@ -33,6 +31,7 @@ void create_generals(General *general, float ongoing_point_X, float ongoing_poin
     general[i].units_type = WARRIOR;
     general[i].sprite = WARRIOR;
     general[i].animation = IDLE;
+    engine.game->generals_created_count++;
 }
 
 void update_generals(Armies *armies, GameState *game) {

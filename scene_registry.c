@@ -14,7 +14,6 @@
 }*/
 
 static void void_function(void);
-
 static void void_function(void) {
     return;
 }
@@ -52,7 +51,7 @@ const SceneCallbacks scene_registry[SCENE_COUNT] = {
     {
         battleplan_init,
         battleplan_input,
-        void_function,
+        battleplan_update,
         battleplan_render,
         battleplan_destroy
     },
