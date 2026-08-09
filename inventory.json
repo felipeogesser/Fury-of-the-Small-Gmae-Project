@@ -1,0 +1,62 @@
+{ "generals": [
+    {
+        "id": 1,
+        "rarity": "common",
+        "hp": 100,
+        "vigour": 100,
+        "attack": 15,
+        "defense": 10,
+        "evasion": 5,
+        "attack_speed": 50,
+        "general_type": "melee",
+        "battalion_type": "infantry",
+        "units_type": "warrior",
+        "sprite": "rafa"
+    },
+    {
+        "id": 2,
+        "rarity": "common",
+        "hp": 100,
+        "vigour": 100,
+        "attack": 15,
+        "defense": 10,
+        "evasion": 5,
+        "attack_speed": 50,
+        "general_type": "melee",
+        "battalion_type": "infantry",
+        "units_type": "warrior",
+        "sprite": "rafa"
+    },
+    {
+        "id": 3,
+        "rarity": "common",
+        "hp": 100,
+        "vigour": 100,
+        "attack": 15,
+        "defense": 10,
+        "evasion": 5,
+        "attack_speed": 50,
+        "general_type": "melee",
+        "battalion_type": "infantry",
+        "units_type": "warrior",
+        "sprite": "rafa"
+    },
+    {
+        "id": 4,
+        "rarity": "common",
+        "hp": 100,
+        "vigour": 100,
+        "attack": 15,
+        "defense": 10,
+        "evasion": 5,
+        "attack_speed": 50,
+        "general_type": "melee",
+        "battalion_type": "infantry",
+        "units_type": "warrior",
+        "sprite": "rafa"
+    }
+
+]
+
+
+}
