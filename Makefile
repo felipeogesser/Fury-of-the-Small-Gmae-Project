@@ -5,8 +5,6 @@ CFLAGS_RELEASE = -O0
 CFLAGS_DEBUG = -g3 -O0 \
 -Wall -Wextra -Wpedantic \
 -Wshadow \
--Wconversion \
--Wsign-conversion \
 -Wcast-align \
 -Wstrict-prototypes \
 -Wmissing-prototypes \
@@ -40,6 +38,8 @@ SRC = \
 	general.c \
 	grids.c \
 	init.c \
+	inventory.c \
+	json_parser.c \
 	load_armies.c \
 	main.c \
 	main_menu.c \
@@ -54,6 +54,7 @@ SRC = \
 	scene_registry.c \
 	set_armies_position.c \
 	sprites.c \
+	type_tables.c \
 	window.c \
 
 OBJ = $(SRC:.c=.o)
