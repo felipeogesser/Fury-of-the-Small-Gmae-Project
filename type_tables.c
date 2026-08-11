@@ -6,10 +6,10 @@
 #include <string.h>
 
 const KindEntry json_kind_table[] = {
-    { "general", GENERAL },
-    { "unit", UNIT },
-    { "item", ITEM },
-    { "weapon", WEAPON },
+    { "general", KIND_GENERAL },
+    { "unit", KIND_UNIT },
+    { "item", KIND_ITEM },
+    { "weapon", KIND_WEAPON },
 };
 const size_t json_kind_table_count = (sizeof(json_kind_table) / sizeof(json_kind_table[0]));
 

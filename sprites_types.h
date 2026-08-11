@@ -3,6 +3,7 @@
 
 typedef struct Sprite Sprite;
 typedef struct SpritePack SpritePack;
+typedef struct SpriteInfo SpriteInfo;
 
 enum Sprites {
     SPRITE_UNKNOWN = -1,
@@ -10,6 +11,7 @@ enum Sprites {
     LANCER,
     WARRIOR,
     RAFA,
+    GENERAL,
     SPRITES_COUNT
 };
 

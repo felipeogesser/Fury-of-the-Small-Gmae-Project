@@ -3,10 +3,10 @@
 
 enum JsonKind {
     KIND_UNKNOWN = -1,
-    GENERAL,
-    UNIT,
-    ITEM,
-    WEAPON,
+    KIND_GENERAL,
+    KIND_UNIT,
+    KIND_ITEM,
+    KIND_WEAPON,
     KIND_COUNT
 };
 

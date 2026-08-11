@@ -11,6 +11,14 @@ typedef struct Sprite {
     signed short width, height;
 } Sprite;
 
+typedef struct SpriteInfo {
+
+    enum Sprites type;
+    //unsigned char sprite_frames_count;
+    //unsigned char sprite_current_frame;
+
+}SpriteInfo;
+
 typedef struct SpritePack {
     Sprite sprite[SPRITES_COUNT][ANIMATION_COUNT];
     unsigned int sprite_count;

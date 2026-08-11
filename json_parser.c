@@ -1,6 +1,7 @@
 #include "json_parser.h"
 #include "json_parser_types.h"
 #include "json_parser_internal.h"
+#include "field_entry.h"
 #include "general_internal.h"
 #include "type_tables.h"
 #include <unistd.h>
@@ -16,12 +17,6 @@ char *find_file_path(const char *json_file);
 void check_if_keys_needs_reordering(char **keys, unsigned int keys_count);
 char **object_parser(char **pp, const char *obj);
 signed int key_value_parser(unsigned int i, General *general, char **pp, const char **keys, const size_t keys_count);
-
-typedef struct FieldEntry {
-    const char *key;
-    size_t offset;
-    size_t size;
-} FieldEntry;
 
 #define OFFSET_OF(type, member) ((size_t) &(((type *)0)->member))
 #define SIZE_OF(type, member) (sizeof(((type *)0)->member))

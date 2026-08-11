@@ -66,9 +66,9 @@ void *inventory_init(void) {
     for (unsigned int i = 0; i < inventory.general_count; i++) {
 
         general[i].render = true;
-        general[i].animation = IDLE;
-        general[i].sprite_frames_count = engine.sprite_pack->sprite[general[i].sprite][IDLE].frames_count;
-        general[i].sprite_current_frame =(unsigned char)(rand() % general[i].sprite_frames_count);
+        general[i].anim.animation = IDLE;
+        general[i].anim.frames_count = engine.sprite_pack->sprite[general[i].sprite.type][IDLE].frames_count;
+        general[i].anim.current_frame =(unsigned char)(rand() % general[i].anim.frames_count);
 
     }
 

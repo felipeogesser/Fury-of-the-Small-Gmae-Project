@@ -28,15 +28,6 @@ void animation_init(void) {
         SDL_Log("IMG_Init failed");
     }
 
-    //engine.animationState = &animationState;
-
-    /*for (unsigned int i = 0; i < engine.game->entities_created_count; i++) {
-
-        unsigned int unit_type = engine.armies->army->general->units_type;
-        entities[i].sprite->texture = sprite_pack->sprite[unit_type][IDLE];
-
-    }*/
-
 }
 
 static unsigned int click_count = 0;
@@ -78,39 +69,52 @@ void animation_input(SDL_Event *e) {
         click_count++;
         for (unsigned int i = 0; i < engine.game->entities_created_count; i++) {
         
-            entities[i].unit_type = RAFA;
+            entities[i].sprite.type = RAFA;
         }
 
     }
 
 }
 
-void animation_update(void) {
+void animation_update(
+    void *object,
+    size_t sizeof_obj,
+    unsigned int obj_count,
+    const FieldEntry *field_table,
+    signed int anim_field,
+    signed int sprite_field) {
 
     Uint32 current_time = SDL_GetTicks();
     if (current_time - last_frame_time >= FRAME_DURATION) {
 
         last_frame_time = current_time;
 
-        Entity *entities = engine.armies->army->general->battalions->entities;
+        size_t anim_offset = field_table[anim_field].offset;
+        size_t sprite_offset = field_table[sprite_field].offset;
 
-        for (unsigned int i = 0; i < engine.game->entities_created_count; i++) {
+        char *obj = (char *)object;
 
-            if (entities[i].sprite_frames_count == 0) {
+        for (unsigned int i = 0; i < obj_count; i++) {
+
+            AnimationState *anim = (AnimationState *)(obj + anim_offset);
+            SpriteInfo *sprite = (SpriteInfo *)(obj + sprite_offset);
+            obj += sizeof_obj;
+
+            if (anim->frames_count == 0) {
                 fprintf(stderr, "Frame count is 0.\n");
                 exit(EXIT_FAILURE);
             }
 
+            anim->current_frame =
+                (anim->current_frame == anim->frames_count - 1) ?
+                0 : anim->current_frame + 1;
 
-            entities[i].sprite_current_frame =
-                (entities[i].sprite_current_frame == entities[i].sprite_frames_count - 1) ?
-                0 : entities[i].sprite_current_frame + 1;
-
-            if (change_animation && entities[i].animation != new_animation) {
-                entities[i].animation = new_animation;
-                entities[i].sprite_current_frame = 0;
-                entities[i].sprite_frames_count = engine.sprite_pack->sprite[entities[i].unit_type][new_animation].frames_count;
+            if (change_animation && anim->animation != new_animation) {
+                anim->animation = new_animation;
+                anim->current_frame = 0;
+                anim->frames_count = engine.sprite_pack->sprite[sprite->type][new_animation].frames_count;
             }
+
         }
 
         change_animation = false;
@@ -119,19 +123,35 @@ void animation_update(void) {
 
 }
 
-void animation_render(void) {
+/*void animation_render(
+    void *object,
+    size_t sizeof_obj,
+    unsigned int obj_count,
+    FieldEntry *field_table,
+    signed int anim_field,
+    signed int sprite_field) {
 
     SDL_Renderer *renderer = engine.renderer;
     Battalion *battalions = engine.armies->army->general->battalions;
     Entity *entities = engine.armies->army->general->battalions->entities;
 
-    for (unsigned int i = 0; i < engine.game->entities_created_count; i++) {
+        size_t anim_offset = field_table[anim_field].offset;
+        size_t sprite_offset = field_table[sprite_field].offset;
+        size_t pos_x
+        size_t pos_y
 
-        enum Sprites unit_type;
-        enum Animation animation;
-        unit_type = entities[i].unit_type;
-        animation = entities[i].animation;
-        Sprite *sprite = &engine.sprite_pack->sprite[unit_type][animation];
+        char *obj = (char *)object;
+
+    for (unsigned int i = 0; i < obj_count; i++) {
+
+        AnimationState *anim = (AnimationState *)(obj + anim_offset);
+        SpriteInfo *spr = (SpriteInfo *)(obj + sprite_offset);
+        obj += sizeof_obj;
+
+        enum Animation animation = anim->animation;
+        enum Sprites type = spr->type;
+        
+        Sprite *sprite = &engine.sprite_pack->sprite[type][animation];
 
         signed int png_width = sprite->width;
         signed int png_height = sprite->height;
@@ -139,17 +159,17 @@ void animation_render(void) {
         signed int sprite_frame_height = png_height;
 
         SDL_Rect sprite_slice = {
-            (sprite_frame_width * entities[i].sprite_current_frame),
+            (sprite_frame_width * anim->current_frame),
             0,
             sprite_frame_width,
             sprite_frame_height
         };
 
         SDL_Rect sprite_position = {
-            (signed int)entities[i].positionX - 10,
-            (signed int)entities[i].positionY - 10,
-            (signed int)battalions->entities_screen_width - 8,
-            (signed int)battalions->entities_screen_height - 8
+            (signed int)entities[i].positionX,
+            (signed int)entities[i].positionY,
+            (signed int)sprite_frame_width,
+            (signed int)sprite_frame_height
         };
         
         camera_world_to_screen(&sprite_position);
@@ -162,7 +182,7 @@ void animation_render(void) {
     
     }
 
-}
+}*/
 
 void animation_destroy(void) {
     
@@ -185,7 +205,7 @@ void animation_destroy(void) {
 
 //////
 
-void battleplan_animation_update(General *general);
+/*void battleplan_animation_update(General *general);
 void battleplan_animation_update(General *general) {
 
     Uint32 current_time = SDL_GetTicks();
@@ -195,20 +215,20 @@ void battleplan_animation_update(General *general) {
 
         for (unsigned int i = 0; i < engine.inventory->general_count; i++) {
 
-            if (general[i].sprite_frames_count == 0) {
+            if (general[i].anim.frames_count == 0) {
                 fprintf(stderr, "Frame count is 0.\n");
                 exit(EXIT_FAILURE);
             }
 
 
-            general[i].sprite_current_frame =
-                (general[i].sprite_current_frame == general[i].sprite_frames_count - 1) ?
-                0 : general[i].sprite_current_frame + 1;
+            general[i].anim.current_frame =
+                (general[i].anim.current_frame == general[i].anim.frames_count - 1) ?
+                0 : general[i].anim.current_frame + 1;
 
-            if (change_animation && general[i].animation != new_animation) {
-                general[i].animation = new_animation;
-                general[i].sprite_current_frame = 0;
-                general[i].sprite_frames_count = engine.sprite_pack->sprite[general[i].sprite][new_animation].frames_count;
+            if (change_animation && general[i].anim.animation != new_animation) {
+                general[i].anim.animation = new_animation;
+                general[i].anim.current_frame = 0;
+                general[i].anim.frames_count = engine.sprite_pack->sprite[general[i].sprite][new_animation].frames_count;
             }
         }
 
@@ -216,4 +236,4 @@ void battleplan_animation_update(General *general) {
 
     }
 
-}
+}*/

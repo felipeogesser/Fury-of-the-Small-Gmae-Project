@@ -27,6 +27,9 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 
+// prototypes
+void render_units(void);
+
 _Bool show_quads = 0;
 
 void battlefield_init(void) {
@@ -101,7 +104,13 @@ void battlefield_update(void) {
 
     camera_update();
 
-    animation_update();
+    animation_update(
+        &engine.armies->army->general->battalions->entities,
+        sizeof(Entity),
+        engine.armies->army->general->battalions->entities_count,
+        unit_field_table,
+        U_ANIM_FIELD,
+        U_SPRITE_FIELD);
 
     update_game_state();
 
@@ -195,7 +204,7 @@ void battlefield_render(void) {
     SDL_SetRenderDrawColor(renderer, 102, 255, 51, 255);
     SDL_RenderFillRect(renderer, &st);
 
-    animation_render();
+    render_units();
 
     if (show_quads) {
         Entity *entities = battalions->entities;
@@ -211,4 +220,52 @@ void battlefield_destroy(void) {
 
     memory_arena_reset();
 
+}
+
+void render_units(void) {
+
+    SDL_Renderer *renderer = engine.renderer;
+    Battalion *battalions = engine.armies->army->general->battalions;
+    Entity *entities = engine.armies->army->general->battalions->entities;
+    unsigned int entities_count = battalions->entities_count;
+
+    for (unsigned int i = 0; i < entities_count; i++) {
+
+        AnimationState *anim = &entities[i].anim;
+        SpriteInfo *spr = &entities[i].sprite;
+
+
+        enum Animation animation = anim->animation;
+        enum Sprites type = spr->type;
+        
+        Sprite *sprite = &engine.sprite_pack->sprite[type][animation];
+
+        signed int png_width = sprite->width;
+        signed int png_height = sprite->height;
+        signed int sprite_frame_width = png_width / sprite->frames_count;
+        signed int sprite_frame_height = png_height;
+
+        SDL_Rect sprite_slice = {
+            (sprite_frame_width * anim->current_frame),
+            0,
+            sprite_frame_width,
+            sprite_frame_height
+        };
+
+        SDL_Rect sprite_position = {
+            (signed int)entities[i].positionX,
+            (signed int)entities[i].positionY,
+            (signed int)sprite_frame_width,
+            (signed int)sprite_frame_height
+        };
+        
+        camera_world_to_screen(&sprite_position);
+
+        const SDL_Rect *rect1 = &sprite_slice;
+        const SDL_Rect *rect2 = &sprite_position;
+
+        SDL_Texture *texture = sprite->texture;
+        SDL_RenderCopy(renderer, texture, rect1, rect2);
+    
+    }
 }

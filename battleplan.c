@@ -414,7 +414,15 @@ void battleplan_update(void) {
 
     }
 
-    battleplan_animation_update(engine.inventory->general);
+    void *general = drawer_slot[0].general;
+    animation_update(
+        general,
+        sizeof(General),
+        engine.inventory->general_count,
+        general_field_table,
+        G_ANIM_FIELD,
+        G_SPRITE_FIELD
+    );
 
 }
 
@@ -487,20 +495,20 @@ void battleplan_destroy(void) {
 
         for (unsigned int i = 0; i < engine.inventory->general_count; i++) {
 
-            if (general[i].sprite_frames_count == 0) {
+            if (general[i].anim.frames_count == 0) {
                 fprintf(stderr, "Frame count is 0.\n");
                 exit(EXIT_FAILURE);
             }
 
 
-            general[i].sprite_current_frame =
-                (general[i].sprite_current_frame == general[i].sprite_frames_count - 1) ?
-                0 : general[i].sprite_current_frame + 1;
+            general[i].anim.current_frame =
+                (general[i].anim.current_frame == general[i].anim.frames_count - 1) ?
+                0 : general[i].anim.current_frame + 1;
 
-            if (change_animation && general[i].animation != new_animation) {
-                general[i].animation = new_animation;
-                general[i].sprite_current_frame = 0;
-                general[i].sprite_frames_count = engine.sprite_pack->sprite[general[i].sprite][new_animation].frames_count;
+            if (change_animation && general[i].anim.animation != new_animation) {
+                general[i].anim.animation = new_animation;
+                general[i].anim.current_frame = 0;
+                general[i].anim.frames_count = engine.sprite_pack->sprite[general[i].sprite][new_animation].frames_count;
             }
         }
 
@@ -673,7 +681,7 @@ static void render_drawer_generals(SDL_Renderer *renderer) {
 
         if (general[i].render) {
 
-            Sprite *sprite = &sprites[general[i].sprite][general[i].animation];
+            Sprite *sprite = &sprites[general[i].sprite.type][general[i].anim.animation];
             
             signed int png_width = sprite->width;
             signed int png_height = sprite->height;
@@ -681,7 +689,7 @@ static void render_drawer_generals(SDL_Renderer *renderer) {
             signed int sprite_frame_height = png_height;
 
             SDL_Rect sprite_slice = {
-                (sprite_frame_width * general[i].sprite_current_frame),
+                (sprite_frame_width * general[i].anim.current_frame),
                 0,
                 sprite_frame_width,
                 sprite_frame_height
@@ -714,7 +722,7 @@ static void render_dragged_general(SDL_Renderer *renderer) {
 
     General *general = general_being_dragged;
 
-    Sprite *sprite = &engine.sprite_pack->sprite[general->sprite][general->animation];
+    Sprite *sprite = &engine.sprite_pack->sprite[general->sprite.type][general->anim.animation];
             
     signed int png_width = sprite->width;
     signed int png_height = sprite->height;
@@ -722,7 +730,7 @@ static void render_dragged_general(SDL_Renderer *renderer) {
     signed int sprite_frame_height = png_height;
 
     SDL_Rect sprite_slice = {
-        (sprite_frame_width * general->sprite_current_frame),
+        (sprite_frame_width * general->anim.current_frame),
         0,
         sprite_frame_width,
         sprite_frame_height
@@ -762,7 +770,7 @@ static void render_grid_generals(SDL_Renderer *renderer) {
 
                 General *general = grid[i][j];
 
-                Sprite *sprite = &sprites[general->sprite][general->animation];
+                Sprite *sprite = &sprites[general->sprite.type][general->anim.animation];
                         
                 signed int png_width = sprite->width;
                 signed int png_height = sprite->height;
@@ -770,7 +778,7 @@ static void render_grid_generals(SDL_Renderer *renderer) {
                 signed int sprite_frame_height = png_height;
 
                 SDL_Rect sprite_slice = {
-                    (sprite_frame_width * general->sprite_current_frame),
+                    (sprite_frame_width * general->anim.current_frame),
                     0,
                     sprite_frame_width,
                     sprite_frame_height
@@ -929,7 +937,7 @@ static void set_generals_stats(General *general) {
 
     for (unsigned int i = 0; i < engine.inventory->general_count; i++) {
 
-        general[i].sprite_frames_count = engine.sprite_pack->sprite[general[i].sprite][IDLE].frames_count;
+        general[i].anim.frames_count = engine.sprite_pack->sprite[general[i].sprite.type][IDLE].frames_count;
 
     }
 

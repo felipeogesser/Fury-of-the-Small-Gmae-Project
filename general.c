@@ -22,6 +22,30 @@ void init_general_battalion_taxonomy(void) {
     #undef X
 }
 
+#define OFFSET_OF(type, member) ((size_t) &(((type *)0)->member))
+#define SIZE_OF(type, member) (sizeof(((type *)0)->member))
+
+const FieldEntry general_field_table[] = {
+    { "anim",            OFFSET_OF(General, anim),            SIZE_OF(General, anim) },
+    { "sprite",          OFFSET_OF(General, sprite),          SIZE_OF(General, sprite) },
+    { "id",              OFFSET_OF(General, id),              SIZE_OF(General, id) },
+    { "rarity",          OFFSET_OF(General, rarity),          SIZE_OF(General, rarity) },
+    { "hp",              OFFSET_OF(General, hp),              SIZE_OF(General, hp) },
+    { "vigour",          OFFSET_OF(General, vigour),          SIZE_OF(General, vigour) },
+    { "attack",          OFFSET_OF(General, attack),          SIZE_OF(General, attack) },
+    { "defense",         OFFSET_OF(General, defense),         SIZE_OF(General, defense) },
+    { "evasion",         OFFSET_OF(General, evasion),         SIZE_OF(General, evasion) },
+    { "attack_speed",    OFFSET_OF(General, attack_speed),    SIZE_OF(General, attack_speed) },
+    { "general_type",    OFFSET_OF(General, general_type),    SIZE_OF(General, general_type) },
+    { "battalion_type",  OFFSET_OF(General, battalion_type),  SIZE_OF(General, battalion_type) },
+    { "units_type",      OFFSET_OF(General, units_type),      SIZE_OF(General, units_type) },
+    { "SENTINEL_VALUE",  sizeof(General),                     0 },
+};
+const size_t general_field_table_count =
+    sizeof(general_field_table) / sizeof(general_field_table[0]);
+#undef OFFSET_OF
+#undef SIZE_OF
+
 void create_generals(General *general, float ongoing_point_X, float ongoing_point_Y, unsigned int i) {
     general[i].id = i + 1;
     general[i].positionX = ongoing_point_X + 40;
@@ -29,8 +53,8 @@ void create_generals(General *general, float ongoing_point_X, float ongoing_poin
     general[i].dimensionX = 8;
     general[i].dimensionY = 8;
     general[i].units_type = WARRIOR;
-    general[i].sprite = WARRIOR;
-    general[i].animation = IDLE;
+    general[i].sprite.type = WARRIOR;
+    general[i].anim.animation = IDLE;
     engine.game->generals_created_count++;
 }
 

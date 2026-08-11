@@ -1,13 +1,19 @@
 #ifndef ENTITIES_INTERNAL_H
 #define ENTITIES_INTERNAL_H
 
-#include "animation_types.h"
-#include "sprites_types.h"
+#include "animation_internal.h"
+#include "field_entry.h"
+#include "sprites_internal.h"
 #include <SDL2/SDL.h>
 
 //#define MAX_ENTITIES 1024
 
+extern const FieldEntry unit_field_table[];
+extern const size_t unit_field_table_count;
+
 typedef struct Entity {
+    AnimationState anim;
+    SpriteInfo sprite;
     unsigned int id;
     char name[32];
     float positionX, positionY;
@@ -28,10 +34,10 @@ typedef struct Entity {
     float constMovX, constMovY;
     float health;
     //unsigned char *sprite_current_frame;
-    unsigned char sprite_frames_count;
-    unsigned char sprite_current_frame;
-    enum Animation animation;
-    enum Sprites unit_type;
+    //unsigned char sprite_frames_count;
+    //unsigned char sprite_current_frame;
+    //enum Animation animation;
+    //enum Sprites unit_type;
     //Sprite sprite;
 } Entity;
 
