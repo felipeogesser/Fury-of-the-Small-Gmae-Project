@@ -5,9 +5,9 @@
 #include "camera.h"
 #include "camera_internal.h"
 #include "engine_internal.h"
-#include "entity_collision.h"
-#include "entities.h"
-#include "entities_internal.h"
+#include "unit_collision.h"
+#include "unit.h"
+#include "unit_internal.h"
 #include "game_state.h"
 #include "game_state_internal.h"
 #include "general.h"
@@ -28,7 +28,7 @@
 #include <stdbool.h>
 
 // prototypes
-void render_units(void);
+static void render_units(void);
 
 _Bool show_quads = 0;
 
@@ -47,7 +47,7 @@ void battlefield_init(void) {
     load_armies_into_arena();
     calculateAmountOfQuadrants();
     init_grids();
-    initialCheckEntityQuadrant(engine.armies, engine.game, engine.grids);
+    initialCheckUnitQuadrant(engine.armies, engine.game, engine.grids);
     renderQuadrantsSetup(engine.armies, engine.game);
 
 }
@@ -94,7 +94,7 @@ void battlefield_update(void) {
     
     player_map_edge_collision(engine.game, engine.map, engine.player);
 
-    check_entity_quadrant(engine.armies, engine.game, engine.grids);
+    check_unit_quadrant(engine.armies, engine.game, engine.grids);
 
     update_player(engine.game);
 
@@ -105,9 +105,9 @@ void battlefield_update(void) {
     camera_update();
 
     animation_update(
-        &engine.armies->army->general->battalions->entities,
-        sizeof(Entity),
-        engine.armies->army->general->battalions->entities_count,
+        &engine.armies->army->general->battalions->unit,
+        sizeof(Unit),
+        engine.armies->army->general->battalions->unit_count,
         unit_field_table,
         U_ANIM_FIELD,
         U_SPRITE_FIELD);
@@ -149,11 +149,11 @@ void battlefield_render(void) {
     unsigned int battalion_count = armies->army->battalion_count;
 
     Battalion *battalions = armies->army->battalions;
-    unsigned int entities_count = battalions->entities_count;
+    unsigned int unit_count = battalions->unit_count;
 
     for (unsigned int i = 0; i < number_of_armies * battalion_count; i++) {
         
-        Entity *entities = battalions[i].entities;
+        Unit *unit = battalions[i].unit;
         General *general = armies->army->general;
         
             SDL_Rect general_render = {
@@ -165,16 +165,16 @@ void battlefield_render(void) {
             SDL_SetRenderDrawColor(renderer, general[i].R_color, general[i].G_color, general[i].B_color, general[i].Alpha);
             SDL_RenderFillRect(renderer, &general_render);
 
-        for (unsigned int j = 0; j < entities_count; j++) {
+        for (unsigned int j = 0; j < unit_count; j++) {
 
-            SDL_Rect entities_render = {
-                (signed int)entities[j].positionX,
-                (signed int)entities[j].positionY,
-                (signed int)entities[j].dimensionX,
-                (signed int)entities[j].dimensionY};
-            camera_world_to_screen(&entities_render);
+            SDL_Rect unit_render = {
+                (signed int)unit[j].positionX,
+                (signed int)unit[j].positionY,
+                (signed int)unit[j].dimensionX,
+                (signed int)unit[j].dimensionY};
+            camera_world_to_screen(&unit_render);
             SDL_SetRenderDrawColor(renderer, battalions[i].R_Color, battalions[i].G_Color, battalions[i].B_Color, battalions[i].Alpha);
-            SDL_RenderFillRect(renderer, &entities_render);
+            SDL_RenderFillRect(renderer, &unit_render);
 
         }
     //mudar dps. fazer todos o generais antes, dps todas as units para n perder pre fetch
@@ -207,9 +207,9 @@ void battlefield_render(void) {
     render_units();
 
     if (show_quads) {
-        Entity *entities = battalions->entities;
+        Unit *unit = battalions->unit;
         GameState *game = engine.game;
-        renderQuadrants(entities, game, renderer);
+        renderQuadrants(unit, game, renderer);
     }
 
 }
@@ -222,17 +222,17 @@ void battlefield_destroy(void) {
 
 }
 
-void render_units(void) {
+static void render_units(void) {
 
     SDL_Renderer *renderer = engine.renderer;
     Battalion *battalions = engine.armies->army->general->battalions;
-    Entity *entities = engine.armies->army->general->battalions->entities;
-    unsigned int entities_count = battalions->entities_count;
+    Unit *unit = engine.armies->army->general->battalions->unit;
+    unsigned int unit_count = battalions->unit_count;
 
-    for (unsigned int i = 0; i < entities_count; i++) {
+    for (unsigned int i = 0; i < unit_count; i++) {
 
-        AnimationState *anim = &entities[i].anim;
-        SpriteInfo *spr = &entities[i].sprite;
+        AnimationState *anim = &unit[i].anim;
+        SpriteInfo *spr = &unit[i].sprite;
 
 
         enum Animation animation = anim->animation;
@@ -253,8 +253,8 @@ void render_units(void) {
         };
 
         SDL_Rect sprite_position = {
-            (signed int)entities[i].positionX,
-            (signed int)entities[i].positionY,
+            (signed int)unit[i].positionX,
+            (signed int)unit[i].positionY,
             (signed int)sprite_frame_width,
             (signed int)sprite_frame_height
         };

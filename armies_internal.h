@@ -15,7 +15,7 @@ typedef struct Army {
     struct Battalion *battalions;
     unsigned int battalion_count;
     unsigned int army_size;
-    unsigned int entities_alive;
+    unsigned int unit_alive;
     unsigned int generals_screen_width;
     unsigned int generals_screen_height;
 } Army;

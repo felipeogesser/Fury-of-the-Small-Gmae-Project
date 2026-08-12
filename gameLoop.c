@@ -1,7 +1,7 @@
 #include "gameLoop.h"
 #include "armies_types.h"
 #include "battalion_types.h"
-#include "entity_collision.h"
+#include "unit_collision.h"
 #include "engine_internal.h"
 #include "game_state_internal.h"
 #include "peripherals.h"
@@ -15,7 +15,7 @@ void game_loop(void) {
 
     //Armies *armies = engine.armies;
     //Battalion *battalions = engine.armies->army->battalions;
-    //Entity *entities = engine.armies->army->battalions->entities;
+    //Unit *unit = engine.armies->army->battalions->unit;
     GameState *game = engine.game;
     //Grids *grids = engine.grids;
     //Map *map = engine.map;

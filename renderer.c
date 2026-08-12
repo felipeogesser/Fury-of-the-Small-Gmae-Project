@@ -1,7 +1,7 @@
 #include "renderer.h"
 #include "armies_internal.h"
 #include "battalion_internal.h"
-#include "entities_internal.h"
+#include "unit_internal.h"
 #include "game_state_internal.h"
 #include "maps_internal.h"
 #include "player_internal.h"
@@ -26,17 +26,17 @@ void render(Armies *armies, GameState *game, Map *map, Player *player, SDL_Rende
     unsigned int battalion_count = armies->army->battalion_count;
 
     Battalion *battalions = armies->army->battalions;
-    unsigned int entities_count = battalions->entities_count;
+    unsigned int unit_count = battalions->unit_count;
 
     for (unsigned int i = 0; i < number_of_armies * battalion_count; i++) {
         
-        Entity *entities = battalions[i].entities;
+        Unit *unit = battalions[i].unit;
         
-        for (unsigned int j = 0; j < entities_count; j++) {
+        for (unsigned int j = 0; j < unit_count; j++) {
             
-            SDL_Rect EntityMovement = { (signed int)(entities[j].positionX - game->offSetX), (signed int)(entities[j].positionY - game->offSetY), (signed int)entities[j].dimensionX, (signed int)entities[j].dimensionY};
+            SDL_Rect UnitMovement = { (signed int)(unit[j].positionX - game->offSetX), (signed int)(unit[j].positionY - game->offSetY), (signed int)unit[j].dimensionX, (signed int)unit[j].dimensionY};
             SDL_SetRenderDrawColor(renderer, battalions[i].R_Color, battalions[i].G_Color, battalions[i].B_Color, battalions[i].Alpha);
-            SDL_RenderFillRect(renderer, &EntityMovement);
+            SDL_RenderFillRect(renderer, &UnitMovement);
 
         }
 
@@ -66,9 +66,9 @@ void render(Armies *armies, GameState *game, Map *map, Player *player, SDL_Rende
     SDL_SetRenderDrawColor(renderer, 102, 255, 51, 255);
     SDL_RenderFillRect(renderer, &st);
 
-    //Entity *entities = battalions->entities;
+    //Unit *unit = battalions->unit;
 
-    //renderQuadrants(entities, game, renderer);
+    //renderQuadrants(unit, game, renderer);
 
     SDL_RenderPresent(renderer);
 }

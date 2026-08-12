@@ -14,7 +14,7 @@ void init_grids(void) {
     size_t bigCount = engine.game->low_LOD_quadrant_count;
     size_t mediumCount = engine.game->medium_LOD_quadrant_count;
     size_t smallCount = engine.game->high_LOD_quadrant_count;
-    //size_t entities_created_count = engine.game.entities_created_count;
+    //size_t unit_created_count = engine.game.unit_created_count;
     size_t number_of_grids = 3;
 
     grids_total_memory_size =

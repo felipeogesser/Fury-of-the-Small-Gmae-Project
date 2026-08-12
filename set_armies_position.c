@@ -1,8 +1,8 @@
 #include "set_armies_position.h"
 #include "armies_internal.h"
 #include "battalion_internal.h"
-#include "entities.h"
-#include "entities_internal.h"
+#include "unit.h"
+#include "unit_internal.h"
 #include "general.h"
 #include "general_internal.h"
 
@@ -43,12 +43,12 @@ void set_armies_in_the_battlefield(Armies *armies) {
 
             create_generals(general, ongoing_point_X, ongoing_point_Y, k);
 
-            Entity *entities = battalions[k].entities;
+            Unit *unit = battalions[k].unit;
 
             for (unsigned int l = 0; l < 5; l++) {
 
                 for (unsigned int m = 0; m < 10; m++) {
-                    create_entities(entities, general, ongoing_point_X, ongoing_point_Y, i, k);
+                    create_unit(unit, general, ongoing_point_X, ongoing_point_Y, i, k);
                     ongoing_point_Y += 6;
                     i++;
                 }
@@ -87,10 +87,10 @@ void set_armies_in_the_battlefield(Armies *armies) {
     for (unsigned int j = 0; j < number_of_armies; j++) {
         Battalion *battalions = army[j].battalions;
         for (unsigned int k = 0; k < number_of_battalions; k++) {
-            Entity *entities = battalions[k].entities;
+            Unit *unit = battalions[k].unit;
             for (unsigned int l = 0; l < 5; l++) {
                 for (unsigned int m = 0; m < 10; m++) {
-                    create_entities(entities, ongoing_point_X, ongoing_point_Y, i);
+                    create_unit(unit, ongoing_point_X, ongoing_point_Y, i);
                     ongoing_point_Y += 3;
                     i++;
                 }
@@ -108,12 +108,12 @@ void set_armies_in_the_battlefield(Armies *armies) {
         starting_point_Y = 50;
     }
 
-    unsigned int entities_created_count = (unsigned int)(battalion_size * number_of_battalions * number_of_armies);
+    unsigned int unit_created_count = (unsigned int)(battalion_size * number_of_battalions * number_of_armies);
 
-    Entity *entities = army->battalions->entities;
+    Unit *unit = army->battalions->unit;
 
-    for (i = 0; i < entities_created_count; i++) {
-        entities[i].id = i + 1;
+    for (i = 0; i < unit_created_count; i++) {
+        unit[i].id = i + 1;
     }
 
 } */

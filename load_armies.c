@@ -2,7 +2,7 @@
 #include "armies_internal.h"
 #include "battalion_internal.h"
 #include "engine_internal.h"
-#include "entities_internal.h"
+#include "unit_internal.h"
 #include "game_state_internal.h"
 #include "general_internal.h"
 #include "memory_arena.h"
@@ -16,14 +16,14 @@ unsigned int battalion_size = 50;
 
 void init_armies_memory_arena(void) {
 
-    engine.game->entities_created_count = (unsigned int)(battalion_size * number_of_battalions * number_of_armies);
+    engine.game->unit_created_count = (unsigned int)(battalion_size * number_of_battalions * number_of_armies);
 
     armies_total_memory_size =
         (_Alignof(Armies) - 1) + sizeof(Armies) +
         (_Alignof(Army) - 1) + number_of_armies * sizeof(Army) +
         (_Alignof(General) - 1) + number_of_armies * number_of_battalions * sizeof(General) +
         (_Alignof(Battalion) - 1) + number_of_armies * number_of_battalions * sizeof(Battalion) +
-        (_Alignof(Entity) - 1) + number_of_armies * number_of_battalions * battalion_size * sizeof(Entity);
+        (_Alignof(Unit) - 1) + number_of_armies * number_of_battalions * battalion_size * sizeof(Unit);
         
     if (memory_arena_memory_remainder() < armies_total_memory_size) {
 
@@ -47,9 +47,9 @@ void init_armies_memory_arena(void) {
         sizeof(Battalion) * number_of_armies * number_of_battalions,
         _Alignof(Battalion));
 
-    Entity *entities = memory_arena_push(
-        sizeof(Entity) * number_of_armies * number_of_battalions * battalion_size,
-        _Alignof(Entity));
+    Unit *unit = memory_arena_push(
+        sizeof(Unit) * number_of_armies * number_of_battalions * battalion_size,
+        _Alignof(Unit));
 
     //
     /*engine.army_memory_ptr = memory_arena_current_pointer();
@@ -72,8 +72,8 @@ void init_armies_memory_arena(void) {
 
     p += number_of_armies * number_of_battalions * sizeof(Battalion);
 
-    p = (char *)(((uintptr_t)p + _Alignof(Entity) - 1) & ~(_Alignof(Entity) - 1));
-    Entity *entities = (Entity *)p;
+    p = (char *)(((uintptr_t)p + _Alignof(Unit) - 1) & ~(_Alignof(Unit) - 1));
+    Unit *unit = (Unit *)p;
 
     armies->army = army;*/
 
@@ -86,18 +86,18 @@ void init_armies_memory_arena(void) {
 
         engine.armies->army[i].general = &general[i * number_of_battalions];
         engine.armies->army[i].battalions = &battalions[i * number_of_battalions];
-        size_t entity_offset_per_army = number_of_battalions * battalion_size * i;
+        size_t Unit_offset_per_army = number_of_battalions * battalion_size * i;
 
         for (size_t j = 0; j < number_of_battalions; j++) {
             
             engine.armies->army[i].general[j].battalions = &battalions[j + i * number_of_battalions];
-            engine.armies->army[i].battalions[j].entities = &entities[battalion_size * j + entity_offset_per_army];
-            engine.armies->army[i].battalions[j].entities_count = (unsigned int)battalion_size;
-            engine.armies->army[i].battalions[j].entities_screen_width = 20;
-            engine.armies->army[i].battalions[j].entities_screen_height = 20;
+            engine.armies->army[i].battalions[j].unit = &unit[battalion_size * j + Unit_offset_per_army];
+            engine.armies->army[i].battalions[j].unit_count = (unsigned int)battalion_size;
+            engine.armies->army[i].battalions[j].unit_screen_width = 20;
+            engine.armies->army[i].battalions[j].unit_screen_height = 20;
         }
     }
-    //engine.armies->army->battalions->entities_count = (unsigned int)battalion_size;
+    //engine.armies->army->battalions->unit_count = (unsigned int)battalion_size;
 
 }
 
@@ -109,7 +109,7 @@ void load_armies_into_arena(void) { //funcao precisa ser melhorada dps, mt desor
 
         army[i].battalion_count = number_of_battalions;
         army[i].army_size = number_of_battalions * battalion_size;
-        army[i].entities_alive = number_of_battalions * battalion_size;
+        army[i].unit_alive = number_of_battalions * battalion_size;
     
     }
         
@@ -133,7 +133,7 @@ void free_army_memory(void) {
 
         army_ptr[i].battalion_count = number_of_battalions;
         army_ptr[i].army_size = number_of_battalions * battalion_size;
-        army_ptr[i].entities_alive = number_of_battalions * battalion_size;
+        army_ptr[i].unit_alive = number_of_battalions * battalion_size;
         
         Battalion *battalions_ptr = army_ptr[i].battalions;
 
@@ -145,17 +145,17 @@ void free_army_memory(void) {
             unsigned char g = (x >>  8) & 255u;
             unsigned char b = (x >> 16) & 255u;
 
-            battalions_ptr[j].entities_count = battalion_size;
+            battalions_ptr[j].unit_count = battalion_size;
             battalions_ptr[j].R_Color = r;
             battalions_ptr[j].G_Color = g;
             battalions_ptr[j].B_Color = b;
             battalions_ptr[j].Alpha = (unsigned char)255;
 
-            Entity *entities_ptr = battalions_ptr[j].entities;
+            Unit *unit_ptr = battalions_ptr[j].unit;
             
             for (unsigned int k = 0; k < battalion_size; k++) {
                 
-                set_armies_in_the_battlefield(entities_ptr);
+                set_armies_in_the_battlefield(unit_ptr);
             
             }
         }

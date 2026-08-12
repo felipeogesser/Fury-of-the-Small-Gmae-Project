@@ -36,7 +36,7 @@ void fill_quadrant_data(void) {
     for (unsigned short i = 0; i < amountX * amountY; i++) {
         bigQuad[i].id = i + 1;
         //for (unsigned int j; j < 100; j++) {
-            //bigQuad[i].entities_inside_quad[j] = (unsigned int)-1;
+            //bigQuad[i].unit_inside_quad[j] = (unsigned int)-1;
         //}
     }
 

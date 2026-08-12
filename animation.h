@@ -1,7 +1,7 @@
 #ifndef ANIMATION_H
 #define ANIMATION_H
 
-#include "entities_internal.h"
+#include "unit_internal.h"
 #include "field_entry.h"
 #include "general_types.h"
 #include <SDL2/SDL.h>

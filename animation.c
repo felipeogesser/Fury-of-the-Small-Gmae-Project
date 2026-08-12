@@ -5,7 +5,7 @@
 #include "camera.h"
 #include "camera_internal.h"
 #include "engine_internal.h"
-#include "entities_internal.h"
+#include "unit_internal.h"
 #include "game_state_internal.h"
 #include "general_internal.h"
 #include "inventory_internal.h"
@@ -52,7 +52,7 @@ void animation_input(SDL_Event *e) {
     if (e->type == SDL_MOUSEBUTTONDOWN &&
         e->button.button == SDL_BUTTON_LEFT) {
 
-        Entity *entities = engine.armies->army->general->battalions->entities;
+        Unit *unit = engine.armies->army->general->battalions->unit;
 
         change_animation = true;
         if (click_count == 0) {
@@ -67,9 +67,9 @@ void animation_input(SDL_Event *e) {
         }
 
         click_count++;
-        for (unsigned int i = 0; i < engine.game->entities_created_count; i++) {
+        for (unsigned int i = 0; i < engine.game->unit_created_count; i++) {
         
-            entities[i].sprite.type = RAFA;
+            unit[i].sprite.type = RAFA;
         }
 
     }
@@ -133,7 +133,7 @@ void animation_update(
 
     SDL_Renderer *renderer = engine.renderer;
     Battalion *battalions = engine.armies->army->general->battalions;
-    Entity *entities = engine.armies->army->general->battalions->entities;
+    Unit *unit = engine.armies->army->general->battalions->unit;
 
         size_t anim_offset = field_table[anim_field].offset;
         size_t sprite_offset = field_table[sprite_field].offset;
@@ -166,8 +166,8 @@ void animation_update(
         };
 
         SDL_Rect sprite_position = {
-            (signed int)entities[i].positionX,
-            (signed int)entities[i].positionY,
+            (signed int)unit[i].positionX,
+            (signed int)unit[i].positionY,
             (signed int)sprite_frame_width,
             (signed int)sprite_frame_height
         };

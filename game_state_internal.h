@@ -11,7 +11,7 @@ typedef struct GameState {
     float KX, KY;
     float delta;
     float decay_rate;
-    unsigned int entities_created_count, generals_created_count, objects_created_count;
+    unsigned int unit_created_count, generals_created_count, objects_created_count;
     unsigned short low_LOD_quadrant_count;
     unsigned short low_LOD_quadrant_size;
     unsigned short medium_LOD_quadrant_count;
