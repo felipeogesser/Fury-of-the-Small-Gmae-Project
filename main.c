@@ -1,5 +1,5 @@
 #include "baking.h"
-#include "gameLoop.h"
+#include "game_loop.h"
 #include "game_shutdown.h"
 #include "init.h"
 //#include "window.h"

@@ -30,7 +30,7 @@ SRC = \
 	battleplan.c \
 	camera.c \
 	engine.c \
-	gameLoop.c \
+	game_loop.c \
 	game_shutdown.c \
 	game_state.c \
 	general.c \
