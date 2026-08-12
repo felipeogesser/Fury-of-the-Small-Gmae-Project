@@ -16,7 +16,7 @@ const FieldEntry unit_field_table[] = {
     { "anim",            OFFSET_OF(Unit, anim),            SIZE_OF(Unit, anim) },
     { "sprite",          OFFSET_OF(Unit, sprite),          SIZE_OF(Unit, sprite) },
     { "id",              OFFSET_OF(Unit, id),              SIZE_OF(Unit, id) },
-    { "SENTINEL_VALUE",  sizeof(Unit),                     0 },
+    { "obj_size",  0,                     sizeof(Unit) },
 };
 const size_t unit_field_table_count =
     sizeof(unit_field_table) / sizeof(unit_field_table[0]);

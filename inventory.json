@@ -1,5 +1,7 @@
 { "generals": [
     {
+        "anim": "idle",
+        "sprite": "rafa",
         "id": 1,
         "rarity": "common",
         "hp": 100,
@@ -10,10 +12,11 @@
         "attack_speed": 50,
         "general_type": "melee",
         "battalion_type": "infantry",
-        "units_type": "warrior",
-        "sprite": "rafa"
+        "units_type": "warrior"
     },
     {
+        "anim": "idle",
+        "sprite": "rafa",
         "id": 2,
         "rarity": "common",
         "hp": 100,
@@ -24,10 +27,11 @@
         "attack_speed": 50,
         "general_type": "melee",
         "battalion_type": "infantry",
-        "units_type": "warrior",
-        "sprite": "rafa"
+        "units_type": "warrior"
     },
     {
+        "anim": "idle",
+        "sprite": "rafa",
         "id": 3,
         "rarity": "common",
         "hp": 100,
@@ -38,10 +42,11 @@
         "attack_speed": 50,
         "general_type": "melee",
         "battalion_type": "infantry",
-        "units_type": "warrior",
-        "sprite": "rafa"
+        "units_type": "warrior"
     },
     {
+        "anim": "idle",
+        "sprite": "rafa",
         "id": 4,
         "rarity": "common",
         "hp": 100,
@@ -52,8 +57,7 @@
         "attack_speed": 50,
         "general_type": "melee",
         "battalion_type": "infantry",
-        "units_type": "warrior",
-        "sprite": "rafa"
+        "units_type": "warrior"
     }
 
 ]

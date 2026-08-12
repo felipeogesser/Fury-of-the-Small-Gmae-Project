@@ -2,6 +2,7 @@
 #include "inventory_internal.h"
 #include "animation_types.h"
 #include "engine_internal.h"
+#include "field_entry.h"
 #include "general_internal.h"
 #include "json_parser.h"
 #include "memory_arena.h"
@@ -15,6 +16,7 @@ void *search_inventory(
     const char *obj,
     size_t obj_size,
     size_t alignment,
+    const FieldEntry *field_table,
     const size_t args_count,
     ...);
 
@@ -46,7 +48,8 @@ void *inventory_init(void) {
         "generals",
         sizeof(General),
         _Alignof(General),
-        12,
+        general_field_table,
+        13,
         "id",
         "rarity",
         "hp",
@@ -58,6 +61,7 @@ void *inventory_init(void) {
         "general_type",
         "battalion_type",
         "units_type",
+        "anim",
         "sprite"
     );
 
@@ -81,6 +85,7 @@ void *search_inventory(
     const char *obj,
     size_t obj_size,
     size_t alignment,
+    const FieldEntry *field_table,
     const size_t args_count,
     ...) {
 
@@ -101,7 +106,7 @@ void *search_inventory(
         keys[i] = va_arg(args, char *);
     }
     char *p = buffer;
-    read_file_and_retrieve_data(memory_p, p, obj_count, obj, keys, args_count);
+    read_file_and_retrieve_data(memory_p, p, field_table, obj_count, obj, keys, args_count);
 
     free(buffer);
     

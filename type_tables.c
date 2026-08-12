@@ -1,4 +1,5 @@
 #include "type_tables.h"
+#include "animation_types.h"
 #include "general_types.h"
 #include "json_parser_types.h"
 #include "sprites_types.h"
@@ -34,6 +35,14 @@ const BattalionTypeEntry battalion_type_table[] = {
 };
 const size_t battalion_type_table_count = (sizeof(battalion_type_table) / sizeof(battalion_type_table[0]));
 
+const AnimationEntry animations_table[] = {
+    { "idle", IDLE },
+    { "run", RUN },
+    { "attack", ATTACK },
+    { "guard", GUARD },
+};
+const size_t animations_table_count = (sizeof(animations_table) / sizeof(animations_table[0]));
+
 const SpritesEntry sprites_table[] = {
     { "archer", ARCHER },
     { "lancer", LANCER },
@@ -43,10 +52,11 @@ const SpritesEntry sprites_table[] = {
 const size_t sprites_table_count = (sizeof(sprites_table) / sizeof(sprites_table[0]));
 
 const TableRef all_tables[] = {
-    { "kind",           json_kind_table,       json_kind_table_count,       sizeof(json_kind_table[0]) },
+    { "kind",           json_kind_table,        json_kind_table_count,       sizeof(json_kind_table[0]) },
     { "rarity",         rarity_table,           rarity_table_count,          sizeof(rarity_table[0]) },
     { "general_type",   general_type_table,     general_type_table_count,    sizeof(general_type_table[0]) },
     { "battalion_type", battalion_type_table,   battalion_type_table_count,  sizeof(battalion_type_table[0]) },
+    { "anim",           animations_table,       animations_table_count,      sizeof(animations_table[0]) },
     { "sprite",         sprites_table,          sprites_table_count,         sizeof(sprites_table[0]) },
 };
 const size_t all_tables_count = sizeof(all_tables) / sizeof(all_tables[0]);
@@ -139,4 +149,22 @@ const char *sprite_to_string(enum Sprites r) {
         }
     }
     return "sprite_unknown";
+}
+
+enum Animation string_to_anim(const char *str) {
+    for (unsigned int i = 0; i < animations_table_count; i++) {
+        if (strcmp(str, animations_table[i].name) == 0) {
+            return animations_table[i].value;
+        }
+    }
+    return ANIMATION_UNKNOWN;
+}
+
+const char *anim_to_string(enum Animation r) {
+    for (unsigned int i = 0; i < animations_table_count; i++) {
+        if (animations_table[i].value == r) {
+            return animations_table[i].name;
+        }
+    }
+    return "animation_unknown";
 }

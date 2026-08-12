@@ -14,11 +14,11 @@
 
 // prototypes
 char *find_file_path(const char *json_file);
-void check_if_keys_needs_reordering(char **keys, unsigned int keys_count);
+void check_if_keys_needs_reordering(const FieldEntry *field_table, char **keys, unsigned int keys_count);
 char **object_parser(char **pp, const char *obj);
-signed int key_value_parser(unsigned int i, General *general, char **pp, const char **keys, const size_t keys_count);
+signed int key_value_parser(unsigned int i, void *memory_p, const FieldEntry *field_table, char **pp, const char **keys, const size_t keys_count);
 
-#define OFFSET_OF(type, member) ((size_t) &(((type *)0)->member))
+/*#define OFFSET_OF(type, member) ((size_t) &(((type *)0)->member))
 #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
 
 static const FieldEntry field_table[] = {
@@ -34,12 +34,12 @@ static const FieldEntry field_table[] = {
     { "battalion_type",  OFFSET_OF(General, battalion_type),  SIZE_OF(General, battalion_type) },
     { "units_type",      OFFSET_OF(General, units_type),      SIZE_OF(General, units_type) },
     { "sprite",          OFFSET_OF(General, sprite),          SIZE_OF(General, sprite) },
-    { "SENTINEL_VALUE",  sizeof(General),                     0 },
+    { "obj_size",  sizeof(General),                     0 },
 };
 #define FIELD_TABLE_COUNT (sizeof(field_table) / sizeof(field_table[0]))
 
 #undef OFFSET_OF
-#undef SIZE_OF
+#undef SIZE_OF*/
 
 typedef struct StringValueEntry {
 
@@ -146,7 +146,14 @@ char *open_read_close_file(const char *json_file) {
 
 }
 
-void read_file_and_retrieve_data(void *memory_p, char *p, const size_t obj_count, const char *obj, char **keys, const size_t keys_count) {
+void read_file_and_retrieve_data(
+    void *memory_p,
+    char *p,
+    const FieldEntry *field_table,
+    const size_t obj_count,
+    const char *obj,
+    char **keys,
+    const size_t keys_count) {
 
     char **pp = &p;
     
@@ -162,13 +169,12 @@ void read_file_and_retrieve_data(void *memory_p, char *p, const size_t obj_count
         exit(EXIT_FAILURE);
     }
 
-    check_if_keys_needs_reordering(keys, keys_count);
+    check_if_keys_needs_reordering(field_table, keys, keys_count);
 
     const char **const_keys = (const char **)keys;
-    General *general = memory_p;
     for (unsigned int i = 0; i < obj_count; i++) {
 
-        signed int status = key_value_parser(i, general, pp, const_keys, keys_count);
+        signed int status = key_value_parser(i, memory_p, field_table, pp, const_keys, keys_count);
 
         if (status) {
             printf("i = %d, obj_count = %ld\n", i, obj_count);
@@ -180,7 +186,9 @@ void read_file_and_retrieve_data(void *memory_p, char *p, const size_t obj_count
 
 }
 
-const char *json_structure[] = {
+/*const char *json_structure[] = {
+        "anim",
+        "sprite",
         "id",
         "rarity",
         "hp",
@@ -190,23 +198,33 @@ const char *json_structure[] = {
         "evasion",
         "attack_speed",
         "general_type",
-        "battalion_type",
-        "units_type",
-        "sprite"
-};
+        "battalion_type"
+};*/
 
-#define JSON_STRUCTURE_KEYS_COUNT (sizeof(json_structure) / sizeof(json_structure[0]))
+//#define JSON_STRUCTURE_KEYS_COUNT (sizeof(json_structure) / sizeof(json_structure[0]))
 
-void check_if_keys_needs_reordering(char **keys, unsigned int keys_count) {
+void check_if_keys_needs_reordering(const FieldEntry *field_table, char **keys, unsigned int keys_count) {
 
-    signed int tmp[JSON_STRUCTURE_KEYS_COUNT];
+    _Bool run = true;
+    unsigned int var = 0;
+    unsigned int field_table_count = 0;
+    while (run) {
+
+        run = !(strcmp(field_table[var].key, "obj_size") == 0); 
+        var++;
+        field_table_count++;
+
+    }
+    field_table_count--; // decrement to not count the "obj_size" field entry
+
+    signed int tmp[field_table_count];
     memset(tmp, -1, sizeof(tmp));
 
-    for (unsigned int j = 0; j < JSON_STRUCTURE_KEYS_COUNT; j++) {
+    for (unsigned int j = 0; j < field_table_count; j++) {
 
         for (unsigned int i = 0; i < keys_count; i++) {
 
-            if (strcmp(json_structure[j], keys[i]) == 0) {
+            if (strcmp(field_table[j].key, keys[i]) == 0) {
                 tmp[j] = (signed int)i;
                 break;
             }
@@ -219,7 +237,7 @@ void check_if_keys_needs_reordering(char **keys, unsigned int keys_count) {
     memcpy(original_keys, keys, sizeof(char *) * keys_count);
 
     unsigned int out = 0;
-    for (unsigned int j = 0; j < JSON_STRUCTURE_KEYS_COUNT; j++) {
+    for (unsigned int j = 0; j < field_table_count; j++) {
 
         if (tmp[j] != -1) {
             keys[out] = original_keys[tmp[j]];
@@ -283,7 +301,26 @@ char **object_parser(char **pp, const char *obj) {
 }
 
 
-signed int key_value_parser(unsigned int i, General *general, char **pp, const char **keys, const size_t keys_count) {
+signed int key_value_parser(
+    unsigned int i,
+    void *memory_p,
+    const FieldEntry *field_table,
+    char **pp,
+    const char **keys,
+    const size_t keys_count) {
+
+    _Bool run = true;
+    unsigned int var = 0;
+    unsigned int field_table_count = 0;
+    while (run) {
+
+        run = !(strcmp(field_table[var].key, "obj_size") == 0); 
+        var++;
+        field_table_count++;
+
+    }
+    field_table_count--; // decrement to not count the "obj_size" field entry
+    size_t obj_size = field_table[var - 1].size;
 
     char *p = *pp;
     _Bool parsing_succesful = false;
@@ -319,13 +356,13 @@ signed int key_value_parser(unsigned int i, General *general, char **pp, const c
                     }
 
                     unsigned int l = 0;
-                    for (; l < FIELD_TABLE_COUNT; l++) {
+                    for (; l < field_table_count; l++) {
 
                         if (strcmp(field_table[l].key, keys[j]) == 0) break;
 
                     }
 
-                    if (l >= FIELD_TABLE_COUNT) {
+                    if (l >= field_table_count) {
 
                         fprintf(stderr, "either key arg doesnt exist or key missing in fiedld table\n");
                         exit(EXIT_FAILURE);
@@ -358,7 +395,7 @@ signed int key_value_parser(unsigned int i, General *general, char **pp, const c
 
                         if (value_should_continue_be_a_string) {
 
-                            char *dest = (char *)&general[i] + field_table[l].offset;
+                            char *dest = (char *)memory_p + obj_size * i + field_table[l].offset;
                             memset(dest, 0, field_table[l].size);
                             strcpy(dest, string);
 
@@ -371,7 +408,7 @@ signed int key_value_parser(unsigned int i, General *general, char **pp, const c
                                     const GenericEntry *entry = (const GenericEntry *)((const char *)all_tables[m].entries + n * all_tables[m].entry_size);
                                     if (strcmp(string, entry->name) == 0) {
                                             
-                                        signed int *dest = (signed int *)((char *)&general[i] + field_table[l].offset);
+                                        signed int *dest = (signed int *)((char *)memory_p + obj_size * i + field_table[l].offset);
                                         memset(dest, 0, field_table[l].size);
                                         *dest = entry->value;
                                         break;
@@ -405,7 +442,7 @@ signed int key_value_parser(unsigned int i, General *general, char **pp, const c
                         if (!float_number) {
 
                             long value = strtol(string, &endptr, 10);
-                            char *dest = (char *)&general[i] + field_table[l].offset;
+                            char *dest = (char *)memory_p + obj_size * i + field_table[l].offset;
                             size_t field_size = field_table[l].size;
 
                             if (sizeof(value) >= field_size) {
@@ -422,7 +459,7 @@ signed int key_value_parser(unsigned int i, General *general, char **pp, const c
 
                         } else {
 
-                            char *dest = (char *)&general[i] + field_table[l].offset;
+                            char *dest = (char *)memory_p + obj_size * i + field_table[l].offset;
                             size_t field_size = field_table[l].size;
                             if (field_size == sizeof(float)) {
 
@@ -450,7 +487,7 @@ signed int key_value_parser(unsigned int i, General *general, char **pp, const c
                     if (j + 1 == keys_count) {
                         *pp = p;
                         parsing_succesful = true;
-                        printf("parsin success\n");
+                        printf("parsing success\n");
                         return 0;
                     }
 

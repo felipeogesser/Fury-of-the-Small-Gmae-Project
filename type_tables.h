@@ -1,7 +1,7 @@
 #ifndef TYPE_TABLES_H
 #define TYPE_TABLES_H
 
-#include "general_types.h"
+#include "animation_types.h"
 #include "general_types.h"
 #include "json_parser_types.h"
 #include "sprites_types.h"
@@ -21,6 +21,9 @@ const char *rarity_to_string(enum Rarity r);
 
 enum Sprites string_to_sprite(const char *str);
 const char *sprite_to_string(enum Sprites r);
+
+enum Animation string_to_anim(const char *str);
+const char *anim_to_string(enum Animation r);
 
 typedef struct KindEntry {
 
@@ -50,6 +53,13 @@ typedef struct BattalionTypeEntry {
 
 } BattalionTypeEntry;
 
+typedef struct AnimationEntry {
+
+    const char *name;
+    enum Animation value;
+
+} AnimationEntry;
+
 typedef struct SpritesEntry {
 
     const char *name;
@@ -78,12 +88,14 @@ extern const RarityEntry rarity_table[];
 extern const GeneralTypeEntry general_type_table[];
 extern const BattalionTypeEntry battalion_type_table[];
 extern const SpritesEntry sprites_table[];
+extern const AnimationEntry animations_table[];
 extern const TableRef all_tables[];
 extern const size_t json_kind_table_count;
 extern const size_t rarity_table_count;
 extern const size_t general_type_table_count;
 extern const size_t battalion_type_table_count;
 extern const size_t sprites_table_count;
+extern const size_t animations_table_count;
 extern const size_t all_tables_count;
 
 #endif

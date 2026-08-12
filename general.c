@@ -39,7 +39,7 @@ const FieldEntry general_field_table[] = {
     { "general_type",    OFFSET_OF(General, general_type),    SIZE_OF(General, general_type) },
     { "battalion_type",  OFFSET_OF(General, battalion_type),  SIZE_OF(General, battalion_type) },
     { "units_type",      OFFSET_OF(General, units_type),      SIZE_OF(General, units_type) },
-    { "SENTINEL_VALUE",  sizeof(General),                     0 },
+    { "obj_size",  0,                     sizeof(General) },
 };
 const size_t general_field_table_count =
     sizeof(general_field_table) / sizeof(general_field_table[0]);
