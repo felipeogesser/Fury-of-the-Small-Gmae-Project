@@ -283,11 +283,16 @@ void battleplan_input(SDL_Event *e) {
             printf("eita\n");
             if (!dragging_general && !mouse_panning_drawer) {
                 printf("eita2\n");
+                signed int j = 0;
                 for (signed int i = 0; i < engine.inventory->general_count; i++){
                     
+                    if (drawer_slot[i].general->render == false) {
+                        j++;
+                        continue;
+                    }
                     dragging_general =
-                        mouse_x >= i * padding_between_generals_x + padding_between_generals_x - pan_offset &&
-                        mouse_x <  GENERAL_SCREEN_WIDTH + i * padding_between_generals_x + padding_between_generals_x - pan_offset &&
+                        mouse_x >= (i - j) * padding_between_generals_x + padding_between_generals_x - pan_offset &&
+                        mouse_x <  GENERAL_SCREEN_WIDTH + (i - j) * padding_between_generals_x + padding_between_generals_x - pan_offset &&
                         mouse_y >= drawer_padding_y + drawer.y &&
                         mouse_y <  drawer_padding_y + drawer.y + drawer.h + GENERAL_SCREEN_HEIGHT;
 
@@ -435,7 +440,12 @@ void battleplan_input(SDL_Event *e) {
                         drag_payload.general->render = true;
                     }
                 
+                } else if (is_general_released_inside_drawer && drag_payload.origin == DRAWER) {
+                    
+                    drag_payload.general->render = true;
+
                 }
+
                 dragging_general = false;
                 clear_payload(&drag_payload);
 
@@ -852,9 +862,9 @@ static void render_grid_generals(SDL_Renderer *renderer) {
     signed int y = deployment_area.y;
     signed int offset_y = deployment_area.h / GRID_DIMENSION_Y;
         
-    for (unsigned int i = 0; i < GRID_DIMENSION_X; i++) {
+    for (signed int i = 0; i < GRID_DIMENSION_X; i++) {
 
-        for (unsigned int j = 0; j < GRID_DIMENSION_Y; j++) {
+        for (signed int j = 0; j < GRID_DIMENSION_Y; j++) {
 
             if (grid[i][j] != NULL) {
 
@@ -887,7 +897,20 @@ static void render_grid_generals(SDL_Renderer *renderer) {
                 const SDL_Rect *rect2 = &sprite_position;
 
                 SDL_Texture *texture = sprite->texture;
-                SDL_RenderCopy(renderer, texture, rect1, rect2);
+
+                signed int g_x = drag_payload.grid_cell_x;
+                signed int g_y = drag_payload.grid_cell_y;
+                if (i == g_x && j == g_y) {
+
+                    SDL_SetTextureAlphaMod(texture, 128);
+                    SDL_RenderCopy(renderer, texture, rect1, rect2);
+                    SDL_SetTextureAlphaMod(texture, 255);
+
+                } else {
+
+                    SDL_RenderCopy(renderer, texture, rect1, rect2);
+
+                }
 
             }
 
