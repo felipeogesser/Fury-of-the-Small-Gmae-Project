@@ -16,7 +16,7 @@
     },
     {
         "anim": "idle",
-        "sprite": "rafa",
+        "sprite": "warrior",
         "id": 2,
         "rarity": "common",
         "hp": 100,
@@ -46,7 +46,7 @@
     },
     {
         "anim": "idle",
-        "sprite": "rafa",
+        "sprite": "warrior",
         "id": 4,
         "rarity": "common",
         "hp": 100,
