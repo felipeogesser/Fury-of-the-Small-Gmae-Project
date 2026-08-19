@@ -37,6 +37,8 @@ typedef struct DragPayload {
 DragPayload drag_payload = {0};
 
 // private prototypes
+static void booleans_init(void);
+static void variables_init(void);
 static void initialize_generals(General *general);
 static void set_generals_drawer_slot_index(General *general);
 static void set_generals_stats(General *general);
@@ -46,13 +48,11 @@ static void check_if_dragging_general_out_of_drawer(void);
 static void on_mouse_left_click(void);
 static void on_left_mouse_release(void);
 static void clear_payload(DragPayload *payload);
-//static void battleplan_animation_update(General *general);
 static void battleplan_render_deployment_area(SDL_Renderer *renderer);
 static void battleplan_render_general_drawer(SDL_Renderer *renderer);
 static void render_drawer_generals(SDL_Renderer *renderer);
 static void render_grid_generals(SDL_Renderer *renderer);
 static void render_dragged_general(SDL_Renderer *renderer);
-//static void render_generals_in_grid(SDL_Renderer *renderer);
 static void open_general_drawer(void);
 static void close_general_drawer(void);
 static float ease_out_elastic(float x);
@@ -61,7 +61,6 @@ static void place_general_on_grid(General **grid_cell, General **general_to_plac
 static void swap_generals(General **general_in_grid, DragPayload *payload);
 static void insert_general_into_drawer(General **general_to_insert);
 
-//static void set_generals_drawer_slot_x_y_position(void);
 
 static Battleplan battleplan = {0};
 
@@ -72,8 +71,6 @@ static SDL_Color battleplan_white = {255, 255, 255, 255};
 static SDL_Surface *battleplan_surface = NULL; 
 
 static SDL_Texture *battleplan_message = NULL;
-
-//static General *general_being_dragged = NULL;
 
 static SDL_Rect drawer_handle = {0};
 static SDL_Rect drawer = {0};
@@ -86,29 +83,20 @@ static _Bool drawer_opened = false;
 static _Bool drawer_closed = true;
 static _Bool mouse_panning_drawer = false;
 static _Bool dragging_general = false;
-//static _Bool dragging_general_from_grid = false;
 static _Bool is_general_released_inside_deploy_area = false;
-static _Bool is_general_released_inside_drawer =false;
+static _Bool is_general_released_inside_drawer = false;
 static _Bool try_once = true;
-//static _Bool is_general_release_valid = false;
 static _Bool general_placement_valid = false;
 static _Bool button_main_menu_clicked = false;
 
 static unsigned int mouse_left_button_holding_down_counter = 0;
 
-//static signed int general_being_dragged_origin_position_x = 0;
-//static signed int general_being_dragged_origin_position_y = 0;
-
 static signed int mouse_x = 0;
 static signed int mouse_y = 0;
 static float mouse_dragging_origin_x = 0.0f;
-//static float mouse_dragging_current_x = 0.0f;
 
 static float elapsed = 0.0f;
 static float duration = 1.5f;
-//static float a = WINDOW_SIZE_Y - 200.0f;
-//static float b = WINDOW_SIZE_Y;
-static float t = 0.0f;
 
 static SDL_Rect battleplan_grid = {
     0,
@@ -142,8 +130,8 @@ static DrawerSlot drawer_slot[10]; // size needs to be established by general co
 
 
 //static signed int drawer_padding_x = 50;
-static signed int drawer_padding_y = 25;
-static signed int padding_between_generals_x = GENERAL_SCREEN_WIDTH + 50;
+static signed int const drawer_padding_y = 25;
+static signed int const padding_between_generals_x = GENERAL_SCREEN_WIDTH + 50;
 
 
 static signed int pan_offset = 0;
@@ -151,6 +139,8 @@ static signed int pan_offset = 0;
 
 void battleplan_init(void) {
 
+    booleans_init();
+    variables_init();
     animation_init();
 
     signed int drawer_compartment_size = 200;
@@ -340,6 +330,46 @@ void battleplan_destroy(void) {
     }
 
     TTF_Quit();
+
+    for (unsigned int i = 0; i < GRID_DIMENSION_X; i++) {
+        
+        for (unsigned int j = 0; j < GRID_DIMENSION_Y; j++ ) {
+
+            grid[i][j] = NULL;
+
+        }
+
+    }
+}
+
+// static functions
+
+static void booleans_init(void) {
+
+    left_mouse_pressed = false;
+    holding_mouse = false;
+    open_drawer = false;
+    close_drawer = false;
+    drawer_opened = false;
+    drawer_closed = true;
+    mouse_panning_drawer = false;
+    dragging_general = false;
+    is_general_released_inside_deploy_area = false;
+    is_general_released_inside_drawer = false;
+    try_once = true;
+    general_placement_valid = false;
+    button_main_menu_clicked = false;
+
+}
+
+static void variables_init(void) {
+
+    mouse_left_button_holding_down_counter = 0;
+    mouse_x = 0;
+    mouse_y = 0;
+    mouse_dragging_origin_x = 0.0f;
+    elapsed = 0.0f;
+
 }
 
 static void on_mouse_left_click(void) {
@@ -916,7 +946,7 @@ static void open_general_drawer(void) {
     float a = WINDOW_SIZE_Y - 200;
     float b = WINDOW_SIZE_Y;
 
-    t = elapsed / duration;
+    float t = elapsed / duration;
     elapsed += engine.game->delta;
     float y = ease_out_elastic(t);
 
@@ -931,7 +961,7 @@ static void close_general_drawer(void) {
 
     float a = WINDOW_SIZE_Y - 200;
     float b = WINDOW_SIZE_Y;
-    t = elapsed / duration;
+    float t = elapsed / duration;
     elapsed += engine.game->delta;
     float y = ease_out_elastic(t);
 
