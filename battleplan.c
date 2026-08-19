@@ -447,7 +447,6 @@ static void handle_mouse_left_button(void) {
             return_value = check_if_dragging_general_out_of_grid();
             if (return_value == -1) {
                 check_if_dragging_general_out_of_drawer();
-                printf("hi\n");
             }
             try_once = false;
 
@@ -1034,7 +1033,7 @@ static void set_generals_stats(General *general) {
 }
 
 static void place_general_on_grid(General **grid_cell, General **general) { // talvez param 2 poderia ser so Gen *, nao **
-printf("aaa\n");
+
     *grid_cell = *general;
     
     if (drag_payload.origin == GRID) {
@@ -1048,7 +1047,7 @@ printf("aaa\n");
 }
 
 static void swap_generals(General **general_in_grid, DragPayload *payload) {
-printf("bbb\n");
+
     General **general_to_swap = &payload->general;
 
     if (payload->origin == DRAWER) {
