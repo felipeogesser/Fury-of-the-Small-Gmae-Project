@@ -197,6 +197,8 @@ void animation_destroy(void) {
         }
     }
 
+    IMG_Quit();
+
 }
 
 

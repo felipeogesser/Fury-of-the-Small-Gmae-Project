@@ -2,7 +2,6 @@
 #include "sprites_internal.h"
 #include "animation_types.h"
 #include "engine_internal.h"
-#include "memory_arena.h"
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>

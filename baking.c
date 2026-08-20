@@ -3,6 +3,6 @@
 
 void data_baking(void) {
 
-    load_sprites_into_memory();
-
+    //load_sprites_into_memory();
+    return;
 }

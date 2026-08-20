@@ -105,13 +105,15 @@ void main_menu_input(SDL_Event *e) {
         if (button_battlefield_clicked) {
             
             scene_switch(BATTLEFIELD);
-    
+            return;
+
         }
 
         if (button_battleplan_clicked) {
 
             scene_switch(BATTLEPLAN);
-        
+            return;
+            
         }
 
     }

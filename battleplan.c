@@ -7,8 +7,10 @@
 #include "general_internal.h"
 #include "inventory.h"
 #include "inventory_internal.h"
+#include "memory_arena.h"
 #include "scene_handler.h"
 #include "scenes.h"
+#include "sprites.h"
 #include "sprites_internal.h"
 #include "window_settings.h"
 #include <SDL2/SDL.h>
@@ -139,6 +141,7 @@ static signed int pan_offset = 0;
 
 void battleplan_init(void) {
 
+    load_sprites_into_memory();
     booleans_init();
     variables_init();
     animation_init();
@@ -240,13 +243,14 @@ void battleplan_input(SDL_Event *e) {
 
 void battleplan_update(void) {
 
-    handle_mouse_left_button();
-
     if (button_main_menu_clicked) {
         
         scene_switch(MAIN_MENU);
-
+        return;
+        
     }
+
+    handle_mouse_left_button();
 
     if (open_drawer) {
 
@@ -340,6 +344,10 @@ void battleplan_destroy(void) {
         }
 
     }
+
+    animation_destroy();
+    memory_arena_reset();
+
 }
 
 // static functions
