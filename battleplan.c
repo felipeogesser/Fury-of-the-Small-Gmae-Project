@@ -90,6 +90,7 @@ static _Bool is_general_released_inside_drawer = false;
 static _Bool try_once = true;
 static _Bool general_placement_valid = false;
 static _Bool button_main_menu_clicked = false;
+static _Bool button_init_battle_clicked = false;
 
 static unsigned int mouse_left_button_holding_down_counter = 0;
 
@@ -185,6 +186,16 @@ void battleplan_init(void) {
     battleplan.button_main_menu.a = 255;
     battleplan.button_main_menu.text = "Go back to main menu";
 
+    battleplan.button_init_battle.x = 900;
+    battleplan.button_init_battle.y = 500;
+    battleplan.button_init_battle.w = 100;
+    battleplan.button_init_battle.h = 20;
+    battleplan.button_init_battle.r = 255;
+    battleplan.button_init_battle.g = 255;
+    battleplan.button_init_battle.b = 255;
+    battleplan.button_init_battle.a = 255;
+    battleplan.button_init_battle.text = "Init battle";
+
     battleplan_font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24);
     if (!battleplan_font) {
         SDL_Log("TTF_OpenFont failed: %s", TTF_GetError());
@@ -250,6 +261,13 @@ void battleplan_update(void) {
         
     }
 
+    if (button_init_battle_clicked) {
+
+        scene_switch(BATTLEFIELD);
+        return;
+
+    }
+
     handle_mouse_left_button();
 
     if (open_drawer) {
@@ -298,7 +316,7 @@ void battleplan_render(void) {
     battleplan_render_deployment_area(renderer);
     battleplan_render_general_drawer(renderer);
 
-    SDL_Rect battleplan_button = {
+    SDL_Rect battleplan_button_main_menu = {
         battleplan.button_main_menu.x,
         battleplan.button_main_menu.y,
         battleplan.button_main_menu.w,
@@ -311,7 +329,24 @@ void battleplan_render(void) {
         battleplan.button_main_menu.b,
         battleplan.button_main_menu.a
     );
-    SDL_RenderFillRect(renderer, &battleplan_button);
+    SDL_RenderFillRect(renderer, &battleplan_button_main_menu);
+
+    SDL_RenderCopy(renderer, battleplan_message, NULL, &battleplan_button_main_menu);
+
+    SDL_Rect battleplan_button_init_battle = {
+        battleplan.button_init_battle.x,
+        battleplan.button_init_battle.y,
+        battleplan.button_init_battle.w,
+        battleplan.button_init_battle.h 
+    };
+    SDL_SetRenderDrawColor(
+        renderer,
+        battleplan.button_init_battle.r,
+        battleplan.button_init_battle.g,
+        battleplan.button_init_battle.b,
+        battleplan.button_init_battle.a
+    );
+    SDL_RenderFillRect(renderer, &battleplan_button_init_battle);
 
     if (drag_payload.general != NULL) {
 
@@ -319,8 +354,7 @@ void battleplan_render(void) {
 
     }
 
-
-    SDL_RenderCopy(renderer, battleplan_message, NULL, &battleplan_button);
+    SDL_RenderCopy(renderer, battleplan_message, NULL, &battleplan_button_init_battle);
 
     SDL_RenderPresent(renderer);
 
@@ -391,6 +425,14 @@ static void on_mouse_left_click(void) {
         mouse_y >= battleplan.button_main_menu.y &&
         mouse_y <  battleplan.button_main_menu.y +
         battleplan.button_main_menu.h;
+    
+    button_init_battle_clicked =
+        mouse_x >= battleplan.button_init_battle.x &&
+        mouse_x <  battleplan.button_init_battle.x +
+        battleplan.button_init_battle.w &&
+        mouse_y >= battleplan.button_init_battle.y &&
+        mouse_y <  battleplan.button_init_battle.y +
+        battleplan.button_init_battle.h;
 
     if (drawer_closed) {
 

@@ -43,9 +43,7 @@ typedef struct Battleplan {
 
     Background background;
     Button button_main_menu;
-
-
-    // 310 bits
+    Button button_init_battle;
 
 } Battleplan;
 /*typedef struct Grid {
