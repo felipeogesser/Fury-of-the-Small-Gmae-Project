@@ -10,7 +10,7 @@ Unit *get_unit(int id);
 
 void init_unit(void);
 
-void create_unit(Unit *unit, General *general, float ongoing_point_X, float ongoing_point_Y, unsigned int i, unsigned int k);
+void create_unit(Unit *unit, General *general, float ongoing_point_X, float ongoing_point_Y, unsigned int i);
 
 void update_units(Armies *armies, GameState *game);
 

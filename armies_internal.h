@@ -5,7 +5,7 @@
 
 typedef struct Armies {
     struct Army *army;
-    unsigned int number_of_armies;
+    unsigned int armies_count;
     unsigned int generals_screen_width;
     unsigned int generals_screen_height;
 } Armies;

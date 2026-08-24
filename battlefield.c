@@ -43,6 +43,7 @@ void battlefield_init(void) {
     engine.map = get_map(map_id[0]);
     unsigned int player_id = create_player(50 ,1000, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
     engine.player = get_player(player_id);
+
     init_armies_memory_arena();
     load_armies_into_arena();
     calculateAmountOfQuadrants();
@@ -105,12 +106,13 @@ void battlefield_update(void) {
     camera_update();
 
     animation_update(
-        &engine.armies->army->general->battalions->unit,
+        engine.armies->army->general->battalions->unit,
         sizeof(Unit),
-        engine.armies->army->general->battalions->unit_count,
+        engine.game->unit_created_count,
         unit_field_table,
         U_ANIM_FIELD,
-        U_SPRITE_FIELD);
+        U_SPRITE_FIELD
+    );
 
     update_game_state();
 
@@ -145,13 +147,13 @@ void battlefield_render(void) {
     SDL_SetRenderDrawColor(renderer, 255, 104, 230, 255);
     SDL_RenderFillRect(renderer, &player_render);
 
-    unsigned int number_of_armies = armies->number_of_armies;
+    unsigned int armies_count = armies->armies_count;
     unsigned int battalion_count = armies->army->battalion_count;
 
     Battalion *battalions = armies->army->battalions;
     unsigned int unit_count = battalions->unit_count;
 
-    for (unsigned int i = 0; i < number_of_armies * battalion_count; i++) {
+    for (unsigned int i = 0; i < armies_count * battalion_count; i++) {
         
         Unit *unit = battalions[i].unit;
         General *general = armies->army->general;

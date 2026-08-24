@@ -62,7 +62,8 @@ static float ease_out_elastic(float x);
 static void place_general_on_grid(General **grid_cell, General **general_to_place);
 static void swap_generals(General **general_in_grid, DragPayload *payload);
 static void insert_general_into_drawer(General **general_to_insert);
-
+static void save_battleplan_placement(void);
+static _Bool grid_is_empty(void);
 
 static Battleplan battleplan = {0};
 
@@ -110,8 +111,6 @@ static SDL_Rect battleplan_grid = {
 
 static signed int const window_edge_padding_x = 150;
 static signed int const window_edge_padding_y = 100;
-#define GRID_DIMENSION_X 5
-#define GRID_DIMENSION_Y 6
 static signed int const grid_cell_width_y = (signed int)(WINDOW_SIZE_Y - 300) / GRID_DIMENSION_Y;
 static signed int const grid_cell_width_x = grid_cell_width_y + 20;
 
@@ -262,9 +261,15 @@ void battleplan_update(void) {
     }
 
     if (button_init_battle_clicked) {
+        
+        if (grid_is_empty() == false) {
+        
+            save_battleplan_placement();
 
-        scene_switch(BATTLEFIELD);
-        return;
+            scene_switch(BATTLEFIELD);
+            return;
+        
+        }
 
     }
 
@@ -379,7 +384,7 @@ void battleplan_destroy(void) {
 
     }
 
-    animation_destroy();
+    //animation_destroy();
     memory_arena_reset();
 
 }
@@ -1163,5 +1168,47 @@ static void clear_payload(DragPayload *payload) {
     payload->grid_cell_x = -1;
     payload->grid_cell_y = -1;
     payload->origin = NO_ORIGIN;
+
+}
+
+static void save_battleplan_placement(void) {
+
+    General (*buffer)[GRID_DIMENSION_Y] = calloc((size_t)GRID_DIMENSION_X * GRID_DIMENSION_Y, sizeof(General));
+
+    for (unsigned int i = 0; i < GRID_DIMENSION_X; i++) {
+
+        for (unsigned int j = 0; j < GRID_DIMENSION_Y; j++) {
+
+            if (grid[i][j] != NULL) {
+
+                memcpy(&buffer[i][j], grid[i][j], sizeof(General));
+
+            }
+
+        }
+
+    }
+
+    battleplan.battleplan_general_placement = buffer;
+
+}
+
+static _Bool grid_is_empty(void) {
+
+    for (signed int i = 0; i < GRID_DIMENSION_X; i++) {
+
+        for (signed int j = 0; j < GRID_DIMENSION_Y; j++) {
+
+            if (grid[i][j] != NULL) {
+            
+                return false;
+            
+            }
+        
+        }
+        
+    }
+
+    return true;
 
 }

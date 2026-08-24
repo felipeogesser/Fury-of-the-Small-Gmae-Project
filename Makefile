@@ -50,7 +50,6 @@ SRC = \
 	quadrant.c \
 	scene_handler.c \
 	scene_registry.c \
-	set_armies_position.c \
 	sprites.c \
 	type_tables.c \
 	unit.c \

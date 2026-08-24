@@ -2,7 +2,10 @@
 #define BATTLEPLAN_INTERNAL_H
 
 #include "battleplan_types.h"
-#include "general_types.h"
+#include "general_internal.h"
+
+#define GRID_DIMENSION_X 5
+#define GRID_DIMENSION_Y 6
 
 typedef struct Background {
 
@@ -44,6 +47,7 @@ typedef struct Battleplan {
     Background background;
     Button button_main_menu;
     Button button_init_battle;
+    General (*battleplan_general_placement)[GRID_DIMENSION_Y];
 
 } Battleplan;
 /*typedef struct Grid {

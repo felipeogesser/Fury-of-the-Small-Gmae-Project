@@ -46,15 +46,12 @@ const size_t general_field_table_count =
 #undef OFFSET_OF
 #undef SIZE_OF
 
-void create_generals(General *general, float ongoing_point_X, float ongoing_point_Y, unsigned int i) {
+void create_generals(General *general, float x, float y, unsigned int i) {
     general[i].id = i + 1;
-    general[i].positionX = ongoing_point_X + 40;
-    general[i].positionY = ongoing_point_Y + 60;
+    general[i].positionX = x;
+    general[i].positionY = y;
     general[i].dimensionX = 8;
     general[i].dimensionY = 8;
-    general[i].units_type = WARRIOR;
-    general[i].sprite.type = WARRIOR;
-    general[i].anim.animation = IDLE;
     engine.game->generals_created_count++;
 }
 

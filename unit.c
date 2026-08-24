@@ -24,16 +24,16 @@ const size_t unit_field_table_count =
 #undef SIZE_OF
 
 
-void create_unit(Unit *unit, General *general, float ongoing_point_X, float ongoing_point_Y, unsigned int i, unsigned int k) {
+void create_unit(Unit *unit, General *general, float x, float y, unsigned int i) {
     unit[i].id = i + 1;
-    unit[i].positionX = ongoing_point_X;
-    unit[i].positionY = ongoing_point_Y;
+    unit[i].positionX = x;
+    unit[i].positionY = y;
     unit[i].dimensionX = 4;
     unit[i].dimensionY = 4;
-    unit[i].anim.animation = IDLE;
-    unit[i].anim.frames_count = engine.sprite_pack->sprite[general[k].units_type][IDLE].frames_count;
-    unit[i].anim.current_frame = (unsigned char)(rand() % unit[i].anim.frames_count);
-    unit[i].sprite.type = general[k].units_type;
+    //unit[i].anim.animation = IDLE;
+    //unit[i].anim.frames_count = engine.sprite_pack->sprite[general->units_type][IDLE].frames_count;
+    //unit[i].anim.current_frame = (unsigned char)(rand() % unit[i].anim.frames_count);
+    unit[i].sprite.type = general->units_type;
 }
 
 void update_units(Armies *armies, GameState *game) {
