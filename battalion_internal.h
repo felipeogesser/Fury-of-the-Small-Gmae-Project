@@ -7,6 +7,13 @@ typedef struct Battalion {
     struct General *general;
     struct Unit *unit;
     unsigned int unit_count;
+    unsigned int initial_map_placement_x;
+    unsigned int initial_map_placement_y;
+    unsigned int padding_between_units_x;
+    unsigned int padding_between_units_y;
+    unsigned int unit_formation_width;
+    unsigned int unit_formation_height;
+    unsigned int area_width, area_height;
     float unit_screen_width;
     float unit_screen_height;
     unsigned char R_Color;

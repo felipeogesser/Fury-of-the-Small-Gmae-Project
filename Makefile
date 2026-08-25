@@ -26,6 +26,7 @@ SDLFLAGS = $(shell pkg-config --cflags --libs sdl2 SDL2_ttf SDL2_image)
 SRC = \
 	animation.c \
 	baking.c \
+	battalion.c \
 	battlefield.c \
 	battleplan.c \
 	camera.c \

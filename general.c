@@ -2,6 +2,7 @@
 #include "general_internal.h"
 #include "animation_types.h"
 #include "armies_internal.h"
+#include "battalion_internal.h"
 #include "engine_internal.h"
 #include "game_state_internal.h"
 #include "sprites_types.h"
@@ -46,22 +47,52 @@ const size_t general_field_table_count =
 #undef OFFSET_OF
 #undef SIZE_OF
 
-void create_generals(General *general, float x, float y, unsigned int i) {
-    general[i].id = i + 1;
-    general[i].positionX = x;
-    general[i].positionY = y;
-    general[i].dimensionX = 8;
-    general[i].dimensionY = 8;
-    engine.game->generals_created_count++;
+// private prototypes
+static void set_general_xy_position(Battalion *battalion, General *general);
+static void set_general_dimension(General *general);
+static void copy_bits_set_to_one(unsigned char *d, const unsigned char *s);
+
+void init_generals(Battalion *battalion, General *general) {
+    
+    copy_bits_set_to_one((unsigned char *)battalion->general, (unsigned char *)general);
+
+    set_general_xy_position(battalion, general);
+
+    set_general_dimension(general);
+
 }
 
 void update_generals(Armies *armies, GameState *game) {
     
     General *general = armies->army->general;
-
-    for (unsigned int i = 0; i < 6; i++) {
+    unsigned int general_count = armies->army->general_count;
+    for (unsigned int i = 0; i < general_count; i++) {
         general[i].positionX += general[i].vectorX * game->delta;
         general[i].positionY += general[i].vectorY * game->delta;
+    }
+
+}
+
+static void set_general_xy_position(Battalion *battalion, General *general) {
+
+    general->positionX = battalion->initial_map_placement_x + battalion->area_width - 5;
+    general->positionY = battalion->initial_map_placement_y + battalion->area_height / 2;
+
+}
+
+static void set_general_dimension(General *general) {
+
+    general->dimensionX = general->sprite.w;
+    general->dimensionY = general->sprite.h;
+
+}
+
+static void copy_bits_set_to_one(unsigned char *d, const unsigned char *s) {
+
+    // d's bytes that are non-zero should always be zero in s.
+    // if this stops being true, than funtion needs to change.
+    for (size_t i = 0; i < sizeof(General); i++) {
+        d[i] |= s[i];
     }
 
 }

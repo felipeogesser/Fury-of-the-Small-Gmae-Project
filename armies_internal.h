@@ -14,6 +14,7 @@ typedef struct Army {
     struct General *general;
     struct Battalion *battalions;
     unsigned int battalion_count;
+    unsigned int general_count;
     unsigned int army_size;
     unsigned int unit_alive;
     unsigned int generals_screen_width;

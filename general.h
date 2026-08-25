@@ -1,13 +1,14 @@
 #ifndef GENERAL_H
 #define GENERAL_H
 
-#include "armies_types.h"
-#include "game_state_types.h"
 #include "general_types.h"
+#include "armies_types.h"
+#include "battalion_types.h"
+#include "game_state_types.h"
 
 void init_general_battalion_taxonomy(void);
 
-void create_generals(General *general, float ongoing_point_X, float ongoing_point_Y, unsigned int i);
+void init_generals(Battalion *battalion, General *general);
 
 void update_generals(Armies *armies, GameState *game);
 

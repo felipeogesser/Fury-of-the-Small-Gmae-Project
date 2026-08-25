@@ -14,6 +14,7 @@ typedef struct Sprite {
 typedef struct SpriteInfo {
 
     enum Sprites type;
+    unsigned int w, h;
     //unsigned char sprite_frames_count;
     //unsigned char sprite_current_frame;
 

@@ -8,7 +8,6 @@
 #include "general_internal.h"
 #include "sprites_internal.h"
 
-
 #define OFFSET_OF(type, member) ((size_t) &(((type *)0)->member))
 #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
 
@@ -23,17 +22,24 @@ const size_t unit_field_table_count =
 #undef OFFSET_OF
 #undef SIZE_OF
 
+// private prototypes
+static void set_units_id(Unit *unit, unsigned int battalion_size);
+static void set_units_dimension(Unit *unit, unsigned int battalion_size);
+static void set_units_sprite_and_animation(Unit *unit, General *general, unsigned int battalion_size);
+static void set_units_xy_position(Unit *unit, unsigned int battalion_size, Battalion *battalion);
 
-void create_unit(Unit *unit, General *general, float x, float y, unsigned int i) {
-    unit[i].id = i + 1;
-    unit[i].positionX = x;
-    unit[i].positionY = y;
-    unit[i].dimensionX = 4;
-    unit[i].dimensionY = 4;
-    //unit[i].anim.animation = IDLE;
-    //unit[i].anim.frames_count = engine.sprite_pack->sprite[general->units_type][IDLE].frames_count;
-    //unit[i].anim.current_frame = (unsigned char)(rand() % unit[i].anim.frames_count);
-    unit[i].sprite.type = general->units_type;
+
+void init_units(Battalion *battalion) {
+    // this function expects to be called only when generals are already initialized
+    General *general = battalion->general;
+    Unit *unit = battalion->unit;
+    unsigned int battalion_size = battalion->unit_count;
+
+    set_units_id(unit, battalion_size);
+    set_units_dimension(unit, battalion_size);
+    set_units_sprite_and_animation(unit, general, battalion_size);
+    set_units_xy_position(unit, battalion_size, battalion);
+
 }
 
 void update_units(Armies *armies, GameState *game) {
@@ -47,15 +53,66 @@ void update_units(Armies *armies, GameState *game) {
 
 }
 
+static void set_units_id(Unit *unit, unsigned int battalion_size) {
 
+    static unsigned int id = 1;
+    for (unsigned int i = 0; i < battalion_size; i++) {
 
+        unit[i].id = id;
+        id++;
 
+    }
 
-/*
+}
 
-tem que add feature na unti pra ela saber qual e a sprite dela,
-referenciar com ponterio pra quando rocar de animacao saber quantos frames
+static void set_units_dimension(Unit *unit, unsigned int battalion_size) {
 
+    for (unsigned int i = 0; i < battalion_size; i++) {
 
+        unit[i].dimensionX = unit[i].sprite.w;
+        unit[i].dimensionY = unit[i].sprite.h;
 
-*/
+    }
+
+}
+
+static void set_units_sprite_and_animation(Unit *unit, General *general, unsigned int battalion_size) {
+
+    for (unsigned int i = 0; i < battalion_size; i++) {
+
+        unit[i].sprite.type = general->units_type;
+        unit[i].sprite.w = engine.sprite_pack->sprite[general->units_type][IDLE].width;
+        unit[i].sprite.h = engine.sprite_pack->sprite[general->units_type][IDLE].height;
+        unit[i].anim.animation = IDLE;
+        unit[i].anim.frames_count = engine.sprite_pack->sprite[general->units_type][IDLE].frames_count;
+        unit[i].anim.current_frame = (unsigned char)(rand() % unit[i].anim.frames_count);
+
+    }
+
+}
+
+static void set_units_xy_position(Unit *unit, unsigned int battalion_size, Battalion *battalion) {
+
+    unsigned int formation_width = battalion->unit_formation_width;
+    unsigned int formation_height = battalion->unit_formation_height;
+    unsigned int battalion_pos_x = battalion->initial_map_placement_x;
+    unsigned int battalion_pos_y = battalion->initial_map_placement_y;
+    unsigned int padding_x = battalion->padding_between_units_x;
+    unsigned int padding_y = battalion->padding_between_units_y;
+    unsigned int idx = 0;
+    for (unsigned int i = 0; i < formation_width; i++) {
+
+        for (unsigned int j = 0; j < formation_height ; j++) {
+
+            unsigned int x = battalion_pos_x + padding_x + unit[idx].dimensionX * i;
+            unsigned int y = battalion_pos_y + padding_y + unit[idx].dimensionY * j;
+            unit[idx].positionX = x;
+            unit[idx].positionY = y;
+            idx++;
+            if (idx == battalion_size) return;
+            
+        }
+
+    }
+
+}
