@@ -557,6 +557,7 @@ static void handle_mouse_left_button(void) {
                         General **grid_cell = &grid[column][row];
                         General **general_to_place = &drag_payload.general;
                         place_general_on_grid(grid_cell, general_to_place);
+                        battleplan.general_in_grid_count++;
 
                     } else {
 
@@ -582,6 +583,7 @@ static void handle_mouse_left_button(void) {
                     grid[x][y] = NULL;
                     General **general = &drag_payload.general;
                     insert_general_into_drawer(general);
+                    battleplan.general_in_grid_count--;
 
                 } else {
 
