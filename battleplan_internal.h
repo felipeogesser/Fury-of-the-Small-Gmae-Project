@@ -48,7 +48,8 @@ typedef struct Battleplan {
     Button button_main_menu;
     Button button_init_battle;
     General (*battleplan_general_placement)[GRID_DIMENSION_Y];
-
+    unsigned int general_in_grid_count;
+    
 } Battleplan;
 /*typedef struct Grid {
 

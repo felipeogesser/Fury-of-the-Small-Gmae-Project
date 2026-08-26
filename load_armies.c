@@ -17,7 +17,7 @@
 
 // prototypes
 static void link_army_memory_hierarchy(Armies *armies, Army *army, General *general, Battalion *battalions, Unit *unit);
-static unsigned int count_battalions_in_battleplan(void);
+//static unsigned int count_battalions_in_battleplan(void);
 static General *get_general_from_grid(General (*grid)[GRID_DIMENSION_Y], unsigned int *x, unsigned int *y);
 
 size_t armies_total_memory_size;
@@ -27,7 +27,7 @@ static unsigned int battalion_size = 50;
 
 void init_armies_memory_arena(void) {
 
-    battalion_count = count_battalions_in_battleplan();
+    battalion_count = engine.battleplan->general_in_grid_count;
     engine.game->unit_created_count = (unsigned int)(battalion_size * battalion_count * armies_count);
 
     armies_total_memory_size =
@@ -163,7 +163,7 @@ void free_army_memory(void) {
 
 }
 
-static unsigned int count_battalions_in_battleplan(void) {
+/*static unsigned int count_battalions_in_battleplan(void) {
 
     unsigned int count = 0;
     General general = {0};
@@ -184,4 +184,4 @@ static unsigned int count_battalions_in_battleplan(void) {
 
     return count;
 
-}
+}*/
