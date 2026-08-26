@@ -146,6 +146,9 @@ void battleplan_init(void) {
     variables_init();
     animation_init();
 
+    // this resets the value as it persists between scenes. battleplan needs a future dedicated struct init/reset function
+    battleplan.general_in_grid_count = 0;
+
     signed int drawer_compartment_size = 200;
     drawer = (SDL_Rect){
         0,
