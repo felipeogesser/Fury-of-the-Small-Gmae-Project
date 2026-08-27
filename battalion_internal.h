@@ -1,6 +1,8 @@
 #ifndef BATTALION_INTERNAL_H
 #define BATTALION_INTERNAL_H
 
+#include "battalion_types.h"
+#include "field_entry.h"
 #include "unit_types.h"
 
 typedef struct Battalion {
@@ -13,7 +15,8 @@ typedef struct Battalion {
     unsigned int padding_between_units_y;
     unsigned int unit_formation_width;
     unsigned int unit_formation_height;
-    unsigned int area_width, area_height;
+    unsigned int area_width;
+    unsigned int area_height;
     float unit_screen_width;
     float unit_screen_height;
     unsigned char R_Color;
@@ -22,4 +25,6 @@ typedef struct Battalion {
     unsigned char Alpha;
 } Battalion;
 
+extern const FieldEntry battalion_field_table[];
+extern const size_t battalion_field_table_count;
 #endif

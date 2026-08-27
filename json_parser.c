@@ -18,29 +18,6 @@ void check_if_keys_needs_reordering(const FieldEntry *field_table, char **keys, 
 char **object_parser(char **pp, const char *obj);
 signed int key_value_parser(unsigned int i, void *memory_p, const FieldEntry *field_table, char **pp, const char **keys, const size_t keys_count);
 
-/*#define OFFSET_OF(type, member) ((size_t) &(((type *)0)->member))
-#define SIZE_OF(type, member) (sizeof(((type *)0)->member))
-
-static const FieldEntry field_table[] = {
-    { "id",             OFFSET_OF(General, id),             SIZE_OF(General, id) },
-    { "rarity",          OFFSET_OF(General, rarity),          SIZE_OF(General, rarity) },
-    { "hp",              OFFSET_OF(General, hp),              SIZE_OF(General, hp) },
-    { "vigour",          OFFSET_OF(General, vigour),          SIZE_OF(General, vigour) },
-    { "attack",          OFFSET_OF(General, attack),          SIZE_OF(General, attack) },
-    { "defense",         OFFSET_OF(General, defense),         SIZE_OF(General, defense) },
-    { "evasion",         OFFSET_OF(General, evasion),         SIZE_OF(General, evasion) },
-    { "attack_speed",    OFFSET_OF(General, attack_speed),    SIZE_OF(General, attack_speed) },
-    { "general_type",    OFFSET_OF(General, general_type),    SIZE_OF(General, general_type) },
-    { "battalion_type",  OFFSET_OF(General, battalion_type),  SIZE_OF(General, battalion_type) },
-    { "units_type",      OFFSET_OF(General, units_type),      SIZE_OF(General, units_type) },
-    { "sprite",          OFFSET_OF(General, sprite),          SIZE_OF(General, sprite) },
-    { "obj_size",  sizeof(General),                     0 },
-};
-#define FIELD_TABLE_COUNT (sizeof(field_table) / sizeof(field_table[0]))
-
-#undef OFFSET_OF
-#undef SIZE_OF*/
-
 typedef struct StringValueEntry {
 
     const char *string;
@@ -205,7 +182,9 @@ void read_file_and_retrieve_data(
 
 void check_if_keys_needs_reordering(const FieldEntry *field_table, char **keys, unsigned int keys_count) {
 
-    _Bool run = true;
+    unsigned int fields_count = field_table_fields_count(field_table);
+
+    /*_Bool run = true;
     unsigned int var = 0;
     unsigned int field_table_count = 0;
     while (run) {
@@ -215,12 +194,12 @@ void check_if_keys_needs_reordering(const FieldEntry *field_table, char **keys, 
         field_table_count++;
 
     }
-    field_table_count--; // decrement to not count the "obj_size" field entry
+    field_table_count--;*/ // decrement to not count the "obj_size" field entry
 
-    signed int tmp[field_table_count];
+    signed int tmp[fields_count];
     memset(tmp, -1, sizeof(tmp));
 
-    for (unsigned int j = 0; j < field_table_count; j++) {
+    for (unsigned int j = 0; j < fields_count; j++) {
 
         for (unsigned int i = 0; i < keys_count; i++) {
 
@@ -237,7 +216,7 @@ void check_if_keys_needs_reordering(const FieldEntry *field_table, char **keys, 
     memcpy(original_keys, keys, sizeof(char *) * keys_count);
 
     unsigned int out = 0;
-    for (unsigned int j = 0; j < field_table_count; j++) {
+    for (unsigned int j = 0; j < fields_count; j++) {
 
         if (tmp[j] != -1) {
             keys[out] = original_keys[tmp[j]];
@@ -309,7 +288,9 @@ signed int key_value_parser(
     const char **keys,
     const size_t keys_count) {
 
-    _Bool run = true;
+
+    unsigned int fields_count = field_table_fields_count(field_table);
+    /*_Bool run = true;
     unsigned int var = 0;
     unsigned int field_table_count = 0;
     while (run) {
@@ -319,8 +300,8 @@ signed int key_value_parser(
         field_table_count++;
 
     }
-    field_table_count--; // decrement to not count the "obj_size" field entry
-    size_t obj_size = field_table[var - 1].size;
+    field_table_count--;*/ // decrement to not count the "obj_size" field entry
+    size_t obj_size = field_table_obj_type_size(field_table);
 
     char *p = *pp;
     _Bool parsing_succesful = false;
@@ -356,13 +337,13 @@ signed int key_value_parser(
                     }
 
                     unsigned int l = 0;
-                    for (; l < field_table_count; l++) {
+                    for (; l < fields_count; l++) {
 
                         if (strcmp(field_table[l].key, keys[j]) == 0) break;
 
                     }
 
-                    if (l >= field_table_count) {
+                    if (l >= fields_count) {
 
                         fprintf(stderr, "either key arg doesnt exist or key missing in fiedld table\n");
                         exit(EXIT_FAILURE);
@@ -517,39 +498,3 @@ signed int key_value_parser(
     return 0;
 
 }
-
-/*enum JsonKind string_to_kind(const char *str) {
-    for (unsigned int i = 0; i < json_kind_table_count; i++) {
-        if (strcmp(str, json_kind_table[i].name) == 0) {
-            return json_kind_table[i].value;
-        }
-    }
-    return KIND_UNKNOWN;
-}
-
-const char *kind_to_string(enum JsonKind r) {
-    for (unsigned int i = 0; i < json_kind_table_count; i++) {
-        if (json_kind_table[i].value == r) {
-            return json_kind_table[i].name;
-        }
-    }
-    return "kind_unknown";
-}
-
-enum Rarity string_to_rarity(const char *str) {
-    for (unsigned int i = 0; i < rarity_table_count; i++) {
-        if (strcmp(str, rarity_table[i].name) == 0) {
-            return rarity_table[i].value;
-        }
-    }
-    return RARITY_UNKNOWN;
-}
-
-const char *rarity_to_string(enum Rarity r) {
-    for (unsigned int i = 0; i < rarity_table_count; i++) {
-        if (rarity_table[i].value == r) {
-            return rarity_table[i].name;
-        }
-    }
-    return "rarity_unknown";
-}*/

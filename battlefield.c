@@ -1,18 +1,17 @@
 #include "battlefield.h"
 #include "animation.h"
 #include "armies_internal.h"
+#include "battalion.h"
 #include "battalion_internal.h"
 #include "camera.h"
 #include "camera_internal.h"
 #include "engine_internal.h"
-#include "unit_collision.h"
-#include "unit.h"
-#include "unit_internal.h"
 #include "game_state.h"
 #include "game_state_internal.h"
 #include "general.h"
 #include "general_internal.h"
 #include "grids.h"
+#include "ini_parser.h"
 #include "load_armies.h"
 #include "memory_arena.h"
 #include "mapMaker.h"
@@ -23,6 +22,9 @@
 #include "player_collision.h"
 #include "quadrant.h"
 #include "quadrant_internal.h"
+#include "unit_collision.h"
+#include "unit.h"
+#include "unit_internal.h"
 #include "window_settings.h"
 #include <SDL2/SDL.h>
 #include <stdbool.h>
@@ -56,6 +58,17 @@ void battlefield_init(void) {
 void battlefield_input(SDL_Event *e) {
 
     if (e->key.keysym.sym == SDLK_1) show_quads = !show_quads;
+    if (e->key.keysym.sym == SDLK_2) {
+    
+        char *buffer = open_read_close_ini_file("battlefield_formation_layout.ini");
+        General *general = engine.armies->army->general;
+        Battalion *battalion = general->battalions;
+        update_battlefield_formation_with_ini_values(buffer, battalion, battalion_field_table);
+        free(buffer);
+        init_generals(battalion, general);
+        init_units(battalion);
+
+    }
     Player *player = engine.player;
         
     if (e->type == SDL_KEYUP) {

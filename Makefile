@@ -31,11 +31,13 @@ SRC = \
 	battleplan.c \
 	camera.c \
 	engine.c \
+	field_entry.c \
 	game_loop.c \
 	game_shutdown.c \
 	game_state.c \
 	general.c \
 	grids.c \
+	ini_parser.c \
 	init.c \
 	inventory.c \
 	json_parser.c \
