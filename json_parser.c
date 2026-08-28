@@ -311,7 +311,7 @@ signed int key_value_parser(
         size_t key_str_len = strlen(keys[j]);
 
         while (*p != '\0') {
-            printf("%c", *p);
+            //printf("%c", *p);
             if (*p == *(keys[j]) && *(p - 1) == '"' && *(p + key_str_len) == '"') {
 
                 _Bool key_found = (key_str_len == 1);
@@ -470,7 +470,7 @@ signed int key_value_parser(
                     if (j + 1 == keys_count) {
                         *pp = p;
                         parsing_succesful = true;
-                        printf("parsing success\n");
+                        //printf("parsing success\n");
                         return 0;
                     }
 

@@ -373,8 +373,8 @@ static void render_units(void) {
     SDL_Renderer *renderer = engine.renderer;
     Unit *unit = engine.armies->army->general->battalions->unit;
     unsigned int unit_count = engine.armies->army->general->battalions->unit_count;
-
-    for (unsigned int i = 0; i < unit_count; i++) {
+    unsigned int battalion_count =  engine.armies->army->battalion_count;
+    for (unsigned int i = 0; i < battalion_count * unit_count; i++) {
 
         AnimationState *anim = &unit[i].anim;
         SpriteInfo *spr = &unit[i].sprite;

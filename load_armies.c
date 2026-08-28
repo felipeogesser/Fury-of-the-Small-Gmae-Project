@@ -137,8 +137,9 @@ static General *get_general_from_grid(General (*grid)[GRID_DIMENSION_Y], unsigne
             
             if (memcmp(&grid[x][y], &general, sizeof(General)) != 0) {
                 
-                *p_x = x;
-                *p_y = y;
+                _Bool n = y + 1 == GRID_DIMENSION_Y;
+                *p_x = x + n;
+                *p_y = !n * y + !n;
                 return &grid[x][y];
 
             }
