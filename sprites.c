@@ -11,7 +11,19 @@
 #include <SDL2/SDL.h>
 #include <SDL_image.h>
 
+
+typedef struct SpritesPath {
+    unsigned int sprite_index;
+    char file_path[512];
+} SpritesPath;
+
+// private prototypes
 static signed int count_pngs_in_folder(const char *path);
+static signed int fill_pngs_from_folder(const char *folder, SpritesPath *out, signed int start_index, unsigned int sprite_index);
+static unsigned int parse_frame_count_from_path(const char *path);
+static signed int stristr_found(const char *haystack, const char *needle);
+static signed int parse_animation_from_path(const char *path);
+
 static signed int count_pngs_in_folder(const char *path) {
     DIR *dir = opendir(path);
     if (!dir) {
@@ -34,12 +46,6 @@ static signed int count_pngs_in_folder(const char *path) {
     return count;
 }
 
-typedef struct SpritesPath {
-    unsigned int sprite_index;
-    char file_path[512];
-} SpritesPath;
-
-static signed int fill_pngs_from_folder(const char *folder, SpritesPath *out, signed int start_index, unsigned int sprite_index);
 static signed int fill_pngs_from_folder(const char *folder, SpritesPath *out, signed int start_index, unsigned int sprite_index) {
     DIR *dir = opendir(folder);
     if (!dir) return start_index;
@@ -61,7 +67,6 @@ static signed int fill_pngs_from_folder(const char *folder, SpritesPath *out, si
     return i;
 }
 
-static unsigned int parse_frame_count_from_path(const char *path);
 static unsigned int parse_frame_count_from_path(const char *path) {
     const char *filename = strrchr(path, '/');
     filename = filename ? filename + 1 : path;
@@ -76,7 +81,6 @@ static unsigned int parse_frame_count_from_path(const char *path) {
     return (unsigned int)frames;
 }
 
-static signed int stristr_found(const char *haystack, const char *needle);
 static signed int stristr_found(const char *haystack, const char *needle) {
     size_t hlen = strlen(haystack);
     size_t nlen = strlen(needle);
@@ -92,7 +96,6 @@ static signed int stristr_found(const char *haystack, const char *needle) {
     return 0;
 }
 
-static signed int parse_animation_from_path(const char *path);
 static signed int parse_animation_from_path(const char *path) {
     if (stristr_found(path, "Idle"))   return IDLE;
     if (stristr_found(path, "Run"))    return RUN;
@@ -156,6 +159,7 @@ void load_sprites_into_memory(void) {
         sprite_pack.sprite[sprite][animation].width        = (signed short)surface->w;
         sprite_pack.sprite[sprite][animation].height       = (signed short)surface->h;
         SDL_FreeSurface(surface);
+        
     }
 
     memset(sprites_string, 0, sizeof(SpritesPath) * (size_t)idx);

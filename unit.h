@@ -13,4 +13,7 @@ void init_units(Battalion *battalion);
 
 void update_units(Armies *armies, GameState *game);
 
+void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *battalion);
+
+
 #endif

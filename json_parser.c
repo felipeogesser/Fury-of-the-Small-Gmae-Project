@@ -385,10 +385,12 @@ signed int key_value_parser(
                             for (unsigned int m = 0; m < all_tables_count; m++) {
                                 
                                 for (unsigned int n = 0; n < all_tables[m].entry_count; n++) {
-                                        
+                                        // future refactor: add another check to compare string with all_table entry_name to double check key-value
                                     const GenericEntry *entry = (const GenericEntry *)((const char *)all_tables[m].entries + n * all_tables[m].entry_size);
                                     if (strcmp(string, entry->name) == 0) {
-                                            
+                                        // future fix: this doesnt check for if string refers to a struct field,
+                                        // so this part just writes in the struct without knowing its inner fields
+                                        // luckily, the structs have their first fields being the ones expected by this code    
                                         signed int *dest = (signed int *)((char *)memory_p + obj_size * i + field_table[l].offset);
                                         memset(dest, 0, field_table[l].size);
                                         *dest = entry->value;

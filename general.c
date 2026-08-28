@@ -48,13 +48,16 @@ const size_t general_field_table_count =
 #undef SIZE_OF
 
 // private prototypes
+static void set_general_sprite_width_and_height(General *general);
+static void copy_bits_set_to_one(unsigned char *d, const unsigned char *s);
 static void set_general_xy_position(Battalion *battalion, General *general);
 static void set_general_dimension(General *general);
-static void copy_bits_set_to_one(unsigned char *d, const unsigned char *s);
 
 void init_generals(Battalion *battalion, General *general) {
     
     copy_bits_set_to_one((unsigned char *)battalion->general, (unsigned char *)general);
+
+    set_general_sprite_width_and_height(general);
 
     set_general_xy_position(battalion, general);
 
@@ -73,6 +76,23 @@ void update_generals(Armies *armies, GameState *game) {
 
 }
 
+static void copy_bits_set_to_one(unsigned char *d, const unsigned char *s) {
+
+    // d's bytes that are non-zero should always be zero in s.
+    // if this stops being true, than funtion needs to change.
+    for (size_t i = 0; i < sizeof(General); i++) {
+        d[i] |= s[i];
+    }
+
+}
+
+static void set_general_sprite_width_and_height(General *general) {
+
+    general->sprite.w = engine.sprite_pack->sprite[general->sprite.type][general->anim.animation].width / general->anim.frames_count;
+    general->sprite.h = engine.sprite_pack->sprite[general->sprite.type][general->anim.animation].height;
+
+}
+
 static void set_general_xy_position(Battalion *battalion, General *general) {
 
     general->positionX = battalion->initial_map_placement_x + battalion->area_width - 5;
@@ -84,15 +104,5 @@ static void set_general_dimension(General *general) {
 
     general->dimensionX = general->sprite.w;
     general->dimensionY = general->sprite.h;
-
-}
-
-static void copy_bits_set_to_one(unsigned char *d, const unsigned char *s) {
-
-    // d's bytes that are non-zero should always be zero in s.
-    // if this stops being true, than funtion needs to change.
-    for (size_t i = 0; i < sizeof(General); i++) {
-        d[i] |= s[i];
-    }
 
 }

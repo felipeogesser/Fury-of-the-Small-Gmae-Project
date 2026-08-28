@@ -7,6 +7,7 @@
 #include "game_state_internal.h"
 #include "general_internal.h"
 #include "sprites_internal.h"
+#include <stdio.h>
 
 #define OFFSET_OF(type, member) ((size_t) &(((type *)0)->member))
 #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
@@ -23,10 +24,12 @@ const size_t unit_field_table_count =
 #undef SIZE_OF
 
 // private prototypes
+void update_units_position(Unit *unit, unsigned int unit_count, signed int x, signed int y);
+
 static void set_units_id(Unit *unit, unsigned int battalion_size);
 static void set_units_dimension(Unit *unit, unsigned int battalion_size);
 static void set_units_sprite_and_animation(Unit *unit, General *general, unsigned int battalion_size);
-static void set_units_xy_position(Unit *unit, unsigned int battalion_size, Battalion *battalion);
+//static void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *battalion);
 
 
 void init_units(Battalion *battalion) {
@@ -36,9 +39,9 @@ void init_units(Battalion *battalion) {
     unsigned int battalion_size = battalion->unit_count;
 
     set_units_id(unit, battalion_size);
-    set_units_dimension(unit, battalion_size);
     set_units_sprite_and_animation(unit, general, battalion_size);
-    set_units_xy_position(unit, battalion_size, battalion);
+    set_units_dimension(unit, battalion_size);
+    set_units_position(unit, battalion_size, battalion);
 
 }
 
@@ -49,6 +52,17 @@ void update_units(Armies *armies, GameState *game) {
     for (unsigned int i = 0; i < game->unit_created_count; i++) {
         unit[i].positionX += unit[i].vectorX * game->delta;
         unit[i].positionY += unit[i].vectorY * game->delta;
+    }
+
+}
+
+void update_units_position(Unit *unit, unsigned int unit_count, signed int x, signed int y) {
+
+    for (unsigned int i = 0; i < unit_count; i++) {
+
+        unit[i].positionX = x;
+        unit[i].positionY = y;
+
     }
 
 }
@@ -80,21 +94,21 @@ static void set_units_sprite_and_animation(Unit *unit, General *general, unsigne
 
     for (unsigned int i = 0; i < battalion_size; i++) {
 
-        unit[i].sprite.type = general->units_type;
-        unit[i].sprite.w = engine.sprite_pack->sprite[general->units_type][IDLE].width;
-        unit[i].sprite.h = engine.sprite_pack->sprite[general->units_type][IDLE].height;
         unit[i].anim.animation = IDLE;
         unit[i].anim.frames_count = engine.sprite_pack->sprite[general->units_type][IDLE].frames_count;
         unit[i].anim.current_frame = (unsigned char)(rand() % unit[i].anim.frames_count);
+        unit[i].sprite.type = general->units_type;
+        unit[i].sprite.w = engine.sprite_pack->sprite[general->units_type][IDLE].width / unit[i].anim.frames_count;
+        unit[i].sprite.h = engine.sprite_pack->sprite[general->units_type][IDLE].height;
 
     }
 
 }
 
-static void set_units_xy_position(Unit *unit, unsigned int battalion_size, Battalion *battalion) {
+void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *battalion) {
 
-    unsigned int formation_width = battalion->unit_formation_width;
     unsigned int formation_height = battalion->unit_formation_height;
+    unsigned int formation_width = ceilf(battalion_size / battalion->unit_formation_height);
     unsigned int battalion_pos_x = battalion->initial_map_placement_x;
     unsigned int battalion_pos_y = battalion->initial_map_placement_y;
     unsigned int padding_x = battalion->padding_between_units_x;
@@ -102,10 +116,10 @@ static void set_units_xy_position(Unit *unit, unsigned int battalion_size, Batta
     unsigned int idx = 0;
     for (unsigned int i = 0; i < formation_width; i++) {
 
-        for (unsigned int j = 0; j < formation_height ; j++) {
+        for (unsigned int j = 0; j < formation_height; j++) {
 
-            unsigned int x = battalion_pos_x + padding_x + unit[idx].dimensionX * i;
-            unsigned int y = battalion_pos_y + padding_y + unit[idx].dimensionY * j;
+            unsigned int x = battalion_pos_x + padding_x + (unit[idx].dimensionX * i);
+            unsigned int y = battalion_pos_y + padding_y + (unit[idx].dimensionY * j);
             unit[idx].positionX = x;
             unit[idx].positionY = y;
             idx++;
