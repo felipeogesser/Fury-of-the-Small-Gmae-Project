@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdbool.h>
+
 // private prototypes
 static char *find_file_path(const char *json_file);
 
@@ -104,40 +105,107 @@ static char *find_file_path(const char *json_file) {
 
 }
 
-enum Scanning {
-
-    KEY = 0,
-    VALUE
-
-};
-
-
 // very simple parser. for values, it only knows how to handle numbers.
 // it doesnt knows spaces, characters or anything else that is neigher a number or '.' from a float
 // but it knows '=' and '\n' but isolated in certain circunstances
 // handles almost no errors like typing or logic errors
 // numbers cant be longer than 7 digits. for floats, cant be 6 or more (because of '.')
-void update_battlefield_formation_with_ini_values(const char *buffer, void *obj, const FieldEntry *field_table) {
+void update_battlefield_formation_with_ini_values(const char *buffer, const char *obj_str_lit, void *obj, const FieldEntry *field_table) {
+
+    enum Scanning {
+
+        KEY,
+        VALUE,
+        OBJECT
+
+    };
 
     #define KEY_LENGH 32
     #define VALUE_LENGH 8
     char key[KEY_LENGH] = {'\0'};
     char value[VALUE_LENGH] = {'\0'};
     const char *p = buffer;
-    enum Scanning scanning = KEY;
+    p++; // prevents indexing out of bounds when doing "*(p - 1)"
+    enum Scanning scanning = OBJECT;
     _Bool is_float = false;
     unsigned int idx = 0;
     unsigned int fields_count = field_table_fields_count(field_table);
     //size_t obj_size = field_table_obj_type_size(field_table);
     unsigned int field_table_idx = 0;
+
+    if (buffer[0] != '[') {
+
+        fprintf(stderr, "ini_parser: file must begin with an object header '['\n");
+        exit(EXIT_FAILURE);
+
+    }
+
     while (*p != '\0') {
 
-        if (scanning == KEY) {
+        if (scanning == OBJECT) {
+            printf("p2 = %c\n", *p);
+
+            if (*(p - 1) == '[') {
+
+                size_t str_len = strlen(obj_str_lit) + 1;// 1 is to add space for '\0'
+                if (str_len <= 1) {
+
+                    printf("str_len = %ld\n", str_len);
+                    fprintf(stderr, "At file ini_parser.c function update_battlefield_formation_with_ini_values, str_len has value equal to 1 or lower\n");
+                    exit(EXIT_FAILURE);
+
+                }
+
+                unsigned int iterations = 0;
+                _Bool obj_match = false;
+                while (*(p - 1) != ']' && iterations < str_len) {
+
+                    //ini_obj_str + sizeof(char) * iterations = *p;
+
+                    _Bool str_mismatch = (*p != obj_str_lit[iterations] && *p != ']');
+                    if (str_mismatch) break;
+                    
+                    _Bool one_ends = (obj_str_lit[iterations] == '\0' || *p == ']');
+                    _Bool str_match = (obj_str_lit[iterations] == '\0' && *p == ']');
+
+                    if (one_ends) {
+                    
+                        obj_match = str_match;
+                        break;
+
+                    }
+                
+                    iterations++;
+                    p++;
+                    
+                }
+
+                if (iterations >= str_len) {
+                    
+                    printf("iterations = %u, str_len = %zu\n", iterations, str_len);
+                    fprintf(stderr, "At file ini_parser.c function update_battlefield_formation_with_ini_values, while loop tried to iterate over max iter limit\n");
+                    exit(EXIT_FAILURE);
+
+                }
+
+                if (obj_match) {
+                
+                    p += 2; // magic number that skips ']' and '\n' after the object string
+                    scanning = KEY;
+                    continue;
+
+                }
+            
+            }
+            printf("p1 = %c\n", *p);
+            p++;
+
+        } else if (scanning == KEY) {
 
             if (*p == '=') {
-                
+                key[idx] = '\0';
                 for (unsigned int i = 0; i < fields_count; i++) {
-                
+
                     if (strcmp(key, field_table[i].key) == 0) {
 
                         field_table_idx = i;
@@ -146,24 +214,25 @@ void update_battlefield_formation_with_ini_values(const char *buffer, void *obj,
                     }
                     if (i == fields_count - 1) {
                         
-                        printf("field table fields count = %d, i = %d\n", fields_count, i);
+                        printf("field table fields count = %u, i = %u\n", fields_count, i);
                         printf("key: %s, field table key: %s\n", key, field_table[i].key);
                         fprintf(stderr, "at file ini_parser function update_battlefield_formation_with_ini_values, ini file contains key that doesnt exist in the field table\n");
                         exit(EXIT_FAILURE);
 
                     }
                 }
+                memset(key, 0, KEY_LENGH);
                 scanning = VALUE;
                 p++;
                 idx = 0;
                 continue;
 
             }
-            
+            printf("p = %c\n", *p);
             key[idx++] = *p;
             p++;
 
-        } else {
+        } else if (scanning == VALUE) {
 
             if (*p == '\n') {
 
@@ -182,7 +251,6 @@ void update_battlefield_formation_with_ini_values(const char *buffer, void *obj,
                 }
 
                 is_float = false;
-                memset(key, 0, KEY_LENGH);
                 memset(value, 0, VALUE_LENGH);
                 scanning = KEY;
                 idx = 0;

@@ -312,7 +312,7 @@ static void update_units_formation_layout(void) {
     General *general = engine.armies->army->general;
     Battalion *battalion = general->battalions;
     Unit *unit = battalion->unit;
-    update_battlefield_formation_with_ini_values(buffer, battalion, battalion_field_table);
+    update_battlefield_formation_with_ini_values(buffer, "battalion", battalion, battalion_field_table);
     free(buffer);
 
     set_units_position(unit, battalion->unit_count, battalion);
