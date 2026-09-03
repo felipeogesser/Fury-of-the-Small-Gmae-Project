@@ -3,6 +3,6 @@
 
 #include "battalion_types.h"
 
-void init_battalion(Battalion *battalion, unsigned int battalion_size, unsigned int x, unsigned int y);
+void init_battalion(Battalion *battalion, unsigned int battalion_size);
 
 #endif

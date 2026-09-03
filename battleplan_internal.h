@@ -42,12 +42,42 @@ typedef struct DrawerSlot {
 
 } DrawerSlot;
 
+typedef struct Dimension {
+
+    unsigned int x, y;
+
+} Dimension;
+typedef struct Grid {
+
+    //Cell cell;
+    
+    Dimension dimension;
+    //Size size;
+
+} Grid;
+
+typedef struct OccupiedCell {
+
+    unsigned int x;
+    unsigned int y;
+    General general;
+
+} OccupiedCell;
+
+typedef struct GridPlacementPayload {
+
+    Grid grid;
+    unsigned int occupied_cell_count;
+    OccupiedCell occupied_cell[];
+
+} GridPlacementPayload;
+
 typedef struct Battleplan {
 
     Background background;
     Button button_main_menu;
     Button button_init_battle;
-    General (*battleplan_general_placement)[GRID_DIMENSION_Y];
+    GridPlacementPayload *grid_payload;
     unsigned int general_in_grid_count;
     
 } Battleplan;

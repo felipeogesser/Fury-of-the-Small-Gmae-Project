@@ -79,17 +79,6 @@ static void set_units_id(Unit *unit, unsigned int battalion_size) {
 
 }
 
-static void set_units_dimension(Unit *unit, unsigned int battalion_size) {
-
-    for (unsigned int i = 0; i < battalion_size; i++) {
-
-        unit[i].dimensionX = unit[i].sprite.w;
-        unit[i].dimensionY = unit[i].sprite.h;
-
-    }
-
-}
-
 static void set_units_sprite_and_animation(Unit *unit, General *general, unsigned int battalion_size) {
 
     for (unsigned int i = 0; i < battalion_size; i++) {
@@ -100,6 +89,17 @@ static void set_units_sprite_and_animation(Unit *unit, General *general, unsigne
         unit[i].sprite.type = general->units_type;
         unit[i].sprite.w = engine.sprite_pack->sprite[general->units_type][IDLE].width / unit[i].anim.frames_count;
         unit[i].sprite.h = engine.sprite_pack->sprite[general->units_type][IDLE].height;
+
+    }
+
+}
+
+static void set_units_dimension(Unit *unit, unsigned int battalion_size) {
+
+    for (unsigned int i = 0; i < battalion_size; i++) {
+
+        unit[i].dimensionX = unit[i].sprite.w;
+        unit[i].dimensionY = unit[i].sprite.h;
 
     }
 

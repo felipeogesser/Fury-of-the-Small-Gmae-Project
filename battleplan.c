@@ -1178,23 +1178,41 @@ static void clear_payload(DragPayload *payload) {
 
 static void save_battleplan_placement(void) {
 
-    General (*buffer)[GRID_DIMENSION_Y] = calloc((size_t)GRID_DIMENSION_X * GRID_DIMENSION_Y, sizeof(General));
+    if (battleplan.grid_payload != NULL) {
+
+        printf("battleplan_general_placement was not freed prior to this assignment\n");
+        free(battleplan.grid_payload);
+    
+    }
+
+    GridPlacementPayload *buffer = calloc(1, sizeof(GridPlacementPayload) + sizeof(OccupiedCell) * battleplan.general_in_grid_count);
+    buffer->grid.dimension.x = GRID_DIMENSION_X;
+    buffer->grid.dimension.y = GRID_DIMENSION_Y;
+    buffer->occupied_cell_count = battleplan.general_in_grid_count;
+
+    unsigned int idx = 0;
 
     for (unsigned int i = 0; i < GRID_DIMENSION_X; i++) {
 
         for (unsigned int j = 0; j < GRID_DIMENSION_Y; j++) {
 
             if (grid[i][j] != NULL) {
-
-                memcpy(&buffer[i][j], grid[i][j], sizeof(General));
-
+                
+                buffer->occupied_cell[idx].x = i;
+                buffer->occupied_cell[idx].y = j;
+                memcpy(&buffer->occupied_cell[idx].general, grid[i][j], sizeof(General));
+                idx++;
+                if (idx == battleplan.general_in_grid_count) {
+                    battleplan.grid_payload = buffer;
+                    return;
+                }
             }
 
         }
 
     }
 
-    battleplan.battleplan_general_placement = buffer;
+    battleplan.grid_payload = buffer;
 
 }
 

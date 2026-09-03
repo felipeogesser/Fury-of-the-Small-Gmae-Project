@@ -16,18 +16,17 @@
 #include <math.h>
 
 // prototypes
-static void link_army_memory_hierarchy(Armies *armies, Army *army, General *general, Battalion *battalions, Unit *unit);
+static void link_army_memory_hierarchy(
+    Armies *armies, Army *army, General *general, Battalion *battalions, Unit *unit,
+    unsigned int armies_count, unsigned int battalion_count, unsigned int battalion_size);
+
 //static unsigned int count_battalions_in_battleplan(void);
-static General *get_general_from_grid(General (*grid)[GRID_DIMENSION_Y], unsigned int *x, unsigned int *y);
+//static General *get_general_from_grid(General (*grid)[GRID_DIMENSION_Y], unsigned int *x, unsigned int *y);
 
-size_t armies_total_memory_size;
-static unsigned int armies_count = 1;
-static unsigned int battalion_count = 0;
-static unsigned int battalion_size = 50;
+size_t armies_total_memory_size = 0;
 
-void init_armies_memory_arena(void) {
+void init_armies_memory_arena(unsigned int armies_count, unsigned int battalion_count, unsigned int battalion_size) {
 
-    battalion_count = engine.battleplan->general_in_grid_count;
     engine.game->unit_created_count = (unsigned int)(battalion_size * battalion_count * armies_count);
 
     armies_total_memory_size =
@@ -63,30 +62,27 @@ void init_armies_memory_arena(void) {
         sizeof(Unit) * armies_count * battalion_count * battalion_size,
         _Alignof(Unit));
 
-    link_army_memory_hierarchy(armies, army, general, battalions, unit);
+    link_army_memory_hierarchy(
+        armies, army, general, battalions, unit,
+        armies_count, battalion_count, battalion_size);
 
 }
 
-void load_armies_into_arena(void) {
+void load_armies_into_arena(unsigned int armies_count, unsigned int battalion_count, unsigned int battalion_size) {
     
     Army *army = engine.armies->army;
-    General (*grid)[GRID_DIMENSION_Y] = engine.battleplan->battleplan_general_placement;
-    unsigned int x = 0;
-    unsigned int y = 0;
+    //GridPlacementPayload *buffer = engine.battleplan->grid_payload;
+    OccupiedCell *occupied_cell = engine.battleplan->grid_payload->occupied_cell;
+    Grid *grid = &engine.battleplan->grid_payload->grid;
     for (unsigned int i = 0; i < armies_count; i++) {
 
         Battalion *battalion = army[i].battalions;
+        General *general = army[i].general;
         for (unsigned int j = 0; j < battalion_count; j++) {
 
-            General *general = get_general_from_grid(grid, &x, &y);
+            init_battalion(&battalion[j], battalion_size);
 
-            init_battalion(&battalion[j], battalion_size, x, y);
-
-            init_generals(&battalion[j], general);
-                // personal thought comment:
-                // because both battalion and general point to
-                // one another, the args are quite ambiguous.
-                // the same is applied to other functions.
+            init_general(&general[j], &occupied_cell[j].general, grid, occupied_cell[j].x, occupied_cell[j].y);
 
             init_units(&battalion[j]);
 
@@ -94,15 +90,20 @@ void load_armies_into_arena(void) {
 
     }
 
+    free(engine.battleplan->grid_payload);
+    engine.battleplan->grid_payload = NULL;
+
 }
 
-static void link_army_memory_hierarchy(Armies *armies, Army *army, General *general, Battalion *battalions, Unit *unit) {
+static void link_army_memory_hierarchy(
+    Armies *armies, Army *army, General *general, Battalion *battalions, Unit *unit,
+    unsigned int armies_count, unsigned int battalion_count, unsigned int battalion_size) {
 
     engine.armies = armies;
     engine.armies->army = army;
     engine.armies->army->battalion_count = battalion_count;
     engine.armies->army->general_count = battalion_count;
-    engine.armies->armies_count = (unsigned int)armies_count;
+    engine.armies->armies_count = armies_count;
     engine.armies->generals_screen_width = 24;
     engine.armies->generals_screen_height = 24;
 
@@ -122,9 +123,9 @@ static void link_army_memory_hierarchy(Armies *armies, Army *army, General *gene
         }
     }
 
-}
+} // future refactor: maintain linking only and put other assignments into obj inits
 
-static General *get_general_from_grid(General (*grid)[GRID_DIMENSION_Y], unsigned int *p_x, unsigned int *p_y) {
+/*static General *get_general_from_grid(General (*grid)[GRID_DIMENSION_Y], unsigned int *p_x, unsigned int *p_y) {
 
     unsigned int x = *p_x;
     unsigned int y = *p_y;
@@ -155,7 +156,7 @@ static General *get_general_from_grid(General (*grid)[GRID_DIMENSION_Y], unsigne
 
     return NULL;
 
-}
+}*/
 
 void free_army_memory(void) {
     

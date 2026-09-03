@@ -1,8 +1,10 @@
 #include "battlefield.h"
+#include "battlefield_internal.h"
 #include "animation.h"
 #include "armies_internal.h"
 #include "battalion.h"
 #include "battalion_internal.h"
+#include "battleplan_internal.h"
 #include "camera.h"
 #include "camera_internal.h"
 #include "engine_internal.h"
@@ -35,16 +37,23 @@ static void update_units_formation_layout(void);
 //static void update_battalions_formation_layout(void);
 static void render_generals(void);
 static void render_units(void);
+//static void battlefield_grid_formatting(Grid *grid);
 
 _Bool show_quads = false;
 _Bool update_formation = false;
 _Bool update_units_formation = false;
 _Bool update_battalions_formation = false; 
 
+Battlefield battlefield = {0};
+
 void battlefield_init(void) {
+
+    engine.battlefield = &battlefield;
 
     camera_init();
     animation_init();
+
+    //battlefield_grid_formatting(&engine.battleplan->grid_payload->grid);
 
     init_general_battalion_taxonomy();
 
@@ -53,8 +62,11 @@ void battlefield_init(void) {
     unsigned int player_id = create_player(50 ,1000, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
     engine.player = get_player(player_id);
 
-    init_armies_memory_arena();
-    load_armies_into_arena();
+    unsigned int armies_count = 1;
+    unsigned int battalion_count = engine.battleplan->grid_payload->occupied_cell_count;
+    unsigned int battalion_size = 50;
+    init_armies_memory_arena(armies_count, battalion_count, battalion_size);
+    load_armies_into_arena(armies_count, battalion_count, battalion_size);
     calculateAmountOfQuadrants();
     init_grids();
     initialCheckUnitQuadrant(engine.armies, engine.game, engine.grids);
@@ -414,3 +426,10 @@ static void render_units(void) {
     }
 
 }
+
+/*static void battlefield_grid_formatting(Grid *grid) {
+
+    battlefield.grid.dimension.x = grid->dimension.x;
+    battlefield.grid.dimension.y = grid->dimension.y;
+
+}*/

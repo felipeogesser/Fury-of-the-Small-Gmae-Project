@@ -3,6 +3,7 @@
 
 #include "animation_types.h"
 #include "armies_types.h"
+#include "battlefield_types.h"
 #include "battleplan_types.h"
 #include "camera_types.h"
 #include "game_state_types.h"
@@ -18,6 +19,7 @@ typedef struct Engine {
     
     // core systems
     Armies *armies;
+    Battlefield *battlefield;
     Battleplan *battleplan;
     GameState *game;
     Grids *grids;

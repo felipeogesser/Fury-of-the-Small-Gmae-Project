@@ -3,8 +3,11 @@
 #include "animation_types.h"
 #include "armies_internal.h"
 #include "battalion_internal.h"
+#include "battlefield_internal.h"
+#include "battleplan_internal.h"
 #include "engine_internal.h"
 #include "game_state_internal.h"
+#include "maps_internal.h"
 #include "sprites_types.h"
 
 #define BATTALION_LIST(X) \
@@ -48,18 +51,18 @@ const size_t general_field_table_count =
 #undef SIZE_OF
 
 // private prototypes
-static void set_general_sprite_width_and_height(General *general);
 static void copy_bits_set_to_one(unsigned char *d, const unsigned char *s);
-static void set_general_xy_position(Battalion *battalion, General *general);
+static void set_general_sprite_width_and_height(General *general);
+static void set_general_position(General *general, Grid *grid, unsigned int x, unsigned int y);
 static void set_general_dimension(General *general);
 
-void init_generals(Battalion *battalion, General *general) {
+void init_general(General *general, General *general_from_battleplan_payload, Grid *grid, unsigned int x, unsigned int y) {
     
-    copy_bits_set_to_one((unsigned char *)battalion->general, (unsigned char *)general);
+    copy_bits_set_to_one((unsigned char *)general, (unsigned char *)general_from_battleplan_payload);
 
     set_general_sprite_width_and_height(general);
 
-    set_general_xy_position(battalion, general);
+    set_general_position(general, grid, x, y);
 
     set_general_dimension(general);
 
@@ -93,10 +96,16 @@ static void set_general_sprite_width_and_height(General *general) {
 
 }
 
-static void set_general_xy_position(Battalion *battalion, General *general) {
+static void set_general_position(General *general, Grid *grid, unsigned int x, unsigned int y) {
 
-    general->positionX = battalion->initial_map_placement_x + battalion->area_width - 5;
-    general->positionY = battalion->initial_map_placement_y + battalion->area_height / 2;
+    unsigned int cell_width = (engine.map->mapSizeX / 2 - engine.battlefield->padding.in_between_armies / 2 - engine.battlefield->padding.left) / grid->dimension.x;
+    unsigned int cell_height = (engine.map->mapSizeY - engine.battlefield->padding.bottom - engine.battlefield->padding.top ) / grid->dimension.y;
+
+    unsigned int cell_position_x = engine.battlefield->padding.left + x * cell_width;
+    unsigned int cell_position_y = engine.battlefield->padding.top + y * cell_height;
+
+    general->positionX = cell_position_x + cell_width;
+    general->positionY = cell_position_y + cell_height;
 
 }
 
