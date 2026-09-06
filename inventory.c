@@ -41,7 +41,7 @@ void *inventory_init(void) {
 
     engine.inventory = &inventory;
 
-    inventory.general_count = 4;
+    inventory.general_count = 9;
 
     General *general = search_inventory(
         inventory.general_count,
@@ -67,14 +67,14 @@ void *inventory_init(void) {
 
     inventory.general = general;
 
-    for (unsigned int i = 0; i < inventory.general_count; i++) {
+    /*for (unsigned int i = 0; i < inventory.general_count; i++) {
 
         general[i].render = true;
         general[i].anim.animation = IDLE;
         general[i].anim.frames_count = engine.sprite_pack->sprite[general[i].sprite.type][IDLE].frames_count;
         general[i].anim.current_frame =(unsigned char)(rand() % general[i].anim.frames_count);
 
-    }
+    }*/
 
     return general;
 

@@ -41,9 +41,9 @@ DragPayload drag_payload = {0};
 // private prototypes
 static void booleans_init(void);
 static void variables_init(void);
-static void initialize_generals(General *general);
+static void partly_initialize_generals(General *general);
 static void set_generals_drawer_slot_index(General *general);
-static void set_generals_stats(General *general);
+static void set_minimal_general_sprite_and_animation_data(General *general);
 static void handle_mouse_left_button(void);
 static signed int check_if_dragging_general_out_of_grid(void);
 static void check_if_dragging_general_out_of_drawer(void);
@@ -225,7 +225,7 @@ void battleplan_init(void) {
 
     clear_payload(&drag_payload);
 
-    initialize_generals(general);
+    partly_initialize_generals(general);
 
 }
 
@@ -1085,11 +1085,11 @@ static float ease_out_elastic(float x) {
 
 }*/
 
-static void initialize_generals(General *general) {
+static void partly_initialize_generals(General *general) {
 
     set_generals_drawer_slot_index(general);
 
-    set_generals_stats(general);
+    set_minimal_general_sprite_and_animation_data(general);
     
 }
 
@@ -1112,11 +1112,14 @@ static void set_generals_drawer_slot_index(General *general) {
 
 }
 
-static void set_generals_stats(General *general) {
+static void set_minimal_general_sprite_and_animation_data(General *general) {
 
     for (unsigned int i = 0; i < engine.inventory->general_count; i++) {
 
+        general[i].render = true;
+        general[i].anim.animation = IDLE;
         general[i].anim.frames_count = engine.sprite_pack->sprite[general[i].sprite.type][IDLE].frames_count;
+        general[i].anim.current_frame = (unsigned char)(rand() % general[i].anim.frames_count);
 
     }
 
