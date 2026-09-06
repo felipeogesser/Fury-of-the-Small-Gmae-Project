@@ -1,7 +1,7 @@
 #include "armies.h"
 #include "armies_internal.h"
 
-void set_army_position(void) {
+/*void set_army_position(void) {
 
     unsigned int formation_height = battalion->unit_formation_height;
     unsigned int formation_width = ceilf(battalion_size / battalion->unit_formation_height);
@@ -30,4 +30,4 @@ padding_between_battalions_y=10
 
     }
 
-}
+}*/

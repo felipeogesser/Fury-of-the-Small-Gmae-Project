@@ -9,8 +9,8 @@ typedef struct Battalion {
     struct General *general;
     struct Unit *unit;
     unsigned int unit_count;
-    unsigned int initial_map_placement_x;
-    unsigned int initial_map_placement_y;
+    //unsigned int initial_map_placement_x;
+    //unsigned int initial_map_placement_y;
     unsigned int padding_between_units_x;
     unsigned int padding_between_units_y;
     unsigned int unit_formation_width;

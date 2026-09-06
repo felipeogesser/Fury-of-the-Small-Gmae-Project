@@ -84,7 +84,7 @@ void load_armies_into_arena(unsigned int armies_count, unsigned int battalion_co
 
             init_general(&general[j], &occupied_cell[j].general, grid, occupied_cell[j].x, occupied_cell[j].y);
 
-            init_units(&battalion[j]);
+            init_units(&battalion[j], grid, &occupied_cell[j]);
 
         }
 

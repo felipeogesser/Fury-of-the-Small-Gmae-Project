@@ -33,7 +33,7 @@
 
 // prototypes
 //static void update_formation_layout(void);
-static void update_units_formation_layout(void);
+//static void update_units_formation_layout(void);
 //static void update_battalions_formation_layout(void);
 static void render_generals(void);
 static void render_units(void);
@@ -116,7 +116,7 @@ void battlefield_input(SDL_Event *e) {
 
 void battlefield_update(void) {
     
-    if (update_formation) {
+/*    if (update_formation) {
         
         //update_formation_layout();
         update_formation = false;
@@ -135,7 +135,7 @@ void battlefield_update(void) {
 //        update_battalions_formation_layout();
         update_battalions_formation = false;
 
-    }
+    }*/
 
     calculate_player_movement(engine.game);
     
@@ -211,7 +211,11 @@ void battlefield_render(void) {
         
         Unit *unit = battalions[i].unit;
         General *general = armies->army->general;
-        
+        if (unit == NULL) {
+            printf("asdasdad\n");
+            exit(EXIT_FAILURE);
+        }
+        //printf("unit = %d\n",);
             SDL_Rect general_render = {
                 (signed int)general[i].positionX,
                 (signed int)general[i].positionY,
@@ -318,7 +322,7 @@ void battlefield_destroy(void) {
 
 }*/
 
-static void update_units_formation_layout(void) {
+/*static void update_units_formation_layout(void) {
 
     char *buffer = open_read_close_ini_file("battlefield_formation_layout.ini");
     General *general = engine.armies->army->general;
@@ -329,7 +333,7 @@ static void update_units_formation_layout(void) {
 
     set_units_position(unit, battalion->unit_count, battalion);
 
-}
+}*/
 
 //static void update_battalions_formation_layout(void) {}
 

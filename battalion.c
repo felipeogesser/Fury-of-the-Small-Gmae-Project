@@ -13,8 +13,6 @@ static void set_battalion_dimension(Battalion *battalion, unsigned int battalion
 #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
 
 const FieldEntry battalion_field_table[] = {
-    { "initial_map_placement_x",    OFFSET_OF(Battalion, initial_map_placement_x),  SIZE_OF(Battalion, initial_map_placement_x) },
-    { "initial_map_placement_y",    OFFSET_OF(Battalion, initial_map_placement_y),  SIZE_OF(Battalion, initial_map_placement_y) },
     { "padding_between_units_x",    OFFSET_OF(Battalion, padding_between_units_x),  SIZE_OF(Battalion, padding_between_units_x) },
     { "padding_between_units_y",    OFFSET_OF(Battalion, padding_between_units_y),  SIZE_OF(Battalion, padding_between_units_y) },
     { "unit_formation_width",       OFFSET_OF(Battalion, unit_formation_width),     SIZE_OF(Battalion, unit_formation_width) },
