@@ -22,7 +22,7 @@ static struct Arena arena = {0};
 
 static enum MemoryArenaAllocStatus memory_arena_alloc(void) {
 
-    size_t capacity = 67108864;
+    size_t capacity = (size_t)(2147483648ULL);
     arena.capacity = capacity;
     
     void *ptr = mmap(

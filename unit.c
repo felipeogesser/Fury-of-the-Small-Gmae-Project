@@ -115,14 +115,14 @@ void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *batt
     unsigned int padding_x = battalion->padding_between_units_x;
     unsigned int padding_y = battalion->padding_between_units_y;
 
-    unsigned int cell_width = (engine.map->mapSizeX / 2 - engine.battlefield->padding.in_between_armies / 2 - engine.battlefield->padding.left) / grid->dimension.x;
-    unsigned int cell_height = (engine.map->mapSizeY - engine.battlefield->padding.bottom - engine.battlefield->padding.top ) / grid->dimension.y;
+    unsigned int cell_width = ((engine.map->mapSizeX / 2 - engine.battlefield->padding.in_between_armies / 2 - engine.battlefield->padding.left) / grid->dimension.x);
+    unsigned int cell_height = ((engine.map->mapSizeY - engine.battlefield->padding.bottom - engine.battlefield->padding.top ) / grid->dimension.y);
 
     unsigned int cell_position_x = engine.battlefield->padding.left + occupied_cell->x * cell_width;
     unsigned int cell_position_y = engine.battlefield->padding.top + occupied_cell->y * cell_height;
 
-    unsigned int cell_x = cell_position_x + cell_width;
-    unsigned int cell_y = cell_position_y + cell_height;
+    unsigned int cell_x = cell_position_x; //+ cell_width;
+    unsigned int cell_y = cell_position_y; //+ cell_height;
 
     unsigned int idx = 0;
     for (unsigned int i = 0; i < formation_width; i++) {
@@ -131,7 +131,6 @@ void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *batt
 
             unsigned int x = cell_x + padding_x + (unit[idx].dimensionX * i);
             unsigned int y = cell_y + padding_y + (unit[idx].dimensionY * j);
-            printf("x = %u, y = %u\n", x, y);
             unit[idx].positionX = x;
             unit[idx].positionY = y;
             idx++;
