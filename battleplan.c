@@ -41,7 +41,6 @@ DragPayload drag_payload = {0};
 // private prototypes
 static void booleans_init(void);
 static void variables_init(void);
-static void partly_initialize_generals(General *general);
 static void set_generals_drawer_slot_index(General *general);
 static void set_minimal_general_sprite_and_animation_data(General *general);
 static void handle_mouse_left_button(void);
@@ -225,8 +224,10 @@ void battleplan_init(void) {
 
     clear_payload(&drag_payload);
 
-    partly_initialize_generals(general);
+    set_generals_drawer_slot_index(general);
 
+    set_minimal_general_sprite_and_animation_data(general);
+    
 }
 
 void battleplan_input(SDL_Event *e) {
@@ -1084,14 +1085,6 @@ static float ease_out_elastic(float x) {
     return -powf(2.0f, 10.0f * x - 10.0f) * sinf((x * 10.0f - 10.75f) * 2.094395f); //2.094395f is 2 * pi / 3 approximately
 
 }*/
-
-static void partly_initialize_generals(General *general) {
-
-    set_generals_drawer_slot_index(general);
-
-    set_minimal_general_sprite_and_animation_data(general);
-    
-}
 
 static void set_generals_drawer_slot_index(General *general) {
 
