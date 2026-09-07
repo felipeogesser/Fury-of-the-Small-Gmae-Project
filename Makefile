@@ -44,7 +44,6 @@ SRC = \
 	load_armies.c \
 	main.c \
 	main_menu.c \
-	mapMaker.c \
 	maps.c \
 	memory_arena.c \
 	peripherals.c \

@@ -1,12 +1,13 @@
 #ifndef MAPS_INTERNAL_H
 #define MAPS_INTERNAL_H
 
-#define MAX_MAPS 10
+#include "maps_types.h"
 
 typedef struct Map {
-    unsigned int id;
-    signed short mapSizeX, mapSizeY;
-    signed short mapLeftLimit, mapRightLimit, mapTopLimit, mapBottomLimit;
+
+    unsigned short mapSizeX, mapSizeY;
+    unsigned short mapLeftLimit, mapRightLimit, mapTopLimit, mapBottomLimit;
+
 } Map;
 
 #endif

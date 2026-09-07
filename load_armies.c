@@ -90,8 +90,8 @@ void load_armies_into_arena(unsigned int armies_count, unsigned int battalion_co
 
     }
 
-    free(engine.battleplan->grid_payload);
-    engine.battleplan->grid_payload = NULL;
+    //free(engine.battleplan->grid_payload);
+    //engine.battleplan->grid_payload = NULL;
 
 }
 

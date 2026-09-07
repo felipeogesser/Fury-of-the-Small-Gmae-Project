@@ -50,6 +50,12 @@ void battlefield_init(void) {
 
     engine.battlefield = &battlefield;
 
+    battlefield.padding.left = 100;
+    battlefield.padding.right = 100;
+    battlefield.padding.top = 50;
+    battlefield.padding.bottom = 50;
+    battlefield.padding.in_between_armies = 1000;
+
     camera_init();
     animation_init();
 
@@ -57,8 +63,12 @@ void battlefield_init(void) {
 
     init_general_battalion_taxonomy();
 
-    make_maps();
-    engine.map = get_map(map_id[0]);
+    unsigned int dimension_x = engine.battleplan->grid_payload->grid.dimension.x;
+    unsigned int dimension_y = engine.battleplan->grid_payload->grid.dimension.y;
+    unsigned int map_size_x = battlefield.padding.left + 48 * 10 * dimension_x * 2 + battlefield.padding.right;
+    unsigned int map_size_y = battlefield.padding.top + 48 * 10 * dimension_y + battlefield.padding.bottom;
+    engine.map = map_init(map_size_x, map_size_y);
+
     unsigned int player_id = create_player(50 ,1000, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
     engine.player = get_player(player_id);
 

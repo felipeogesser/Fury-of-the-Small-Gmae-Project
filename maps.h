@@ -3,8 +3,8 @@
 
 #include "maps_types.h"
 
-unsigned int create_map(signed short mapSizeX, signed short mapSizeY);
+Map *map_init(unsigned int mapSizeX, unsigned int mapSizeY);
 
-Map *get_map(unsigned int mapId);
+//Map *get_map(unsigned int mapId);
 
 #endif
