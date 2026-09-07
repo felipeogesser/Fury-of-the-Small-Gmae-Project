@@ -133,7 +133,7 @@ void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *batt
     }
 
     unsigned int cell_inner_padding_left = 0;
-    cell_inner_padding_left = (cell_width - formation_width * (unit->sprite.w + unit_padding_x)) / 2;
+    cell_inner_padding_left = cell_width / 2 - formation_width * (unit->sprite.w + unit_padding_x);
 
 
     unsigned int idx = 0;
@@ -141,8 +141,8 @@ void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *batt
 
         for (unsigned int j = 0; j < formation_height; j++) {
 
-            unsigned int x = cell_position_x + cell_inner_padding_left + unit_padding_x + (unit[idx].dimensionX * i);
-            unsigned int y = cell_position_y + cell_inner_padding_top + unit_padding_y + (unit[idx].dimensionY * j);
+            unsigned int x = cell_position_x + cell_inner_padding_left + unit_padding_x * i + (unit[idx].dimensionX * i);
+            unsigned int y = cell_position_y + cell_inner_padding_top + unit_padding_y * j + (unit[idx].dimensionY * j);
             unit[idx].positionX = x;
             unit[idx].positionY = y;
             idx++;

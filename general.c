@@ -53,8 +53,8 @@ const size_t general_field_table_count =
 // private prototypes
 static void copy_bits_set_to_one(unsigned char *d, const unsigned char *s);
 static void set_general_sprite_width_and_height(General *general);
-static void set_general_position(General *general, Grid *grid, unsigned int x, unsigned int y);
 static void set_general_dimension(General *general);
+static void set_general_position(General *general, Grid *grid, unsigned int x, unsigned int y);
 
 void init_general(General *general, General *general_from_battleplan_payload, Grid *grid, unsigned int x, unsigned int y) {
     
@@ -62,9 +62,9 @@ void init_general(General *general, General *general_from_battleplan_payload, Gr
 
     set_general_sprite_width_and_height(general);
 
-    set_general_position(general, grid, x, y);
-
     set_general_dimension(general);
+
+    set_general_position(general, grid, x, y);
 
 }
 
@@ -96,6 +96,13 @@ static void set_general_sprite_width_and_height(General *general) {
 
 }
 
+static void set_general_dimension(General *general) {
+
+    general->dimensionX = general->sprite.w;
+    general->dimensionY = general->sprite.h;
+
+}
+
 static void set_general_position(General *general, Grid *grid, unsigned int x, unsigned int y) {
 
     unsigned int cell_width = (engine.map->mapSizeX / 2 - engine.battlefield->padding.in_between_armies / 2 - engine.battlefield->padding.left) / grid->dimension.x;
@@ -104,14 +111,7 @@ static void set_general_position(General *general, Grid *grid, unsigned int x, u
     unsigned int cell_position_x = engine.battlefield->padding.left + x * cell_width;
     unsigned int cell_position_y = engine.battlefield->padding.top + y * cell_height;
 
-    general->positionX = cell_position_x + cell_width;
-    general->positionY = cell_position_y + cell_height;
-
-}
-
-static void set_general_dimension(General *general) {
-
-    general->dimensionX = general->sprite.w;
-    general->dimensionY = general->sprite.h;
+    general->positionX = cell_position_x + cell_width / 2;
+    general->positionY = cell_position_y + cell_height / 2 - general->dimensionY / 2;
 
 }
