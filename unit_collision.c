@@ -36,7 +36,7 @@ void initialCheckUnitQuadrant(Armies *armies, GameState *game, Grids *grids) {
         int X = column * (signed int)game->low_LOD_quadrant_size;
         int row = (int)floor(unit[i].positionY / game->low_LOD_quadrant_size);
         int Y = row * game->low_LOD_quadrant_size;
- 
+
         signed int indexer = row * amountX + column;
 
         if (indexer < 0 || indexer >= amountX * amountY) {

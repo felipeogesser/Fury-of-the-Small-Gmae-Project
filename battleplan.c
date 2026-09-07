@@ -41,7 +41,7 @@ DragPayload drag_payload = {0};
 // private prototypes
 static void booleans_init(void);
 static void variables_init(void);
-static void set_generals_drawer_slot_index(General *general);
+static void set_drawer_slot_generals_index(General *general);
 static void set_minimal_general_sprite_and_animation_data(General *general);
 static void handle_mouse_left_button(void);
 static signed int check_if_dragging_general_out_of_grid(void);
@@ -224,7 +224,7 @@ void battleplan_init(void) {
 
     clear_payload(&drag_payload);
 
-    set_generals_drawer_slot_index(general);
+    set_drawer_slot_generals_index(general);
 
     set_minimal_general_sprite_and_animation_data(general);
     
@@ -1086,7 +1086,7 @@ static float ease_out_elastic(float x) {
 
 }*/
 
-static void set_generals_drawer_slot_index(General *general) {
+static void set_drawer_slot_generals_index(General *general) {
 
     unsigned int index = 0;
     for (enum Rarity i = 0; i < RARITY_TYPES_COUNT; i++) {

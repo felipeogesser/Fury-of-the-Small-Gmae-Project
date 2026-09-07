@@ -47,6 +47,7 @@ typedef struct Dimension {
     unsigned int x, y;
 
 } Dimension;
+
 typedef struct Grid {
 
     //Cell cell;
