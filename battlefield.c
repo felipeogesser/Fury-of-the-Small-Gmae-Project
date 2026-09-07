@@ -16,7 +16,6 @@
 #include "ini_parser.h"
 #include "load_armies.h"
 #include "memory_arena.h"
-#include "mapMaker.h"
 #include "maps.h"
 #include "maps_internal.h"
 #include "player.h"
