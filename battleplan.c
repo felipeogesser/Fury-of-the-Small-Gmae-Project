@@ -547,7 +547,7 @@ static void handle_mouse_left_button(void) {
 
     if (!left_mouse_pressed) {
 
-        if (!dragging_general && general_placement_valid) {
+        if (general_placement_valid) {
 
             if (is_general_released_inside_deploy_area) {
 
@@ -616,7 +616,7 @@ static void handle_mouse_left_button(void) {
             is_general_released_inside_drawer = false;
             clear_payload(&drag_payload);
 
-        } else if (!dragging_general && !general_placement_valid) {
+        } else {
 
             if (drag_payload.origin == GRID) {
 
