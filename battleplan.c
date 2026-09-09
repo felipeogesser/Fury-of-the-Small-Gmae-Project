@@ -579,6 +579,7 @@ static void handle_mouse_left_button(void) {
             } else if (is_general_released_inside_drawer) {
                 
                 if (drag_payload.origin != DRAWER) {
+                    
                     signed int x = drag_payload.grid_cell_x;
                     signed int y = drag_payload.grid_cell_y;
                     if (x != -1 && y != -1) {
@@ -609,31 +610,15 @@ static void handle_mouse_left_button(void) {
             
             }
 
-            general_placement_valid = false;
-            is_general_released_inside_deploy_area = false;
-            is_general_released_inside_drawer = false;
-            clear_payload(&drag_payload);
+        } else if (drag_payload.origin == DRAWER) {
 
-        } else {
-
-            if (drag_payload.origin == GRID) {
-
-                is_general_released_inside_deploy_area = false;
-                is_general_released_inside_drawer = false;
-                clear_payload(&drag_payload);
-
-            }
-
-            if (drag_payload.origin == DRAWER) {
-                
-                is_general_released_inside_deploy_area = false;
-                is_general_released_inside_drawer = false;
-                drag_payload.general->render = true;
-                clear_payload(&drag_payload);
-
-            }
+            drag_payload.general->render = true;
 
         }
+
+        is_general_released_inside_deploy_area = false;
+        is_general_released_inside_drawer = false;
+        clear_payload(&drag_payload);
 
     }
 
