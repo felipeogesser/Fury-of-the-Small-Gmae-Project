@@ -576,33 +576,31 @@ static void handle_mouse_left_button(void) {
 
                 }
 
-                //clear_payload(&drag_payload);
-
-
-            } else if (is_general_released_inside_drawer && drag_payload.origin != DRAWER) {
-                signed int x = drag_payload.grid_cell_x;
-                signed int y = drag_payload.grid_cell_y;
-                if (x != -1 && y != -1) {
-
-                    grid[x][y] = NULL;
-                    General **general = &drag_payload.general;
-                    insert_general_into_drawer(general);
-                    battleplan.general_in_grid_count--;
-
-                } else {
-
-                    printf("x = %d, y = %d\n", x, y);
-                    fprintf(stderr, "x or y is -1 even though payload origin is from grid\n");
-                    exit(EXIT_FAILURE);
-                    //drag_payload.general->render = true;
-                }
-
-                //clear_payload(&drag_payload);
-
-            } else if (is_general_released_inside_drawer && drag_payload.origin == DRAWER) {
+            } else if (is_general_released_inside_drawer) {
                 
-                drag_payload.general->render = true;
-                //clear_payload(&drag_payload);
+                if (drag_payload.origin != DRAWER) {
+                    signed int x = drag_payload.grid_cell_x;
+                    signed int y = drag_payload.grid_cell_y;
+                    if (x != -1 && y != -1) {
+
+                        grid[x][y] = NULL;
+                        General **general = &drag_payload.general;
+                        insert_general_into_drawer(general);
+                        battleplan.general_in_grid_count--;
+
+                    } else {
+
+                        printf("x = %d, y = %d\n", x, y);
+                        fprintf(stderr, "x or y is -1 even though payload origin is from grid\n");
+                        exit(EXIT_FAILURE);
+
+                    }
+
+                } else if (drag_payload.origin == DRAWER) {
+                    
+                    drag_payload.general->render = true;
+
+                }
 
             } else {
 
