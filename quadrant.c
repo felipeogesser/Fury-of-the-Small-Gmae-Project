@@ -30,7 +30,7 @@ void calculateAmountOfQuadrants(void) {
 }
 
 void fill_quadrant_data(void) {
-    bigQuadrant *bigQuad = engine.grids->GLLoD->bigQuad;
+    bigQuadrant *bigQuad = engine.battlefield_grid->GLLoD->bigQuad;
     unsigned short amountX = engine.game->amountX;
     unsigned short amountY = engine.game->amountY;
     for (unsigned short i = 0; i < amountX * amountY; i++) {
@@ -41,7 +41,7 @@ void fill_quadrant_data(void) {
     }
 
     /*for (unsigned int i = 0; i < engine.game->low_LOD_quadrant_count; i++) {
-        engine.grids->GLLoD->occupied_quads_indexes[i] = (unsigned int)-1;
+        engine.battlefield_grid->GLLoD->occupied_quads_indexes[i] = (unsigned int)-1;
     }*/
 }
 

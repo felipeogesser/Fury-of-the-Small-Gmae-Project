@@ -3,7 +3,7 @@
 
 typedef struct Dimension Dimension;
 
-typedef struct Grid Grid;
+typedef struct BattleplanGrid BattleplanGrid;
 
 typedef struct OccupiedCell OccupiedCell;
 

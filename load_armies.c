@@ -74,7 +74,7 @@ void load_armies_into_arena(unsigned int armies_count, unsigned int battalion_co
     Army *army = engine.armies->army;
     //GridPlacementPayload *buffer = engine.battleplan->grid_payload;
     OccupiedCell *occupied_cell = engine.battleplan->grid_payload->occupied_cell;
-    Grid *grid = &engine.battleplan->grid_payload->grid;
+    BattleplanGrid *grid = &engine.battleplan->grid_payload->grid;
     for (unsigned int i = 0; i < armies_count; i++) {
 
         Battalion *battalion = army[i].battalions;

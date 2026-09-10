@@ -10,11 +10,11 @@
 
 Unit *get_unit(int id);
 
-void init_units(Battalion *battalion, Grid *grid, OccupiedCell *occupied_cell);
+void init_units(Battalion *battalion, BattleplanGrid *grid, OccupiedCell *occupied_cell);
 
 void update_units(Armies *armies, GameState *game);
 
-void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *battalion, Grid *grid, OccupiedCell *occupied_cell);
+void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *battalion, BattleplanGrid *grid, OccupiedCell *occupied_cell);
 
 
 #endif

@@ -34,7 +34,7 @@ static void set_units_sprite_and_animation(Unit *unit, General *general, unsigne
 //static void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *battalion);
 
 
-void init_units(Battalion *battalion, Grid *grid, OccupiedCell *occupied_cell) {
+void init_units(Battalion *battalion, BattleplanGrid *grid, OccupiedCell *occupied_cell) {
     // this function expects to be called only when generals are already initialized
     General *general = battalion->general;
     Unit *unit = battalion->unit;
@@ -107,7 +107,7 @@ static void set_units_dimension(Unit *unit, unsigned int battalion_size) {
 
 }
 
-void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *battalion, Grid *grid, OccupiedCell *occupied_cell) {
+void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *battalion, BattleplanGrid *grid, OccupiedCell *occupied_cell) {
 
     unsigned int formation_height = battalion->unit_formation_height;
     unsigned int formation_width = ceilf(battalion_size / battalion->unit_formation_height);

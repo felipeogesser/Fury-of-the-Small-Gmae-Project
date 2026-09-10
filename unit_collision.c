@@ -23,12 +23,12 @@
 
 // futuramente trocar [i] por ->
 
-void initialCheckUnitQuadrant(Armies *armies, GameState *game, BattlefieldGrid *grids) {
+void initialCheckUnitQuadrant(Armies *armies, GameState *game, BattlefieldGrid *battlefield_grid) {
 
     Unit *unit = armies->army->battalions->unit;
     signed int amountX = game->amountX;
     signed int amountY = game->amountY;
-    bigQuadrant *quadrant = grids->GLLoD->bigQuad;
+    bigQuadrant *quadrant = battlefield_grid->GLLoD->bigQuad;
 
     for (unsigned int i = 0; i < game->unit_created_count; i++) {
         
@@ -97,12 +97,12 @@ void initialCheckUnitQuadrant(Armies *armies, GameState *game, BattlefieldGrid *
 
 
 // unit goes into indexes = to their id -1
-void check_unit_quadrant(Armies *armies, GameState *game, BattlefieldGrid *grids) {
+void check_unit_quadrant(Armies *armies, GameState *game, BattlefieldGrid *battlefield_grid) {
 
     Unit *unit = armies->army->battalions->unit;
     signed int amountX = game->amountX;
     signed int amountY = game->amountY;
-    bigQuadrant *quadrant = grids->GLLoD->bigQuad;
+    bigQuadrant *quadrant = battlefield_grid->GLLoD->bigQuad;
     
     for (unsigned int i = 0; i < game->unit_created_count; i++) {
         int column = (int)floor((unit[i].positionX) / game->low_LOD_quadrant_size);

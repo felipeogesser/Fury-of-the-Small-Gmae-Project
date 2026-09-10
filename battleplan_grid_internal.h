@@ -10,14 +10,14 @@ typedef struct Dimension {
 
 } Dimension;
 
-typedef struct Grid {
+typedef struct BattleplanGrid {
 
     //Cell cell;
     
     Dimension dimension;
     //Size size;
 
-} Grid;
+} BattleplanGrid;
 
 typedef struct OccupiedCell {
 
@@ -29,7 +29,7 @@ typedef struct OccupiedCell {
 
 typedef struct GridPlacementPayload {
 
-    Grid grid;
+    BattleplanGrid grid;
     unsigned int occupied_cell_count;
     OccupiedCell occupied_cell[];
 

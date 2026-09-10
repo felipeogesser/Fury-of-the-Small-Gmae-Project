@@ -8,7 +8,7 @@
 
 void init_general_battalion_taxonomy(void);
 
-void init_general(General *general, General *general_from_battleplan_payload, Grid *grid, unsigned int x, unsigned int y);
+void init_general(General *general, General *general_from_battleplan_payload, BattleplanGrid *grid, unsigned int x, unsigned int y);
 
 void update_generals(Armies *armies, GameState *game);
 

@@ -37,7 +37,7 @@ void init_grids(void) {
 
     engine.grid_memory_ptr = memory_arena_current_pointer();
 
-    BattlefieldGrid *grids = memory_arena_push(sizeof(BattlefieldGrid), _Alignof(BattlefieldGrid));
+    BattlefieldGrid *battlefield_grid = memory_arena_push(sizeof(BattlefieldGrid), _Alignof(BattlefieldGrid));
 
     GridLowLOD *GLLoD = memory_arena_push(sizeof(GridLowLOD), _Alignof(GridLowLOD));
 
@@ -57,25 +57,25 @@ void init_grids(void) {
     
     Occupied *occupied_GHLoD = memory_arena_push(sizeof(Occupied) + sizeof(unsigned int) * smallCount, _Alignof(Occupied));
     
-    engine.grids = grids;
+    engine.battlefield_grid = battlefield_grid;
     
-    engine.grids->GLLoD = GLLoD;
+    engine.battlefield_grid->GLLoD = GLLoD;
 
-    engine.grids->GLLoD->bigQuad = bigQuad;
+    engine.battlefield_grid->GLLoD->bigQuad = bigQuad;
 
-    engine.grids->GLLoD->occupied = occupied_GLLoD;
+    engine.battlefield_grid->GLLoD->occupied = occupied_GLLoD;
 
-    engine.grids->GMLoD = GMLoD;
+    engine.battlefield_grid->GMLoD = GMLoD;
 
-    engine.grids->GMLoD->mediumQuad = mediumQuad;
+    engine.battlefield_grid->GMLoD->mediumQuad = mediumQuad;
 
-    engine.grids->GMLoD->occupied = occupied_GMLoD;
+    engine.battlefield_grid->GMLoD->occupied = occupied_GMLoD;
 
-    engine.grids->GHLoD = GHLoD;
+    engine.battlefield_grid->GHLoD = GHLoD;
     
-    engine.grids->GHLoD->smallQuad = smallQuad;
+    engine.battlefield_grid->GHLoD->smallQuad = smallQuad;
 
-    engine.grids->GHLoD->occupied = occupied_GHLoD;
+    engine.battlefield_grid->GHLoD->occupied = occupied_GHLoD;
    
     fill_quadrant_data();
 

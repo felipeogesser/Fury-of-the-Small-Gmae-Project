@@ -7,8 +7,8 @@
 #include "game_state_types.h"
 #include "battlefield_grid_types.h"
 
-void initialCheckUnitQuadrant(Armies *armies, GameState *game, BattlefieldGrid *grids);
-void check_unit_quadrant(Armies *armies, GameState *game, BattlefieldGrid *grids);
+void initialCheckUnitQuadrant(Armies *armies, GameState *game, BattlefieldGrid *battlefield_grid);
+void check_unit_quadrant(Armies *armies, GameState *game, BattlefieldGrid *battlefield_grid);
 void renderQuadrantsSetup(Armies *armies, GameState *game);
 void renderQuadrants(Unit *unit, GameState *game, SDL_Renderer *renderer);
 
