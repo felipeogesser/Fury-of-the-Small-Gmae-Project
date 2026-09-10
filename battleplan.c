@@ -548,8 +548,12 @@ static void handle_mouse_left_button(void) {
     if (!left_mouse_pressed) {
 
         if (general_placement_valid) {
+            
+            general_placement_valid = false;
 
             if (is_general_released_inside_deploy_area) {
+
+                is_general_released_inside_deploy_area = false;
 
                 signed int column = floor((mouse_x - window_edge_padding_x) / grid_cell_width_x);
                 signed int row = floor((mouse_y - window_edge_padding_y) / grid_cell_width_y);
@@ -578,6 +582,8 @@ static void handle_mouse_left_button(void) {
 
             } else if (is_general_released_inside_drawer) {
                 
+                is_general_released_inside_drawer = false;
+
                 if (drag_payload.origin != DRAWER) {
                     
                     signed int x = drag_payload.grid_cell_x;
@@ -616,13 +622,11 @@ static void handle_mouse_left_button(void) {
 
         }
 
-        is_general_released_inside_deploy_area = false;
-        is_general_released_inside_drawer = false;
         clear_payload(&drag_payload);
 
     }
 
-}
+}//////////////////////////////////////// fix logic error cleaup tava errado, da pra botar parte to cleanup logo dps do if 
 
 static signed int check_if_dragging_general_out_of_grid(void) {
 

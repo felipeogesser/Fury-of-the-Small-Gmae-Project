@@ -7,7 +7,7 @@
 #include "unit_internal.h"
 #include "game_state_internal.h"
 #include "general_internal.h"
-#include "grids_internal.h"
+#include "battlefield_grid_internal.h"
 #include "load_armies.h"
 #include "quadrant_internal.h"
 #include <SDL2/SDL.h>

@@ -1,5 +1,5 @@
-#ifndef GRIDS_TYPES_H
-#define GRIDS_TYPES_H
+#ifndef BATTLEFIELD_GRID_TYPES_H
+#define BATTLEFIELD_GRID_TYPES_H
 
 typedef struct Grids Grids;
 

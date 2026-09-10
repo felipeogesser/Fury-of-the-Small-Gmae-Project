@@ -1,5 +1,5 @@
-#ifndef GRID_H
-#define GRID_H
+#ifndef BATTLEFIELD_GRID_H
+#define BATTLEFIELD_GRID_H
 
 #include <stddef.h>
 

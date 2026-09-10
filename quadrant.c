@@ -2,7 +2,7 @@
 #include "quadrant_internal.h"
 #include "engine_internal.h"
 #include "game_state_internal.h"
-#include "grids_internal.h"
+#include "battlefield_grid_internal.h"
 #include "maps_internal.h"
 
 //Quadrant *quadrant = NULL;
