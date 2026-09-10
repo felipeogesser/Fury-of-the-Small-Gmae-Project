@@ -12,7 +12,7 @@
 #include "game_state_internal.h"
 #include "general.h"
 #include "general_internal.h"
-#include "grids.h"
+#include "battlefield_grid.h"
 #include "ini_parser.h"
 #include "load_armies.h"
 #include "memory_arena.h"
