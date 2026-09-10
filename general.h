@@ -3,7 +3,7 @@
 
 #include "general_types.h"
 #include "armies_types.h"
-#include "battleplan_types.h"
+#include "battleplan_grid_types.h"
 #include "game_state_types.h"
 
 void init_general_battalion_taxonomy(void);

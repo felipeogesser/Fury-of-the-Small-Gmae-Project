@@ -18,7 +18,7 @@ void init_grids(void) {
     size_t number_of_grids = 3;
 
     grids_total_memory_size =
-        sizeof(Grids) + (_Alignof(Grids) - 1) +
+        sizeof(BattlefieldGrid) + (_Alignof(BattlefieldGrid) - 1) +
         sizeof(GridLowLOD) + (_Alignof(GridLowLOD) - 1) +
         sizeof(GridMediumLOD) + (_Alignof(GridMediumLOD) - 1) +
         sizeof(GridHighLOD) + (_Alignof(GridHighLOD) - 1) +
@@ -30,14 +30,14 @@ void init_grids(void) {
         
     if (memory_arena_memory_remainder() < grids_total_memory_size) {
 
-        fprintf(stderr, "Grids memory allocation failed. Not enough memory available.\n");
+        fprintf(stderr, "BattlefieldGrid memory allocation failed. Not enough memory available.\n");
         exit(EXIT_FAILURE);
 
     }
 
     engine.grid_memory_ptr = memory_arena_current_pointer();
 
-    Grids *grids = memory_arena_push(sizeof(Grids), _Alignof(Grids));
+    BattlefieldGrid *grids = memory_arena_push(sizeof(BattlefieldGrid), _Alignof(BattlefieldGrid));
 
     GridLowLOD *GLLoD = memory_arena_push(sizeof(GridLowLOD), _Alignof(GridLowLOD));
 

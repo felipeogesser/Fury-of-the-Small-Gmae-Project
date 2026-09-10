@@ -4,7 +4,7 @@
 #include "unit_types.h"
 #include "armies_types.h"
 #include "battalion_types.h"
-#include "battleplan_types.h"
+#include "battleplan_grid_types.h"
 #include "game_state_types.h"
 #include "general_types.h"
 

@@ -2,10 +2,8 @@
 #define BATTLEPLAN_INTERNAL_H
 
 #include "battleplan_types.h"
-#include "general_internal.h"
-
-#define GRID_DIMENSION_X 5
-#define GRID_DIMENSION_Y 6
+#include "battleplan_grid_types.h"
+#include "general_types.h"
 
 typedef struct Background {
 
@@ -42,37 +40,6 @@ typedef struct DrawerSlot {
 
 } DrawerSlot;
 
-typedef struct Dimension {
-
-    unsigned int x, y;
-
-} Dimension;
-
-typedef struct Grid {
-
-    //Cell cell;
-    
-    Dimension dimension;
-    //Size size;
-
-} Grid;
-
-typedef struct OccupiedCell {
-
-    unsigned int x;
-    unsigned int y;
-    General general;
-
-} OccupiedCell;
-
-typedef struct GridPlacementPayload {
-
-    Grid grid;
-    unsigned int occupied_cell_count;
-    OccupiedCell occupied_cell[];
-
-} GridPlacementPayload;
-
 typedef struct Battleplan {
 
     Background background;
@@ -82,10 +49,5 @@ typedef struct Battleplan {
     unsigned int general_in_grid_count;
     
 } Battleplan;
-/*typedef struct Grid {
-
-    General *general;
-
-} Grid;*/
 
 #endif

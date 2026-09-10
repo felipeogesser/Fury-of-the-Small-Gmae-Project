@@ -23,7 +23,7 @@
 
 // futuramente trocar [i] por ->
 
-void initialCheckUnitQuadrant(Armies *armies, GameState *game, Grids *grids) {
+void initialCheckUnitQuadrant(Armies *armies, GameState *game, BattlefieldGrid *grids) {
 
     Unit *unit = armies->army->battalions->unit;
     signed int amountX = game->amountX;
@@ -97,7 +97,7 @@ void initialCheckUnitQuadrant(Armies *armies, GameState *game, Grids *grids) {
 
 
 // unit goes into indexes = to their id -1
-void check_unit_quadrant(Armies *armies, GameState *game, Grids *grids) {
+void check_unit_quadrant(Armies *armies, GameState *game, BattlefieldGrid *grids) {
 
     Unit *unit = armies->army->battalions->unit;
     signed int amountX = game->amountX;

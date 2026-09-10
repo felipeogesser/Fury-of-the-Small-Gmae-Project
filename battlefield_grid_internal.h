@@ -1,15 +1,16 @@
 #ifndef BATTLEFIELD_GRID_INTERNAL_H
 #define BATTLEFIELD_GRID_INTERNAL_H
 
+#include "battlefield_grid_types.h"
 #include "quadrant_types.h"
 
-typedef struct Grids {
+typedef struct BattlefieldGrid {
 
     struct GridLowLOD *GLLoD;
     struct GridMediumLOD *GMLoD;
     struct GridHighLOD *GHLoD;
 
-} Grids;
+} BattlefieldGrid;
 
 typedef struct GridLowLOD {
 

@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include "maps_internal.h"
 #include "battlefield_internal.h"
-#include "battleplan_internal.h"
+#include "battleplan_grid_internal.h"
 #define OFFSET_OF(type, member) ((size_t) &(((type *)0)->member))
 #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
 

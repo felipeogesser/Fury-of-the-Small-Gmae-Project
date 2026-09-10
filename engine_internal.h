@@ -22,7 +22,7 @@ typedef struct Engine {
     Battlefield *battlefield;
     Battleplan *battleplan;
     GameState *game;
-    Grids *grids;
+    BattlefieldGrid *grids;
     MainMenu *main_menu;
     Map *map;
     Player *player;

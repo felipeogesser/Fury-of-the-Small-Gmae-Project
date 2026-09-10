@@ -4,6 +4,7 @@
 #include "battalion.h"
 #include "battalion_internal.h"
 #include "battleplan_internal.h"
+#include "battleplan_grid_internal.h"
 #include "engine_internal.h"
 #include "game_state_internal.h"
 #include "general.h"
