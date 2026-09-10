@@ -1,5 +1,7 @@
 #include "battleplan.h"
 #include "battleplan_internal.h"
+#include "battleplan_grid.h"
+#include "battleplan_grid_internal.h"
 #include "animation.h"
 #include "animation_types.h"
 #include "engine_internal.h"
@@ -120,7 +122,7 @@ static SDL_Rect deployment_area = {
     grid_cell_width_y * GRID_DIMENSION_Y
 };
 
-static General *grid[GRID_DIMENSION_X][GRID_DIMENSION_Y];
+//static General *grid[GRID_DIMENSION_X][GRID_DIMENSION_Y];
 //static unsigned char grid_general_count = 0;
 static DrawerSlot drawer_slot[10]; // size needs to be established by general count in inventory
 
@@ -626,7 +628,7 @@ static void handle_mouse_left_button(void) {
 
     }
 
-}
+}//////////////////////////////////////// fix logic error cleaup tava errado, da pra botar parte to cleanup logo dps do if 
 
 static signed int check_if_dragging_general_out_of_grid(void) {
 

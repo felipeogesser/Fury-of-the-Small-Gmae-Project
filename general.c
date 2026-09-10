@@ -4,7 +4,7 @@
 #include "armies_internal.h"
 #include "battalion_internal.h"
 #include "battlefield_internal.h"
-#include "battleplan_internal.h"
+#include "battleplan_grid_internal.h"
 #include "engine_internal.h"
 #include "game_state_internal.h"
 #include "maps_internal.h"
@@ -54,9 +54,9 @@ const size_t general_field_table_count =
 static void copy_bits_set_to_one(unsigned char *d, const unsigned char *s);
 static void set_general_sprite_width_and_height(General *general);
 static void set_general_dimension(General *general);
-static void set_general_position(General *general, Grid *grid, unsigned int x, unsigned int y);
+static void set_general_position(General *general, BattleplanGrid *grid, unsigned int x, unsigned int y);
 
-void init_general(General *general, General *general_from_battleplan_payload, Grid *grid, unsigned int x, unsigned int y) {
+void init_general(General *general, General *general_from_battleplan_payload, BattleplanGrid *grid, unsigned int x, unsigned int y) {
     
     copy_bits_set_to_one((unsigned char *)general, (unsigned char *)general_from_battleplan_payload);
 
@@ -103,7 +103,7 @@ static void set_general_dimension(General *general) {
 
 }
 
-static void set_general_position(General *general, Grid *grid, unsigned int x, unsigned int y) {
+static void set_general_position(General *general, BattleplanGrid *grid, unsigned int x, unsigned int y) {
 
     unsigned int cell_width = (engine.map->mapSizeX / 2 - engine.battlefield->padding.in_between_armies / 2 - engine.battlefield->padding.left) / grid->dimension.x;
     unsigned int cell_height = (engine.map->mapSizeY - engine.battlefield->padding.bottom - engine.battlefield->padding.top ) / grid->dimension.y;

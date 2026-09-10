@@ -28,7 +28,9 @@ SRC = \
 	baking.c \
 	battalion.c \
 	battlefield.c \
+	battlefield_grid.c \
 	battleplan.c \
+	battleplan_grid.c \
 	camera.c \
 	engine.c \
 	field_entry.c \
@@ -36,7 +38,6 @@ SRC = \
 	game_shutdown.c \
 	game_state.c \
 	general.c \
-	grids.c \
 	ini_parser.c \
 	init.c \
 	inventory.c \

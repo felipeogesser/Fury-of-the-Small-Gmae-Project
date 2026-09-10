@@ -7,7 +7,7 @@
 #include "unit_internal.h"
 #include "game_state_internal.h"
 #include "general_internal.h"
-#include "grids_internal.h"
+#include "battlefield_grid_internal.h"
 #include "load_armies.h"
 #include "quadrant_internal.h"
 #include <SDL2/SDL.h>
@@ -23,12 +23,12 @@
 
 // futuramente trocar [i] por ->
 
-void initialCheckUnitQuadrant(Armies *armies, GameState *game, Grids *grids) {
+void initialCheckUnitQuadrant(Armies *armies, GameState *game, BattlefieldGrid *battlefield_grid) {
 
     Unit *unit = armies->army->battalions->unit;
     signed int amountX = game->amountX;
     signed int amountY = game->amountY;
-    bigQuadrant *quadrant = grids->GLLoD->bigQuad;
+    bigQuadrant *quadrant = battlefield_grid->GLLoD->bigQuad;
 
     for (unsigned int i = 0; i < game->unit_created_count; i++) {
         
@@ -97,12 +97,12 @@ void initialCheckUnitQuadrant(Armies *armies, GameState *game, Grids *grids) {
 
 
 // unit goes into indexes = to their id -1
-void check_unit_quadrant(Armies *armies, GameState *game, Grids *grids) {
+void check_unit_quadrant(Armies *armies, GameState *game, BattlefieldGrid *battlefield_grid) {
 
     Unit *unit = armies->army->battalions->unit;
     signed int amountX = game->amountX;
     signed int amountY = game->amountY;
-    bigQuadrant *quadrant = grids->GLLoD->bigQuad;
+    bigQuadrant *quadrant = battlefield_grid->GLLoD->bigQuad;
     
     for (unsigned int i = 0; i < game->unit_created_count; i++) {
         int column = (int)floor((unit[i].positionX) / game->low_LOD_quadrant_size);

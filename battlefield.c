@@ -5,6 +5,8 @@
 #include "battalion.h"
 #include "battalion_internal.h"
 #include "battleplan_internal.h"
+#include "battleplan_grid.h"
+#include "battleplan_grid_internal.h"
 #include "camera.h"
 #include "camera_internal.h"
 #include "engine_internal.h"
@@ -12,7 +14,8 @@
 #include "game_state_internal.h"
 #include "general.h"
 #include "general_internal.h"
-#include "grids.h"
+#include "battlefield_grid.h"
+#include "battlefield_grid_internal.h"
 #include "ini_parser.h"
 #include "load_armies.h"
 #include "memory_arena.h"
@@ -36,7 +39,7 @@
 //static void update_battalions_formation_layout(void);
 static void render_generals(void);
 static void render_units(void);
-//static void battlefield_grid_formatting(Grid *grid);
+//static void battlefield_grid_formatting(BattleplanGrid *grid);
 
 _Bool show_quads = false;
 _Bool update_formation = false;
@@ -78,7 +81,7 @@ void battlefield_init(void) {
     load_armies_into_arena(armies_count, battalion_count, battalion_size);
     calculateAmountOfQuadrants();
     init_grids();
-    initialCheckUnitQuadrant(engine.armies, engine.game, engine.grids);
+    initialCheckUnitQuadrant(engine.armies, engine.game, engine.battlefield_grid);
     renderQuadrantsSetup(engine.armies, engine.game);
 
 }
@@ -150,7 +153,7 @@ void battlefield_update(void) {
     
     player_map_edge_collision(engine.game, engine.map, engine.player);
 
-    check_unit_quadrant(engine.armies, engine.game, engine.grids);
+    check_unit_quadrant(engine.armies, engine.game, engine.battlefield_grid);
 
     update_player(engine.game);
 
@@ -440,7 +443,7 @@ static void render_units(void) {
 
 }
 
-/*static void battlefield_grid_formatting(Grid *grid) {
+/*static void battlefield_grid_formatting(BattleplanGrid *grid) {
 
     battlefield.grid.dimension.x = grid->dimension.x;
     battlefield.grid.dimension.y = grid->dimension.y;

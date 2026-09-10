@@ -1,7 +1,7 @@
-#include "grids.h"
-#include "grids_internal.h"
-#include "game_state_internal.h"
+#include "battlefield_grid.h"
+#include "battlefield_grid_internal.h"
 #include "engine_internal.h"
+#include "game_state_internal.h"
 #include "memory_arena.h"
 #include "quadrant.h"
 #include "quadrant_internal.h"
@@ -18,7 +18,7 @@ void init_grids(void) {
     size_t number_of_grids = 3;
 
     grids_total_memory_size =
-        sizeof(Grids) + (_Alignof(Grids) - 1) +
+        sizeof(BattlefieldGrid) + (_Alignof(BattlefieldGrid) - 1) +
         sizeof(GridLowLOD) + (_Alignof(GridLowLOD) - 1) +
         sizeof(GridMediumLOD) + (_Alignof(GridMediumLOD) - 1) +
         sizeof(GridHighLOD) + (_Alignof(GridHighLOD) - 1) +
@@ -30,14 +30,14 @@ void init_grids(void) {
         
     if (memory_arena_memory_remainder() < grids_total_memory_size) {
 
-        fprintf(stderr, "Grids memory allocation failed. Not enough memory available.\n");
+        fprintf(stderr, "BattlefieldGrid memory allocation failed. Not enough memory available.\n");
         exit(EXIT_FAILURE);
 
     }
 
     engine.grid_memory_ptr = memory_arena_current_pointer();
 
-    Grids *grids = memory_arena_push(sizeof(Grids), _Alignof(Grids));
+    BattlefieldGrid *battlefield_grid = memory_arena_push(sizeof(BattlefieldGrid), _Alignof(BattlefieldGrid));
 
     GridLowLOD *GLLoD = memory_arena_push(sizeof(GridLowLOD), _Alignof(GridLowLOD));
 
@@ -57,25 +57,25 @@ void init_grids(void) {
     
     Occupied *occupied_GHLoD = memory_arena_push(sizeof(Occupied) + sizeof(unsigned int) * smallCount, _Alignof(Occupied));
     
-    engine.grids = grids;
+    engine.battlefield_grid = battlefield_grid;
     
-    engine.grids->GLLoD = GLLoD;
+    engine.battlefield_grid->GLLoD = GLLoD;
 
-    engine.grids->GLLoD->bigQuad = bigQuad;
+    engine.battlefield_grid->GLLoD->bigQuad = bigQuad;
 
-    engine.grids->GLLoD->occupied = occupied_GLLoD;
+    engine.battlefield_grid->GLLoD->occupied = occupied_GLLoD;
 
-    engine.grids->GMLoD = GMLoD;
+    engine.battlefield_grid->GMLoD = GMLoD;
 
-    engine.grids->GMLoD->mediumQuad = mediumQuad;
+    engine.battlefield_grid->GMLoD->mediumQuad = mediumQuad;
 
-    engine.grids->GMLoD->occupied = occupied_GMLoD;
+    engine.battlefield_grid->GMLoD->occupied = occupied_GMLoD;
 
-    engine.grids->GHLoD = GHLoD;
+    engine.battlefield_grid->GHLoD = GHLoD;
     
-    engine.grids->GHLoD->smallQuad = smallQuad;
+    engine.battlefield_grid->GHLoD->smallQuad = smallQuad;
 
-    engine.grids->GHLoD->occupied = occupied_GHLoD;
+    engine.battlefield_grid->GHLoD->occupied = occupied_GHLoD;
    
     fill_quadrant_data();
 
