@@ -6,7 +6,7 @@
 #define INVSQRT2 0.70710678f
 
 typedef struct GameState {
-    enum SceneState scene_state;
+    SceneState scene_state;
     float LX, LY;
     float KX, KY;
     float delta;

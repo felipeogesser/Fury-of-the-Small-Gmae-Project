@@ -40,7 +40,7 @@ void game_loop(void) {
         game->delta = (float)(FrameEnd - FrameStart) / (float)FrameTicks;
         FrameStart = FrameEnd;
 
-        switch(game->scene_state) {
+        switch(game->scene_state.scene) {
 
             case MAIN_MENU:
 

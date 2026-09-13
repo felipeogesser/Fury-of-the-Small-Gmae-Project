@@ -42,7 +42,10 @@ SRC = \
 	init.c \
 	inventory.c \
 	json_parser.c \
+	letter.c \
 	load_armies.c \
+	mailbox.c \
+	mailroom.c \
 	main.c \
 	main_menu.c \
 	maps.c \

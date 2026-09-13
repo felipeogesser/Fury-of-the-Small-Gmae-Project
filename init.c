@@ -1,5 +1,6 @@
 #include "init.h"
 #include "game_state.h"
+#include "mailroom.h"
 #include "memory_arena.h"
 #include "window.h"
 #include <stdbool.h>
@@ -12,5 +13,6 @@ void init(void) {
     memory_arena_init();
     create_window();
     init_game_state();
-
+    mailroom_init();
+    
 }
