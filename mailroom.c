@@ -39,11 +39,10 @@ Mailbag mailroom_fetch_new_letters(void) {
 
 }
 
-void mailroom_store_letter(Letter *letter, enum Scene scene) {
+void mailroom_store_letter(Letter *letter) {
 
-    Mailbox *mailbox = &mailroom.mailbox[scene];
+    Mailbox *mailbox = &mailroom.mailbox[letter->to];
     mailbox_letter_push(mailbox, letter);
-
 
 }
 

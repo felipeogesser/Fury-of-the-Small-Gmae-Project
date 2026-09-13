@@ -1,14 +1,18 @@
 #include "letter.h"
 #include "letter_internal.h"
+#include "engine_internal.h"
 #include "field_entry.h"
+#include "game_state_internal.h"
 #include "mailroom.h"
 #include "scenes.h" 
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
-void letter_write(Letter *letter, void *obj, unsigned int count, FieldEntry *field_entry) {
+void letter_write(Letter *letter, void *obj, unsigned int count, enum Scene destination_scene, FieldEntry *field_entry) {
 
+    letter->from = engine.game->scene_state.scene;
+    letter->to = destination_scene;
     unsigned int field_table_count = field_table_fields_count(field_entry);
     size_t obj_size = field_table_obj_type_size(field_entry);
     letter->body = calloc(count, obj_size);
@@ -18,9 +22,9 @@ void letter_write(Letter *letter, void *obj, unsigned int count, FieldEntry *fie
 
 }
 
-void letter_send(Letter *letter, enum Scene scene) {
+void letter_send(Letter *letter) {
 
-    mailroom_store_letter(letter, scene);
+    mailroom_store_letter(letter);
 
 }
 

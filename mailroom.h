@@ -7,7 +7,7 @@
 
 void mailroom_init(void);
 Mailbag mailroom_fetch_new_letters(void);
-void mailroom_store_letter(Letter *letter, enum Scene scene);
+void mailroom_store_letter(Letter *letter);
 void mailroom_save_letter(Letter *letter);
 
 #endif
