@@ -32,6 +32,7 @@ SRC = \
 	battleplan.c \
 	battleplan_grid.c \
 	camera.c \
+	contract.c \
 	engine.c \
 	field_entry.c \
 	game_loop.c \
@@ -44,6 +45,7 @@ SRC = \
 	json_parser.c \
 	letter.c \
 	load_armies.c \
+	mailbag.c \
 	mailbox.c \
 	mailroom.c \
 	main.c \

@@ -5,10 +5,12 @@
 #include "battalion.h"
 #include "battalion_internal.h"
 #include "battleplan_internal.h"
-#include "battleplan_grid.h"
-#include "battleplan_grid_internal.h"
+//#include "battleplan_grid.h"
+//#include "battleplan_grid_internal.h"
 #include "camera.h"
 #include "camera_internal.h"
+#include "contract.h"
+#include "contract_types.h"
 #include "engine_internal.h"
 #include "game_state.h"
 #include "game_state_internal.h"
@@ -17,10 +19,13 @@
 #include "battlefield_grid.h"
 #include "battlefield_grid_internal.h"
 #include "ini_parser.h"
+#include "letter_internal.h"
 #include "load_armies.h"
-#include "memory_arena.h"
-#include "maps.h"
+#include "mailbag.h"
+#include "mailbag_internal.h"
+#include "mailroom.h"
 #include "maps_internal.h"
+#include "memory_arena.h"
 #include "player.h"
 #include "player_internal.h"
 #include "player_collision.h"
@@ -52,11 +57,18 @@ void battlefield_init(void) {
 
     engine.battlefield = &battlefield;
 
-    battlefield.padding.left = 100;
-    battlefield.padding.right = 100;
-    battlefield.padding.top = 50;
-    battlefield.padding.bottom = 50;
-    battlefield.padding.in_between_armies = 1000;
+    Mailbag mailbag = mailroom_fetch_new_letters();
+
+    for (unsigned int i = 0; i < mailbag.new_letter_count; i++) {
+
+        Contract *contract = mailbag.letters[i].contract;
+        if (check_contract(contract)) {
+
+            battlefield.general_payload = sign_contract(contract);
+
+        }
+
+    }    
 
     camera_init();
     animation_init();
@@ -65,20 +77,27 @@ void battlefield_init(void) {
 
     init_general_battalion_taxonomy();
 
-    unsigned int dimension_x = engine.battleplan->grid_payload->grid.dimension.x;
+/*    unsigned int dimension_x = engine.battleplan->grid_payload->grid.dimension.x;
     unsigned int dimension_y = engine.battleplan->grid_payload->grid.dimension.y;
     unsigned int map_size_x = battlefield.padding.left + 48 * 10 * dimension_x * 2 + battlefield.padding.right;
     unsigned int map_size_y = battlefield.padding.top + 48 * 10 * dimension_y + battlefield.padding.bottom;
     engine.map = map_init(map_size_x, map_size_y);
-
+*/
     unsigned int player_id = create_player(50 ,1000, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
     engine.player = get_player(player_id);
 
     unsigned int armies_count = 1;
-    unsigned int battalion_count = engine.battleplan->grid_payload->occupied_cell_count;
+    //unsigned int battalion_count = engine.battleplan->grid_payload->occupied_cell_count;
+    unsigned int battalion_count = battlefield.general_payload->general_count;
     unsigned int battalion_size = 50;
     init_armies_memory_arena(armies_count, battalion_count, battalion_size);
-    load_armies_into_arena(armies_count, battalion_count, battalion_size);
+    GeneralPayload *general_payload = battlefield.general_payload;
+    load_armies_into_arena(general_payload, armies_count, battalion_count, battalion_size);
+    free(general_payload->general_and_pos);
+    //free(general_payload);
+    general_payload = NULL;
+    mailbag_letters_destroy(&mailbag);
+
     calculateAmountOfQuadrants();
     init_grids();
     initialCheckUnitQuadrant(engine.armies, engine.game, engine.battlefield_grid);

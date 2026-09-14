@@ -6,9 +6,9 @@
 
 Map map = {0};
 
-Map *map_init(unsigned int map_size_x, unsigned int map_size_y) {
+Map *map_init(unsigned int map_size_x, unsigned int map_size_y, Padding *padding) {
 
-
+    map.padding = *padding;
     unsigned short max_u_short_value = -1;
     if (map_size_x > max_u_short_value || map_size_y > max_u_short_value) {
 

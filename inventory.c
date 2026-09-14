@@ -11,11 +11,11 @@
 #include <stdbool.h>
 
 // prototypes
-void *search_inventory(
+static void *search_inventory(
     const unsigned short obj_count,
     const char *obj,
     size_t obj_size,
-    size_t alignment,
+    /*size_t alignment,*/
     const FieldEntry *field_table,
     const size_t args_count,
     ...);
@@ -47,7 +47,7 @@ void *inventory_init(void) {
         inventory.general_count,
         "generals",
         sizeof(General),
-        _Alignof(General),
+        /*_Alignof(General),*/
         general_field_table,
         13,
         "id",
@@ -80,16 +80,17 @@ void *inventory_init(void) {
 
 }
 
-void *search_inventory(
+static void *search_inventory(
     const unsigned short obj_count,
     const char *obj,
     size_t obj_size,
-    size_t alignment,
+    /*size_t alignment,*/
     const FieldEntry *field_table,
     const size_t args_count,
     ...) {
 
-    void *memory_p = memory_arena_push(obj_size * obj_count, alignment);
+    //void *memory_p = memory_arena_push(obj_size * obj_count, alignment);
+    void *memory_p = calloc(obj_count, obj_size);
 
     char *buffer = open_read_close_file("inventory.json");
 

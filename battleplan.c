@@ -1,14 +1,21 @@
 #include "battleplan.h"
 #include "battleplan_internal.h"
+#include "battleplan_battlefield_handoff.h"
 #include "battleplan_grid.h"
 #include "battleplan_grid_internal.h"
 #include "animation.h"
 #include "animation_types.h"
+#include "contract.h"
+#include "contract_types.h"
 #include "engine_internal.h"
 #include "game_state_internal.h"
 #include "general_internal.h"
 #include "inventory.h"
 #include "inventory_internal.h"
+#include "letter.h"
+#include "letter_types.h"
+#include "maps.h"
+#include "maps_internal.h"
 #include "memory_arena.h"
 #include "scene_handler.h"
 #include "scenes.h"
@@ -63,8 +70,11 @@ static float ease_out_elastic(float x);
 static void place_general_on_grid(General **grid_cell, General **general_to_place);
 static void swap_generals(General **general_in_grid, DragPayload *payload);
 static void insert_general_into_drawer(General **general_to_insert);
-static void save_battleplan_placement(void);
+static GeneralPayload *save_battleplan_placement(void);
 static _Bool grid_is_empty(void);
+static Position battleplan_calculate_general_position(General *general, unsigned int x, unsigned int y);
+static void send_battleplan_placement_to_battlefield(GeneralPayload *general_payload);
+
 
 static Battleplan battleplan = {0};
 
@@ -270,9 +280,25 @@ void battleplan_update(void) {
         
         if (grid_is_empty() == false) {
         
-            save_battleplan_placement();
+            Padding padding = {
+                .left = 100,
+                .right = 100,
+                .top = 50,
+                .bottom = 50,
+                .in_between_armies = 1000
+            };
+            unsigned int dimension_x = GRID_DIMENSION_X;
+            unsigned int dimension_y = GRID_DIMENSION_Y;
+            unsigned int map_size_x = padding.left + 48 * 10 * dimension_x * 2 + padding.right;
+            unsigned int map_size_y = padding.top + 48 * 10 * dimension_y + padding.bottom;
+            engine.map = map_init(map_size_x, map_size_y, &padding);
+
+            GeneralPayload *general_payload = save_battleplan_placement();
+
+            send_battleplan_placement_to_battlefield(general_payload);
 
             scene_switch(BATTLEFIELD);
+
             return;
         
         }
@@ -1161,7 +1187,7 @@ static void clear_payload(DragPayload *payload) {
 
 }
 
-static void save_battleplan_placement(void) {
+static GeneralPayload *save_battleplan_placement(void) {
 
     if (battleplan.grid_payload != NULL) {
 
@@ -1170,34 +1196,41 @@ static void save_battleplan_placement(void) {
     
     }
 
-    GridPlacementPayload *buffer = calloc(1, sizeof(GridPlacementPayload) + sizeof(OccupiedCell) * battleplan.general_in_grid_count);
-    buffer->grid.dimension.x = GRID_DIMENSION_X;
-    buffer->grid.dimension.y = GRID_DIMENSION_Y;
-    buffer->occupied_cell_count = battleplan.general_in_grid_count;
+    //GridPlacementPayload *buffer = calloc(1, sizeof(GridPlacementPayload) + sizeof(OccupiedCell) * battleplan.general_in_grid_count);
+    //buffer->grid.dimension.x = GRID_DIMENSION_X;
+    //buffer->grid.dimension.y = GRID_DIMENSION_Y;
+    //buffer->occupied_cell_count = battleplan.general_in_grid_count;
 
+    GeneralPayload *general_payload = calloc(1, sizeof(GeneralPayload));
+    general_payload->general_and_pos = calloc(battleplan.general_in_grid_count, sizeof(GeneralAndPosition));
     unsigned int idx = 0;
-
     for (unsigned int i = 0; i < GRID_DIMENSION_X; i++) {
 
         for (unsigned int j = 0; j < GRID_DIMENSION_Y; j++) {
 
             if (grid[i][j] != NULL) {
                 
-                buffer->occupied_cell[idx].x = i;
-                buffer->occupied_cell[idx].y = j;
-                memcpy(&buffer->occupied_cell[idx].general, grid[i][j], sizeof(General));
+                general_payload->general_and_pos[idx].general = grid[i][j];
+                general_payload->general_and_pos[idx].pos = battleplan_calculate_general_position(grid[i][j], i, j);
+
+                //buffer->occupied_cell[idx].x = i;
+                //buffer->occupied_cell[idx].y = j;
+                //memcpy(&buffer->occupied_cell[idx].general, grid[i][j], sizeof(General));
                 idx++;
                 if (idx == battleplan.general_in_grid_count) {
-                    battleplan.grid_payload = buffer;
-                    return;
+                    //battleplan.grid_payload = buffer;
+                    general_payload->general_count = idx;
+                    goto return_function;
+
                 }
             }
 
         }
 
     }
-
-    battleplan.grid_payload = buffer;
+    return_function:
+        return general_payload;
+    //battleplan.grid_payload = buffer;
 
 }
 
@@ -1218,5 +1251,33 @@ static _Bool grid_is_empty(void) {
     }
 
     return true;
+
+}
+
+static Position battleplan_calculate_general_position(General *general, unsigned int x, unsigned int y) {
+
+    unsigned int cell_width = (engine.map->mapSizeX / 2 - engine.map->padding.in_between_armies / 2 - engine.map->padding.left) / GRID_DIMENSION_X;
+    unsigned int cell_height = (engine.map->mapSizeY - engine.map->padding.bottom - engine.map->padding.top ) / GRID_DIMENSION_Y;
+
+    unsigned int cell_position_x = engine.map->padding.left + x * cell_width;
+    unsigned int cell_position_y = engine.map->padding.top + y * cell_height;
+
+    Position pos;
+    pos.x = cell_position_x + cell_width / 2;
+    pos.y = cell_position_y + cell_height / 2 - engine.sprite_pack->sprite[general->sprite.type][general->anim.animation].height / 2;
+    return pos;
+
+}
+
+static void send_battleplan_placement_to_battlefield(GeneralPayload *general_payload) {
+
+    enum Contracts title = SET_ARMY_POSITION;
+    void *body = general_payload;
+    Contract *contract = contract_set(title, body);
+
+    enum Scene from = BATTLEPLAN;
+    enum Scene to = BATTLEFIELD;
+    Letter *letter = letter_write(from, to, contract);
+    letter_send(letter);
 
 }

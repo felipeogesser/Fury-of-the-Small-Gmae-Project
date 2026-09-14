@@ -6,11 +6,9 @@
 #include "engine_internal.h"
 #include "game_state_internal.h"
 #include "general_internal.h"
-#include "sprites_internal.h"
-#include <stdio.h>
 #include "maps_internal.h"
-#include "battlefield_internal.h"
-#include "battleplan_grid_internal.h"
+#include "sprites_internal.h"
+
 #define OFFSET_OF(type, member) ((size_t) &(((type *)0)->member))
 #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
 
@@ -31,10 +29,10 @@ void update_units_position(Unit *unit, unsigned int unit_count, signed int x, si
 static void set_units_id(Unit *unit, unsigned int battalion_size);
 static void set_units_dimension(Unit *unit, unsigned int battalion_size);
 static void set_units_sprite_and_animation(Unit *unit, General *general, unsigned int battalion_size);
-//static void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *battalion);
+static void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *battalion, unsigned int x, unsigned int y);
 
 
-void init_units(Battalion *battalion, BattleplanGrid *grid, OccupiedCell *occupied_cell) {
+void init_units(Battalion *battalion, unsigned int x, unsigned int y) {
     // this function expects to be called only when generals are already initialized
     General *general = battalion->general;
     Unit *unit = battalion->unit;
@@ -43,7 +41,7 @@ void init_units(Battalion *battalion, BattleplanGrid *grid, OccupiedCell *occupi
     set_units_id(unit, battalion_size);
     set_units_sprite_and_animation(unit, general, battalion_size);
     set_units_dimension(unit, battalion_size);
-    set_units_position(unit, battalion_size, battalion, grid, occupied_cell);
+    set_units_position(unit, battalion_size, battalion, x, y);
 
 }
 
@@ -107,7 +105,50 @@ static void set_units_dimension(Unit *unit, unsigned int battalion_size) {
 
 }
 
-void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *battalion, BattleplanGrid *grid, OccupiedCell *occupied_cell) {
+///
+//usar o general pra definir pos das units, passar genral como arg
+//////
+static void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *battalion, unsigned int x, unsigned int y) {
+
+    unsigned int formation_height = battalion->unit_formation_height;
+    unsigned int formation_width = ceilf(battalion_size / battalion->unit_formation_height);
+
+    unsigned int pad_x = battalion->padding_between_units_x;
+    unsigned int pad_y = battalion->padding_between_units_y;
+
+    unsigned int pos_x = x;
+    unsigned int pos_y = y;
+    unsigned int dim_x = unit->dimensionX;
+    unsigned int dim_y = unit->dimensionY;
+    if (battalion_size < formation_height) {
+
+        pos_x -= dim_x * 2;
+        pos_y -= dim_y / 2 - (dim_y + pad_y) * battalion_size / 2;
+        
+    } else {
+
+        pos_x -= dim_x * 2;
+        pos_y += dim_y / 2 - (dim_y + pad_y) * formation_height / 2;
+        
+    }
+
+    unsigned int idx = 0;
+    for (unsigned int i = 0; i < formation_width; i++) {
+
+        for (unsigned int j = 0; j < formation_height; j++) {
+
+            unit[idx].positionX = pos_x - i * (dim_x + pad_x);
+            unit[idx].positionY = pos_y + j * (dim_y + pad_y);
+            idx++;
+            if (idx == battalion_size) return;
+            
+        }
+
+    }
+
+}
+
+/*void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *battalion, BattleplanGrid *grid, OccupiedCell *occupied_cell) {
 
     unsigned int formation_height = battalion->unit_formation_height;
     unsigned int formation_width = ceilf(battalion_size / battalion->unit_formation_height);
@@ -115,11 +156,11 @@ void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *batt
     unsigned int unit_padding_x = battalion->padding_between_units_x;
     unsigned int unit_padding_y = battalion->padding_between_units_y;
 
-    unsigned int cell_width = (engine.map->mapSizeX / 2 - engine.battlefield->padding.in_between_armies / 2 - engine.battlefield->padding.left) / grid->dimension.x;
-    unsigned int cell_height = (engine.map->mapSizeY - engine.battlefield->padding.bottom - engine.battlefield->padding.top ) / grid->dimension.y;
+    unsigned int cell_width = (engine.map->mapSizeX / 2 - engine.map->padding.in_between_armies / 2 - engine.map->padding.left) / grid->dimension.x;
+    unsigned int cell_height = (engine.map->mapSizeY - engine.map->padding.bottom - engine.map->padding.top ) / grid->dimension.y;
 
-    unsigned int cell_position_x = engine.battlefield->padding.left + occupied_cell->x * cell_width;
-    unsigned int cell_position_y = engine.battlefield->padding.top + occupied_cell->y * cell_height;
+    unsigned int cell_position_x = engine.map->padding.left + occupied_cell->x * cell_width;
+    unsigned int cell_position_y = engine.map->padding.top + occupied_cell->y * cell_height;
 
     unsigned int cell_inner_padding_top = 0;
     if (battalion_size < formation_height) {
@@ -152,4 +193,4 @@ void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *batt
 
     }
 
-}
+}*/

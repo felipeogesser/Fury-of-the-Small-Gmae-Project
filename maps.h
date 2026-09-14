@@ -3,7 +3,7 @@
 
 #include "maps_types.h"
 
-Map *map_init(unsigned int mapSizeX, unsigned int mapSizeY);
+Map *map_init(unsigned int mapSizeX, unsigned int mapSizeY, Padding *padding);
 
 //Map *get_map(unsigned int mapId);
 

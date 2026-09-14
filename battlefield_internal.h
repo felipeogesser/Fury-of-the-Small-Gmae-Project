@@ -1,7 +1,9 @@
 #ifndef BATTLEFIELD_INTERNAL_H
 #define BATTLEFIELD_INTERNAL_H
 
-typedef struct Padding {
+#include "battleplan_battlefield_handoff.h"
+
+/*typedef struct Padding {
 
     unsigned int left;
     unsigned int right;
@@ -9,7 +11,7 @@ typedef struct Padding {
     unsigned int bottom;
     unsigned int in_between_armies;
 
-} Padding;
+} Padding;*/
 
 /*typedef struct Cell {
 
@@ -40,8 +42,9 @@ typedef struct Padding {
 
 typedef struct Battlefield {
 
+    GeneralPayload *general_payload;
     //Grid grid;
-    Padding padding;
+    //Padding padding;
 
 } Battlefield;
 

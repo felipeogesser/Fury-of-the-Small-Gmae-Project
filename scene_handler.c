@@ -77,11 +77,11 @@ void scene_switch(enum Scene next_scene) {
 
         scene_registry[current_scene].destroy();
 
+        engine.game->scene_state.scene = next_scene;
+
         scene_registry[next_scene].init();
 
         scene_registry[next_scene].update();
-
-        engine.game->scene_state.scene = next_scene;
 
     }
 }

@@ -3,8 +3,9 @@
 #include "armies_internal.h"
 #include "battalion.h"
 #include "battalion_internal.h"
-#include "battleplan_internal.h"
-#include "battleplan_grid_internal.h"
+#include "battleplan_battlefield_handoff.h"
+//#include "battleplan_internal.h"
+//#include "battleplan_grid_internal.h"
 #include "engine_internal.h"
 #include "game_state_internal.h"
 #include "general.h"
@@ -69,23 +70,24 @@ void init_armies_memory_arena(unsigned int armies_count, unsigned int battalion_
 
 }
 
-void load_armies_into_arena(unsigned int armies_count, unsigned int battalion_count, unsigned int battalion_size) {
+void load_armies_into_arena(GeneralPayload *general_payload, unsigned int armies_count, unsigned int battalion_count, unsigned int battalion_size) {
     
     Army *army = engine.armies->army;
     //GridPlacementPayload *buffer = engine.battleplan->grid_payload;
-    OccupiedCell *occupied_cell = engine.battleplan->grid_payload->occupied_cell;
-    BattleplanGrid *grid = &engine.battleplan->grid_payload->grid;
+    //OccupiedCell *occupied_cell = engine.battleplan->grid_payload->occupied_cell;
+    //BattleplanGrid *grid = &engine.battleplan->grid_payload->grid;
     for (unsigned int i = 0; i < armies_count; i++) {
 
         Battalion *battalion = army[i].battalions;
         General *general = army[i].general;
+        GeneralAndPosition *general_and_pos = general_payload->general_and_pos;
         for (unsigned int j = 0; j < battalion_count; j++) {
 
             init_battalion(&battalion[j], battalion_size);
 
-            init_general(&general[j], &occupied_cell[j].general, grid, occupied_cell[j].x, occupied_cell[j].y);
+            init_general(&general[j], general_and_pos[j].general, general_and_pos[j].pos.x, general_and_pos[j].pos.y);
 
-            init_units(&battalion[j], grid, &occupied_cell[j]);
+            init_units(&battalion[j], general_and_pos[j].pos.x, general_and_pos[j].pos.y);
 
         }
 
