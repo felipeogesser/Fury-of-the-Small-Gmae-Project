@@ -1,5 +1,11 @@
 #include "player.h"
-#include "engine.h"
+#include "player_internal.h"
+#include "game_state_internal.h"
+//#include "engine_internal.h"
+#include "window_settings.h"
+#include <stdio.h>
+#include <stdbool.h>
+#include <SDL2/SDL.h>
 
 static Player player = {0};
 
@@ -12,7 +18,7 @@ static unsigned int player_count = 0;
 unsigned int create_player(int max_hp, int max_st, const char *name,
     float playerSpawnX, float playerSpawnY,
     float playerDimensionX, float playerDimensionY,
-    bool collision, int quadrant,
+    _Bool collision, int quadrant,
     float speed, float runSpeed) {
     if (player_count >= MAX_PLAYERS) return 1; 
     unsigned int playerIndex = player_count;

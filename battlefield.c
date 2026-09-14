@@ -1,38 +1,116 @@
 #include "battlefield.h"
-#include "calculateEntityQuadrant.h"
-#include "engine.h"
-#include "entities.h"
-#include "gameState.h"
-#include "grids.h"
-#include "loadArmies.h"
+#include "battlefield_internal.h"
+#include "animation.h"
+#include "armies_internal.h"
+#include "battalion.h"
+#include "battalion_internal.h"
+#include "battleplan_internal.h"
+//#include "battleplan_grid.h"
+//#include "battleplan_grid_internal.h"
+#include "camera.h"
+#include "camera_internal.h"
+#include "contract.h"
+#include "contract_types.h"
+#include "engine_internal.h"
+#include "game_state.h"
+#include "game_state_internal.h"
+#include "general.h"
+#include "general_internal.h"
+#include "battlefield_grid.h"
+#include "battlefield_grid_internal.h"
+#include "ini_parser.h"
+#include "letter_internal.h"
+#include "load_armies.h"
+#include "mailbag.h"
+#include "mailbag_internal.h"
+#include "mailroom.h"
+#include "maps_internal.h"
 #include "memory_arena.h"
-#include "mapMaker.h"
-#include "maps.h"
 #include "player.h"
-#include "playerMapEdgeCollisionFunc.h"
+#include "player_internal.h"
+#include "player_collision.h"
 #include "quadrant.h"
-#include "windowSettings.h"
+#include "quadrant_internal.h"
+#include "unit_collision.h"
+#include "unit.h"
+#include "unit_internal.h"
+#include "window_settings.h"
+#include <SDL2/SDL.h>
+#include <stdbool.h>
+
+// prototypes
+//static void update_formation_layout(void);
+//static void update_units_formation_layout(void);
+//static void update_battalions_formation_layout(void);
+static void render_generals(void);
+static void render_units(void);
+//static void battlefield_grid_formatting(BattleplanGrid *grid);
+
+_Bool show_quads = false;
+_Bool update_formation = false;
+_Bool update_units_formation = false;
+_Bool update_battalions_formation = false; 
+
+Battlefield battlefield = {0};
 
 void battlefield_init(void) {
 
-    make_maps();
-    engine.map = get_map(map_id[0]);
+    engine.battlefield = &battlefield;
+
+    Mailbag mailbag = mailroom_fetch_new_letters();
+
+    for (unsigned int i = 0; i < mailbag.new_letter_count; i++) {
+
+        Contract *contract = mailbag.letters[i].contract;
+        if (check_contract(contract)) {
+
+            battlefield.general_payload = sign_contract(contract);
+
+        }
+
+    }    
+
+    camera_init();
+    animation_init();
+
+    //battlefield_grid_formatting(&engine.battleplan->grid_payload->grid);
+
+    init_general_battalion_taxonomy();
+
+/*    unsigned int dimension_x = engine.battleplan->grid_payload->grid.dimension.x;
+    unsigned int dimension_y = engine.battleplan->grid_payload->grid.dimension.y;
+    unsigned int map_size_x = battlefield.padding.left + 48 * 10 * dimension_x * 2 + battlefield.padding.right;
+    unsigned int map_size_y = battlefield.padding.top + 48 * 10 * dimension_y + battlefield.padding.bottom;
+    engine.map = map_init(map_size_x, map_size_y);
+*/
     unsigned int player_id = create_player(50 ,1000, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
     engine.player = get_player(player_id);
-    engine.game->offSetX = engine.player->playerPositionX - WINDOW_SIZE_X / 2 + engine.player->playerDimensionX / 2;
-    engine.game->offSetY = engine.player->playerPositionY - WINDOW_SIZE_Y / 2 + engine.player->playerDimensionY / 2;
 
-    init_armies_memory_arena();
-    load_armies_into_arena();
+    unsigned int armies_count = 1;
+    //unsigned int battalion_count = engine.battleplan->grid_payload->occupied_cell_count;
+    unsigned int battalion_count = battlefield.general_payload->general_count;
+    unsigned int battalion_size = 50;
+    init_armies_memory_arena(armies_count, battalion_count, battalion_size);
+    GeneralPayload *general_payload = battlefield.general_payload;
+    load_armies_into_arena(general_payload, armies_count, battalion_count, battalion_size);
+    free(general_payload->general_and_pos);
+    //free(general_payload);
+    general_payload = NULL;
+    mailbag_letters_destroy(&mailbag);
+
     calculateAmountOfQuadrants();
     init_grids();
-    fill_quadrant_data();
-    initialCheckEntityQuadrant(engine.armies, engine.game, engine.grids);
+    initialCheckUnitQuadrant(engine.armies, engine.game, engine.battlefield_grid);
     renderQuadrantsSetup(engine.armies, engine.game);
 
 }
 
 void battlefield_input(SDL_Event *e) {
+
+    if (e->key.keysym.sym == SDLK_1) show_quads = !show_quads;
+    if (e->key.keysym.sym == SDLK_2) update_formation = true;
+    if (e->key.keysym.sym == SDLK_3) update_units_formation = true;
+    if (e->key.keysym.sym == SDLK_4) update_battalions_formation = true;
 
     Player *player = engine.player;
         
@@ -61,62 +139,136 @@ void battlefield_input(SDL_Event *e) {
                 break;
         }
     }
+
+    camera_input(e);
+    animation_input(e);
+
 }
 
 void battlefield_update(void) {
+    
+/*    if (update_formation) {
+        
+        //update_formation_layout();
+        update_formation = false;
+
+    }
+
+    if (update_units_formation) {
+
+        update_units_formation_layout();
+        update_units_formation = false;
+    
+    }
+
+    if (update_battalions_formation) {
+
+//        update_battalions_formation_layout();
+        update_battalions_formation = false;
+
+    }*/
 
     calculate_player_movement(engine.game);
     
     player_map_edge_collision(engine.game, engine.map, engine.player);
 
-    check_entity_quadrant(engine.armies, engine.game, engine.grids);
+    check_unit_quadrant(engine.armies, engine.game, engine.battlefield_grid);
 
     update_player(engine.game);
 
     update_units(engine.armies, engine.game);
 
-    update_game_state(engine.player);
+    update_generals(engine.armies, engine.game);
+
+    camera_update();
+
+    animation_update(
+        engine.armies->army->general->battalions->unit,
+        sizeof(Unit),
+        engine.game->unit_created_count,
+        unit_field_table,
+        U_ANIM_FIELD,
+        U_SPRITE_FIELD
+    );
+    animation_update(
+        engine.armies->army->general,
+        sizeof(General),
+        engine.armies->army->general_count,
+        general_field_table,
+        G_ANIM_FIELD,
+        G_SPRITE_FIELD
+    );
+
+    update_game_state();
 
 }
 
 void battlefield_render(void) {
 
     Armies *armies = engine.armies;
-    GameState *game = engine.game;
     Map *map = engine.map;
     Player *player = engine.player;
     SDL_Renderer *renderer = engine.renderer;
             
-    SDL_SetRenderDrawColor(renderer, 120, 80, 80, 255);
+    //SDL_SetRenderDrawColor(renderer, 120, 80, 80, 255);
 
-    SDL_RenderClear(renderer);
+    //SDL_RenderClear(renderer);
 
-    SDL_Rect map_rect = {map->mapLeftLimit - (signed int)game->offSetX, map->mapTopLimit - (signed int)game->offSetY, map->mapSizeX, map->mapSizeY};
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_Rect map_rect = {
+        (signed int)map->mapLeftLimit,
+        (signed int)map->mapTopLimit,
+        (signed int)map->mapSizeX,
+        (signed int)map->mapSizeY};
+    camera_world_to_screen(&map_rect);
+    SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
     SDL_RenderFillRect(renderer, &map_rect);
 
-    SDL_Rect PlayerRender = { (signed int)player->playerPositionOnScreenX, (signed int)player->playerPositionOnScreenY, (signed int)player->playerDimensionX, (signed int)player->playerDimensionY };
+    SDL_Rect player_render = {
+        (signed int)player->playerPositionX,
+        (signed int)player->playerPositionY,
+        (signed int)player->playerDimensionX,
+        (signed int)player->playerDimensionY};
+    camera_world_to_screen(&player_render);
     SDL_SetRenderDrawColor(renderer, 255, 104, 230, 255);
-    SDL_RenderFillRect(renderer, &PlayerRender);
+    SDL_RenderFillRect(renderer, &player_render);
 
-    unsigned int number_of_armies = armies->number_of_armies;
+    unsigned int armies_count = armies->armies_count;
     unsigned int battalion_count = armies->army->battalion_count;
 
     Battalion *battalions = armies->army->battalions;
-    unsigned int entities_count = battalions->entities_count;
+    unsigned int unit_count = battalions->unit_count;
 
-    for (unsigned int i = 0; i < number_of_armies * battalion_count; i++) {
+    for (unsigned int i = 0; i < armies_count * battalion_count; i++) {
         
-        Entity *entities = battalions[i].entities;
-        
-        for (unsigned int j = 0; j < entities_count; j++) {
-            
-            SDL_Rect entities_render = { (signed int)(entities[j].positionX - game->offSetX), (signed int)(entities[j].positionY - game->offSetY), (signed int)entities[j].dimensionX, (signed int)entities[j].dimensionY};
+        Unit *unit = battalions[i].unit;
+        General *general = armies->army->general;
+        if (unit == NULL) {
+            printf("asdasdad\n");
+            exit(EXIT_FAILURE);
+        }
+        //printf("unit = %d\n",);
+            SDL_Rect general_render = {
+                (signed int)general[i].positionX,
+                (signed int)general[i].positionY,
+                (signed int)general[i].dimensionX,
+                (signed int)general[i].dimensionY};
+            camera_world_to_screen(&general_render);
+            SDL_SetRenderDrawColor(renderer, general[i].R_color, general[i].G_color, general[i].B_color, general[i].Alpha);
+            SDL_RenderFillRect(renderer, &general_render);
+
+        for (unsigned int j = 0; j < unit_count; j++) {
+
+            SDL_Rect unit_render = {
+                (signed int)unit[j].positionX,
+                (signed int)unit[j].positionY,
+                (signed int)unit[j].dimensionX,
+                (signed int)unit[j].dimensionY};
+            camera_world_to_screen(&unit_render);
             SDL_SetRenderDrawColor(renderer, battalions[i].R_Color, battalions[i].G_Color, battalions[i].B_Color, battalions[i].Alpha);
-            SDL_RenderFillRect(renderer, &entities_render);
+            SDL_RenderFillRect(renderer, &unit_render);
 
         }
-
+    //mudar dps. fazer todos o generais antes, dps todas as units para n perder pre fetch
     }
 
     SDL_Rect hp_bar = { 28, 28, player->max_hp + 4, 19 };
@@ -143,16 +295,176 @@ void battlefield_render(void) {
     SDL_SetRenderDrawColor(renderer, 102, 255, 51, 255);
     SDL_RenderFillRect(renderer, &st);
 
-    //Entity *entities = battalions->entities;
+    render_generals();
+    render_units();
 
-    //renderQuadrants(entities, game, renderer);
-
-    SDL_RenderPresent(renderer);
+    if (show_quads) {
+        Unit *unit = battalions->unit;
+        GameState *game = engine.game;
+        renderQuadrants(unit, game, renderer);
+    }
 
 }
 
 void battlefield_destroy(void) {
 
+    animation_destroy();
+
     memory_arena_reset();
 
 }
+
+/*static void update_formation_layout(void) {
+
+    char *buffer = open_read_close_ini_file("battlefield_formation_layout.ini");
+    General *general = engine.armies->army->general;
+    Battalion *battalion = general->battalions;
+    //Unit *unit = battalion->unit;
+    update_battlefield_formation_with_ini_values(buffer, battalion, battalion_field_table);
+    free(buffer);
+    Unit *unit = engine.armies->army->battalions->unit;
+        unsigned int formation_width = battalion->unit_formation_width;
+    unsigned int formation_height = battalion->unit_formation_height;
+    unsigned int battalion_pos_x = battalion->initial_map_placement_x;
+    unsigned int battalion_pos_y = battalion->initial_map_placement_y;
+    unsigned int padding_x = battalion->padding_between_units_x;
+    unsigned int padding_y = battalion->padding_between_units_y;
+    unsigned int idx = 0;
+        for (unsigned int i = 0; i <  engine.armies->army->battalions->unit_count; i++) {
+
+        unit[i].dimensionX = 20;
+        unit[i].dimensionY = 20;
+
+    }
+    for (unsigned int i = 0; i < formation_width; i++) {
+
+        for (unsigned int j = 0; j < formation_height ; j++) {
+
+            unsigned int x = battalion_pos_x + padding_x + unit[idx].dimensionX * i;
+            unsigned int y = battalion_pos_y + padding_y + unit[idx].dimensionY * j;
+            unit[idx].positionX = x;
+            unit[idx].positionY = y;
+            idx++;
+            if (idx == engine.armies->army->battalions->unit_count) return;
+            
+        }
+
+    }
+
+}*/
+
+/*static void update_units_formation_layout(void) {
+
+    char *buffer = open_read_close_ini_file("battlefield_formation_layout.ini");
+    General *general = engine.armies->army->general;
+    Battalion *battalion = general->battalions;
+    Unit *unit = battalion->unit;
+    update_battlefield_formation_with_ini_values(buffer, "battalion", battalion, battalion_field_table);
+    free(buffer);
+
+    set_units_position(unit, battalion->unit_count, battalion);
+
+}*/
+
+//static void update_battalions_formation_layout(void) {}
+
+static void render_generals(void) {
+
+
+    SDL_Renderer *renderer = engine.renderer;
+    General *general = engine.armies->army->general;
+    unsigned int general_count = engine.armies->army->general_count;
+
+    for (unsigned int i = 0; i < general_count; i++) {
+
+        AnimationState *anim = &general[i].anim;
+        SpriteInfo *spr = &general[i].sprite;
+
+        enum Animation animation = anim->animation;
+        enum Sprites type = spr->type;
+        
+        Sprite *sprite = &engine.sprite_pack->sprite[type][animation];
+
+        signed int png_width = sprite->width;
+        signed int png_height = sprite->height;
+        signed int sprite_frame_width = png_width / sprite->frames_count;
+        signed int sprite_frame_height = png_height;
+
+        SDL_Rect sprite_slice = {
+            (sprite_frame_width * anim->current_frame),
+            0,
+            sprite_frame_width,
+            sprite_frame_height
+        };
+
+        SDL_Rect sprite_position = {
+            (signed int)general[i].positionX,
+            (signed int)general[i].positionY,
+            (signed int)sprite_frame_width,
+            (signed int)sprite_frame_height
+        };
+        
+        camera_world_to_screen(&sprite_position);
+
+        const SDL_Rect *rect1 = &sprite_slice;
+        const SDL_Rect *rect2 = &sprite_position;
+
+        SDL_Texture *texture = sprite->texture;
+        SDL_RenderCopy(renderer, texture, rect1, rect2);
+    
+    }
+
+}
+static void render_units(void) {
+
+    SDL_Renderer *renderer = engine.renderer;
+    Unit *unit = engine.armies->army->general->battalions->unit;
+    unsigned int unit_count = engine.armies->army->general->battalions->unit_count;
+    unsigned int battalion_count =  engine.armies->army->battalion_count;
+    for (unsigned int i = 0; i < battalion_count * unit_count; i++) {
+
+        AnimationState *anim = &unit[i].anim;
+        SpriteInfo *spr = &unit[i].sprite;
+
+        enum Animation animation = anim->animation;
+        enum Sprites type = spr->type;
+        
+        Sprite *sprite = &engine.sprite_pack->sprite[type][animation];
+
+        signed int png_width = sprite->width;
+        signed int png_height = sprite->height;
+        signed int sprite_frame_width = png_width / sprite->frames_count;
+        signed int sprite_frame_height = png_height;
+
+        SDL_Rect sprite_slice = {
+            (sprite_frame_width * anim->current_frame),
+            0,
+            sprite_frame_width,
+            sprite_frame_height
+        };
+
+        SDL_Rect sprite_position = {
+            (signed int)unit[i].positionX,
+            (signed int)unit[i].positionY,
+            (signed int)sprite_frame_width,
+            (signed int)sprite_frame_height
+        };
+        
+        camera_world_to_screen(&sprite_position);
+
+        const SDL_Rect *rect1 = &sprite_slice;
+        const SDL_Rect *rect2 = &sprite_position;
+
+        SDL_Texture *texture = sprite->texture;
+        SDL_RenderCopy(renderer, texture, rect1, rect2);
+    
+    }
+
+}
+
+/*static void battlefield_grid_formatting(BattleplanGrid *grid) {
+
+    battlefield.grid.dimension.x = grid->dimension.x;
+    battlefield.grid.dimension.y = grid->dimension.y;
+
+}*/

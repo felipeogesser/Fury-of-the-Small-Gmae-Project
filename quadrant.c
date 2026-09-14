@@ -1,6 +1,9 @@
 #include "quadrant.h"
-#include "engine.h"
-#include "gameState.h"
+#include "quadrant_internal.h"
+#include "engine_internal.h"
+#include "game_state_internal.h"
+#include "battlefield_grid_internal.h"
+#include "maps_internal.h"
 
 //Quadrant *quadrant = NULL;
 
@@ -16,6 +19,7 @@
 }*/
 
 void calculateAmountOfQuadrants(void) {
+    engine.game->low_LOD_quadrant_size = 64U;
     unsigned short amountX = (unsigned short)(engine.map->mapSizeX / engine.game->low_LOD_quadrant_size);
     unsigned short amountY = (unsigned short)(engine.map->mapSizeY / engine.game->low_LOD_quadrant_size);
     engine.game->amountX = amountX;
@@ -26,12 +30,19 @@ void calculateAmountOfQuadrants(void) {
 }
 
 void fill_quadrant_data(void) {
-    bigQuadrant *bigQuad = engine.grids->GLLoD->bigQuad;
+    bigQuadrant *bigQuad = engine.battlefield_grid->GLLoD->bigQuad;
     unsigned short amountX = engine.game->amountX;
     unsigned short amountY = engine.game->amountY;
     for (unsigned short i = 0; i < amountX * amountY; i++) {
         bigQuad[i].id = i + 1;
+        //for (unsigned int j; j < 100; j++) {
+            //bigQuad[i].unit_inside_quad[j] = (unsigned int)-1;
+        //}
     }
+
+    /*for (unsigned int i = 0; i < engine.game->low_LOD_quadrant_count; i++) {
+        engine.battlefield_grid->GLLoD->occupied_quads_indexes[i] = (unsigned int)-1;
+    }*/
 }
 
 /*Quadrant *get_quadrant(int id) {

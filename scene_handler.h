@@ -6,7 +6,7 @@
 
 //void scene_handler_init(void);
 
-void scene_init(enum SceneState scene);
+void scene_init(enum Scene scene);
 
 void scene_input(SDL_Event *e);
 
@@ -16,6 +16,6 @@ void scene_render(void);
 
 void scene_destroy(void);
 
-void scene_switch(enum SceneState next_scene);
+void scene_switch(enum Scene next_scene);
 
 #endif

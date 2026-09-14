@@ -1,7 +1,7 @@
 #include "scene_registry.h"
 #include "battlefield.h"
+#include "battleplan.h"
 #include "main_menu.h"
-#include "scenes.h"
 #include <SDL2/SDL.h>
 
 /*#define SCENE(init_fn, input_fn, update_fn, render_fn, destroy_fn) \
@@ -13,9 +13,8 @@
     .destroy = destroy_fn                                 \
 }*/
 
-void void_function(void);
-
-void void_function(void) {
+static void void_function(void);
+static void void_function(void) {
     return;
 }
 
@@ -39,7 +38,7 @@ void void_function(void) {
     
 };*/
 
-const struct SceneCallbacks scene_registry[SCENE_COUNT] = {
+const SceneCallbacks scene_registry[SCENE_COUNT] = {
 
     {
         main_menu_init,
@@ -47,6 +46,14 @@ const struct SceneCallbacks scene_registry[SCENE_COUNT] = {
         void_function,
         main_menu_render,
         main_menu_destroy
+    },
+
+    {
+        battleplan_init,
+        battleplan_input,
+        battleplan_update,
+        battleplan_render,
+        battleplan_destroy
     },
 
     {

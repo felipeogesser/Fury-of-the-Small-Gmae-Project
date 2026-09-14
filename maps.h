@@ -1,16 +1,10 @@
-#ifndef MAPS
-#define MAPS
+#ifndef MAPS_H
+#define MAPS_H
 
-#define MAX_MAPS 10
+#include "maps_types.h"
 
-typedef struct Map {
-    unsigned int id;
-    signed short mapSizeX, mapSizeY;
-    signed short mapLeftLimit, mapRightLimit, mapTopLimit, mapBottomLimit;
-} Map;
+Map *map_init(unsigned int mapSizeX, unsigned int mapSizeY, Padding *padding);
 
-unsigned int create_map(signed short mapSizeX, signed short mapSizeY);
-
-Map *get_map(unsigned int mapId);
+//Map *get_map(unsigned int mapId);
 
 #endif

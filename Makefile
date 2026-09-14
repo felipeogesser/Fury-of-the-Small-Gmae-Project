@@ -5,8 +5,6 @@ CFLAGS_RELEASE = -O0
 CFLAGS_DEBUG = -g3 -O0 \
 -Wall -Wextra -Wpedantic \
 -Wshadow \
--Wconversion \
--Wsign-conversion \
 -Wcast-align \
 -Wstrict-prototypes \
 -Wmissing-prototypes \
@@ -23,34 +21,47 @@ CFLAGS_DEBUG = -g3 -O0 \
 -fno-common \
 -fstack-protector-strong
 
-
-SDLFLAGS = $(shell pkg-config --cflags --libs sdl2 SDL2_ttf)
+SDLFLAGS = $(shell pkg-config --cflags --libs sdl2 SDL2_ttf SDL2_image)
 
 SRC = \
+	animation.c \
 	baking.c \
+	battalion.c \
 	battlefield.c \
-	calculateEntityQuadrant.c \
+	battlefield_grid.c \
+	battleplan.c \
+	battleplan_grid.c \
+	camera.c \
+	contract.c \
 	engine.c \
-	entities.c \
-	gameLoop.c \
-	gameState.c \
-	grids.c \
+	field_entry.c \
+	game_loop.c \
+	game_shutdown.c \
+	game_state.c \
+	general.c \
+	ini_parser.c \
 	init.c \
-	loadArmies.c \
+	inventory.c \
+	json_parser.c \
+	letter.c \
+	load_armies.c \
+	mailbag.c \
+	mailbox.c \
+	mailroom.c \
 	main.c \
 	main_menu.c \
-	mapMaker.c \
 	maps.c \
 	memory_arena.c \
 	peripherals.c \
 	player.c \
-	playerMapEdgeCollisionFunc.c \
+	player_collision.c \
 	quadrant.c \
-	renderer.c \
 	scene_handler.c \
 	scene_registry.c \
-	setArmiesPosition.c \
-	game_shutdown.c \
+	sprites.c \
+	type_tables.c \
+	unit.c \
+	unit_collision.c \
 	window.c \
 
 OBJ = $(SRC:.c=.o)
