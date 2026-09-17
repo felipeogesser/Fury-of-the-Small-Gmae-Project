@@ -35,6 +35,7 @@ SRC = \
 	contract.c \
 	engine.c \
 	field_entry.c \
+	file_io.c \
 	game_loop.c \
 	game_shutdown.c \
 	game_state.c \
