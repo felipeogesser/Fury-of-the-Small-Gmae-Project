@@ -2,8 +2,8 @@
 #include "general_internal.h"
 #include "animation_types.h"
 #include "armies_internal.h"
-#include "battalion_internal.h"
-#include "battlefield_internal.h"
+//#include "battalion_internal.h"
+//#include "battlefield_internal.h"
 //#include "battleplan_grid_internal.h"
 #include "engine_internal.h"
 #include "game_state_internal.h"
@@ -45,10 +45,12 @@ const FieldEntry general_field_table[] = {
     { "units_type",      OFFSET_OF(General, units_type),      SIZE_OF(General, units_type) },
     { "obj_size",        0,                                   sizeof(General) },
 };
-const size_t general_field_table_count =
-    sizeof(general_field_table) / sizeof(general_field_table[0]);
 #undef OFFSET_OF
 #undef SIZE_OF
+
+const size_t general_field_table_count =
+    sizeof(general_field_table) / sizeof(general_field_table[0]);
+const size_t sizeof_General = sizeof(General);
 
 // private prototypes
 static void copy_bits_set_to_one(unsigned char *d, const unsigned char *s);

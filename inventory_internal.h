@@ -2,7 +2,7 @@
 #define INVENTORY_INTERNAL_H
 
 #include "inventory_types.h"
-#include "general_internal.h"
+#include "general_types.h"
 
 typedef struct Inventory {
 
@@ -10,7 +10,6 @@ typedef struct Inventory {
     unsigned short item_count;
     unsigned short weapon_count;
     General *general;
-
 
 } Inventory;
 

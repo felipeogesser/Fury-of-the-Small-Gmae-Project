@@ -1,3 +1,4 @@
+#include "file_io.h"
 #include <stddef.h>
 #include <errno.h>
 #include <stdio.h>
@@ -6,7 +7,7 @@
 #include <libgen.h>
 
 // private prototypes
-static char *find_file_path(const char *json_file);
+static char *find_file_path(const char *restrict file_name);
 
 char *open_read_close_file(const char *restrict file_name) {
 

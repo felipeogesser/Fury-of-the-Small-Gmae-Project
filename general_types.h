@@ -1,6 +1,8 @@
 #ifndef GENERAL_TYPES_H
 #define GENERAL_TYPES_H
 
+#include <stddef.h>
+
 enum GeneralType {
     GENERAL_TYPE_UNKNOWN = -1,
     MELEE,
@@ -56,5 +58,6 @@ enum GeneralFields {
 typedef struct General General;
 
 extern const unsigned int *const general_battalion_taxonomy_type_masks;
+extern const size_t sizeof_General;
 
 #endif

@@ -2,21 +2,30 @@
 #include "json_parser_types.h"
 #include "json_parser_internal.h"
 #include "field_entry.h"
-#include "general_internal.h"
+#include "file_io.h"
 #include "type_tables.h"
-#include <unistd.h>
+//#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include <libgen.h>
+//#include <libgen.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdarg.h>
 
-// prototypes
-char *find_file_path(const char *json_file);
-void check_if_keys_needs_reordering(const FieldEntry *field_table, char **keys, unsigned int keys_count);
-char **object_parser(char **pp, const char *obj);
-signed int key_value_parser(unsigned int i, void *memory_p, const FieldEntry *field_table, char **pp, const char **keys, const size_t keys_count);
+// private prototypes
+//char *find_file_path(const char *json_file);
+static void read_file_and_retrieve_data(
+    void *memory_p,
+    char *p,
+    const FieldEntry *field_table,
+    const size_t obj_count,
+    const char *obj,
+    char **keys,
+    const size_t keys_count);
+static void check_if_keys_needs_reordering(const FieldEntry *field_table, char **keys, unsigned int keys_count);
+static char **object_parser(char **pp, const char *obj);
+static signed int key_value_parser(unsigned int i, void *memory_p, const FieldEntry *field_table, char **pp, const char **keys, const size_t keys_count);
 
 typedef struct StringValueEntry {
 
@@ -29,7 +38,7 @@ static const StringValueEntry string_value_table[] = {
 };
 #define JSON_STRING_VALUE_TABLE_COUNT (sizeof(string_value_table) / sizeof(string_value_table[0]))
 
-char *find_file_path(const char *json_file) {
+/*char *find_file_path(const char *json_file) {
 
     #define PATH_CAPACITY 1024
 
@@ -67,9 +76,9 @@ char *find_file_path(const char *json_file) {
 
     return json_file_path;
 
-}
+}*/
 
-char *open_read_close_file(const char *json_file) {
+/*char *open_read_close_file(const char *json_file) {
 
     char *json_file_path = find_file_path(json_file);
 
@@ -121,9 +130,58 @@ char *open_read_close_file(const char *json_file) {
 
     return buffer;
 
+}*/
+
+
+void *get_json_file_data(
+    const char *file_name,
+    const unsigned short obj_count,
+    const char *obj,
+    const size_t obj_size,
+    const FieldEntry *field_table,
+    const size_t args_count,
+    ...) {
+
+    if (args_count <= 0) {
+
+        fprintf(stderr, "at function get_json_file_data, args_count is either <= 0\n");
+        return NULL;
+        
+    }
+
+    char *buffer = open_read_close_file(file_name);
+
+    if (!buffer) {
+        
+        fprintf(stderr, "at function get_json_file_data, inner function call open_read_close_file returned NULL for variable buffer\n");
+        return NULL;
+
+    }
+
+    va_list args;
+    va_start(args, args_count);
+
+    char *keys[args_count];
+    for (unsigned int i = 0; i < args_count; i++) {
+
+        keys[i] = va_arg(args, char *);
+
+    }
+
+    char *p = buffer;
+    //void *memory_p = memory_arena_push(obj_size * obj_count, alignment);
+    void *memory_p = calloc(obj_count, obj_size);
+    read_file_and_retrieve_data(memory_p, p, field_table, obj_count, obj, keys, args_count);
+    // json parser
+    free(buffer);
+    
+    va_end(args);
+    
+    return memory_p;
+
 }
 
-void read_file_and_retrieve_data(
+static void read_file_and_retrieve_data(
     void *memory_p,
     char *p,
     const FieldEntry *field_table,
@@ -180,7 +238,7 @@ void read_file_and_retrieve_data(
 
 //#define JSON_STRUCTURE_KEYS_COUNT (sizeof(json_structure) / sizeof(json_structure[0]))
 
-void check_if_keys_needs_reordering(const FieldEntry *field_table, char **keys, unsigned int keys_count) {
+static void check_if_keys_needs_reordering(const FieldEntry *field_table, char **keys, unsigned int keys_count) {
 
     unsigned int fields_count = field_table_fields_count(field_table);
 
@@ -227,7 +285,7 @@ void check_if_keys_needs_reordering(const FieldEntry *field_table, char **keys, 
 
 }
 
-char **object_parser(char **pp, const char *obj) {
+static char **object_parser(char **pp, const char *obj) {
 
 
     char *p = *pp;
@@ -280,7 +338,7 @@ char **object_parser(char **pp, const char *obj) {
 }
 
 
-signed int key_value_parser(
+static signed int key_value_parser(
     unsigned int i,
     void *memory_p,
     const FieldEntry *field_table,
