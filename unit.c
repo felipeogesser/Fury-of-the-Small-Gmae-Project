@@ -4,24 +4,30 @@
 #include "armies_internal.h"
 #include "battalion_internal.h"
 #include "engine_internal.h"
+#include "field_entry_internal.h"
 #include "game_state_internal.h"
 #include "general_internal.h"
 #include "maps_internal.h"
 #include "sprites_internal.h"
 
-#define OFFSET_OF(type, member) ((size_t) &(((type *)0)->member))
-#define SIZE_OF(type, member) (sizeof(((type *)0)->member))
+static const FieldEntry field_table[] = {
 
-const FieldEntry unit_field_table[] = {
+    #define OFFSET_OF(type, member) ((size_t) &(((type *)0)->member))
+    #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
+
     { "anim",            OFFSET_OF(Unit, anim),            SIZE_OF(Unit, anim) },
     { "sprite",          OFFSET_OF(Unit, sprite),          SIZE_OF(Unit, sprite) },
     { "id",              OFFSET_OF(Unit, id),              SIZE_OF(Unit, id) },
-    { "obj_size",  0,                     sizeof(Unit) },
+    { "obj_size",        0,                                sizeof(Unit) },
+
+    #undef OFFSET_OF
+    #undef SIZE_OF
+
 };
-const size_t unit_field_table_count =
-    sizeof(unit_field_table) / sizeof(unit_field_table[0]);
-#undef OFFSET_OF
-#undef SIZE_OF
+//const size_t unit_field_table_count =
+//    sizeof(unit_field_table) / sizeof(unit_field_table[0]);
+const FieldEntry *const unit_field_table = field_table;
+
 
 // private prototypes
 void update_units_position(Unit *unit, unsigned int unit_count, signed int x, signed int y);

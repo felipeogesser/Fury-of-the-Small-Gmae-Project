@@ -1,14 +1,15 @@
 #include "general.h"
 #include "general_internal.h"
-#include "animation_types.h"
+#include "animation_internal.h"
 #include "armies_internal.h"
 //#include "battalion_internal.h"
 //#include "battlefield_internal.h"
 //#include "battleplan_grid_internal.h"
 #include "engine_internal.h"
+#include "field_entry_internal.h"
 #include "game_state_internal.h"
 #include "maps_internal.h"
-#include "sprites_types.h"
+#include "sprites_internal.h"
 
 #define BATTALION_LIST(X) \
     X(INFANTRY,  MELEE) \
@@ -26,10 +27,11 @@ void init_general_battalion_taxonomy(void) {
     #undef X
 }
 
-#define OFFSET_OF(type, member) ((size_t) &(((type *)0)->member))
-#define SIZE_OF(type, member) (sizeof(((type *)0)->member))
+static const FieldEntry field_table[] = {
 
-const FieldEntry general_field_table[] = {
+    #define OFFSET_OF(type, member) ((size_t) &(((type *)0)->member))
+    #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
+
     { "anim",            OFFSET_OF(General, anim),            SIZE_OF(General, anim) },
     { "sprite",          OFFSET_OF(General, sprite),          SIZE_OF(General, sprite) },
     { "id",              OFFSET_OF(General, id),              SIZE_OF(General, id) },
@@ -44,12 +46,16 @@ const FieldEntry general_field_table[] = {
     { "battalion_type",  OFFSET_OF(General, battalion_type),  SIZE_OF(General, battalion_type) },
     { "units_type",      OFFSET_OF(General, units_type),      SIZE_OF(General, units_type) },
     { "obj_size",        0,                                   sizeof(General) },
-};
-#undef OFFSET_OF
-#undef SIZE_OF
 
-const size_t general_field_table_count =
-    sizeof(general_field_table) / sizeof(general_field_table[0]);
+    #undef OFFSET_OF
+    #undef SIZE_OF
+
+};
+
+const FieldEntry *const general_field_table = field_table;
+
+//const size_t general_field_table_count =
+//    sizeof(general_field_table) / sizeof(general_field_table[0]);
 const size_t sizeof_General = sizeof(General);
 
 // private prototypes

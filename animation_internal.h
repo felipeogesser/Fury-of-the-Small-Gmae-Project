@@ -2,7 +2,6 @@
 #define ANIMATION_INTERNAL_H
 
 #include "animation_types.h"
-#include <SDL2/SDL.h>
 
 /*typedef struct Animation {
     char *animation_path;

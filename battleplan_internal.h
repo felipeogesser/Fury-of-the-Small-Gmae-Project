@@ -40,6 +40,15 @@ typedef struct DrawerSlot {
 
 } DrawerSlot;
 
+typedef struct EnemyBoard {
+
+    General *general;
+    General *grid[GRID_DIMENSION_X][GRID_DIMENSION_Y];
+    unsigned int general_count;
+    _Bool occupied_grid_slot[GRID_DIMENSION_X * GRID_DIMENSION_Y];
+
+} EnemyBoard;
+
 typedef struct Battleplan {
 
     Background background;
@@ -47,7 +56,8 @@ typedef struct Battleplan {
     Button button_init_battle;
     GridPlacementPayload *grid_payload;
     unsigned int general_in_grid_count;
-    
+    EnemyBoard enemy_board;
+
 } Battleplan;
 
 #endif

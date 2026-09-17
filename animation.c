@@ -1,14 +1,8 @@
 #include "animation.h"
 #include "animation_internal.h"
-#include "armies_internal.h"
-#include "battalion_internal.h"
-#include "camera.h"
-#include "camera_internal.h"
 #include "engine_internal.h"
-#include "unit_internal.h"
+#include "field_entry_internal.h"
 #include "game_state_internal.h"
-#include "general_internal.h"
-#include "inventory_internal.h"
 #include "sprites_internal.h"
 #include <SDL2/SDL.h>
 #include <SDL_image.h>
@@ -30,8 +24,10 @@ void animation_init(void) {
 
 }
 
+/*
 static unsigned int click_count = 0;
 void animation_input(SDL_Event *e) {
+
 
     if (e->type == SDL_MOUSEBUTTONDOWN &&
         e->button.button == SDL_BUTTON_RIGHT) {
@@ -41,13 +37,13 @@ void animation_input(SDL_Event *e) {
 
     }
 
-/*if (e->type == SDL_MOUSEBUTTONDOWN &&
+    if (e->type == SDL_MOUSEBUTTONDOWN &&
         e->button.button == SDL_BUTTON_LEFT) {
 
         change_animation = true;
         new_animation = IDLE;
 
-    }*/
+    }
 
     if (e->type == SDL_MOUSEBUTTONDOWN &&
         e->button.button == SDL_BUTTON_LEFT) {
@@ -75,6 +71,7 @@ void animation_input(SDL_Event *e) {
     }
 
 }
+*/
 
 void animation_update(
     void *object,

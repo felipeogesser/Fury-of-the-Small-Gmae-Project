@@ -2,12 +2,12 @@
 #define BATTALION_INTERNAL_H
 
 #include "battalion_types.h"
-#include "field_entry.h"
+#include "general_types.h"
 #include "unit_types.h"
 
 typedef struct Battalion {
-    struct General *general;
-    struct Unit *unit;
+    General *general;
+    Unit *unit;
     unsigned int unit_count;
     //unsigned int initial_map_placement_x;
     //unsigned int initial_map_placement_y;
@@ -25,7 +25,7 @@ typedef struct Battalion {
     unsigned char Alpha;
 } Battalion;
 
-extern const FieldEntry battalion_field_table[];
-extern const size_t battalion_field_table_count;
+extern const FieldEntry *const battalion_field_table;
+//extern const size_t battalion_field_table_count;
 
 #endif

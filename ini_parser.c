@@ -1,5 +1,6 @@
 #include "ini_parser.h"
 #include "field_entry.h"
+#include "field_entry_internal.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>

@@ -1,7 +1,7 @@
 #ifndef JSON_PARSER_H
 #define JSON_PARSER_H
 
-#include "field_entry.h"
+#include "field_entry_types.h"
 #include <stddef.h>
 
 

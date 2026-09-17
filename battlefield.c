@@ -141,7 +141,7 @@ void battlefield_input(SDL_Event *e) {
     }
 
     camera_input(e);
-    animation_input(e);
+    //animation_input(e);
 
 }
 

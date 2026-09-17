@@ -1,8 +1,10 @@
 #include "field_entry.h"
+#include "field_entry_internal.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+
 #define MAX_ITER 100
 
 unsigned int field_table_fields_count(const FieldEntry *field_table) {
@@ -82,4 +84,3 @@ size_t field_table_obj_type_size(const FieldEntry *field_table) {
 }
 
 #undef MAX_ITER
-

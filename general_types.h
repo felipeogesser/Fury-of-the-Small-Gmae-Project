@@ -1,6 +1,7 @@
 #ifndef GENERAL_TYPES_H
 #define GENERAL_TYPES_H
 
+#include "field_entry_types.h"
 #include <stddef.h>
 
 enum GeneralType {
@@ -57,6 +58,7 @@ enum GeneralFields {
 
 typedef struct General General;
 
+extern const FieldEntry *const general_field_table;
 extern const unsigned int *const general_battalion_taxonomy_type_masks;
 extern const size_t sizeof_General;
 

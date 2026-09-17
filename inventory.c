@@ -1,11 +1,9 @@
 #include "inventory.h"
 #include "inventory_internal.h"
 #include "engine_internal.h"
-#include "field_entry.h"
-#include "general_internal.h"
+#include "field_entry_types.h"
+#include "general_types.h"
 #include "json_parser.h"
-#include "memory_arena.h"
-#include "sprites_internal.h"
 
 Inventory inventory = {0};
 

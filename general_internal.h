@@ -4,11 +4,9 @@
 #include "general_types.h"
 #include "animation_internal.h"
 #include "battalion_types.h"
-#include "field_entry.h"
 #include "sprites_internal.h"
 
-extern const FieldEntry general_field_table[];
-extern const size_t general_field_table_count;
+//extern const size_t general_field_table_count;
 
 typedef struct General {
     AnimationState anim;

@@ -1,7 +1,7 @@
 #include "json_parser.h"
-#include "json_parser_types.h"
 #include "json_parser_internal.h"
 #include "field_entry.h"
+#include "field_entry_internal.h"
 #include "file_io.h"
 #include "type_tables.h"
 //#include <unistd.h>
