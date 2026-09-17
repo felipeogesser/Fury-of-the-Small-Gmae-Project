@@ -76,7 +76,7 @@ char *open_read_close_file(const char *restrict file_name) {
     }
 
     errno = 0;
-    char *buffer = calloc(1, file_size + 1);
+    char *buffer = calloc(1, file_size + 64); // +64 byes gives enough buffer for all callers. This prevents memcmp or any intrinsics that reads past the end of a buffer unable to touch protected memory and cause SIGSEGV.
     if (!buffer) {
 
         if (errno != 0) {
