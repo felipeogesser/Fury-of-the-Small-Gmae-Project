@@ -3,13 +3,11 @@
 
 #include "unit_types.h"
 #include "animation_internal.h"
-#include "field_entry_types.h"
 #include "sprites_internal.h"
 #include <SDL2/SDL.h>
 
 //#define MAX_unit 1024
 
-extern const FieldEntry *const unit_field_table;
 //extern const size_t unit_field_table_count;
 
 typedef struct Unit {
