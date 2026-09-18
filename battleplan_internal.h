@@ -54,7 +54,6 @@ typedef struct Battleplan {
     Background background;
     Button button_main_menu;
     Button button_init_battle;
-    GridPlacementPayload *grid_payload;
     unsigned int general_in_grid_count;
     EnemyBoard enemy_board;
 

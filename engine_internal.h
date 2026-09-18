@@ -1,13 +1,14 @@
 #ifndef ENGINE_INTERNAL_H
 #define ENGINE_INTERNAL_H
 
+#include "engine_types.h"
 #include "animation_types.h"
 #include "armies_types.h"
+#include "battlefield_grid_types.h"
 #include "battlefield_types.h"
 #include "battleplan_types.h"
 #include "camera_types.h"
 #include "game_state_types.h"
-#include "battlefield_grid_types.h"
 #include "inventory_types.h"
 #include "main_menu_types.h"
 #include "maps_types.h"

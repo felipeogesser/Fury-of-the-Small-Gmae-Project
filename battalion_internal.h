@@ -25,7 +25,6 @@ typedef struct Battalion {
     unsigned char Alpha;
 } Battalion;
 
-extern const FieldEntry *const battalion_field_table;
 //extern const size_t battalion_field_table_count;
 
 #endif

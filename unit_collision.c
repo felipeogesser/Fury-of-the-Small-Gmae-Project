@@ -1,15 +1,12 @@
 #include "unit_collision.h"
 #include "armies_internal.h"
 #include "battalion_internal.h"
-#include "camera.h"
-#include "camera_internal.h"
-#include "engine_internal.h"
-#include "unit_internal.h"
-#include "game_state_internal.h"
-#include "general_internal.h"
 #include "battlefield_grid_internal.h"
-#include "load_armies.h"
+#include "camera.h"
+#include "engine_internal.h"
+#include "game_state_internal.h"
 #include "quadrant_internal.h"
+#include "unit_internal.h"
 #include <SDL2/SDL.h>
 
 #define QUAD1 ((unsigned char)(1u << 0))

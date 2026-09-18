@@ -7,4 +7,8 @@ typedef struct Background Background;
 
 typedef struct Button Button;
 
+typedef struct DrawerSlot DrawerSlot;
+
+typedef struct EnemyBoard EnemyBoard;
+
 #endif

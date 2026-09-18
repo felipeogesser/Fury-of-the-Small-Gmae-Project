@@ -1,21 +1,19 @@
 #include "battleplan.h"
 #include "battleplan_internal.h"
 #include "battleplan_battlefield_handoff.h"
-#include "battleplan_grid.h"
-#include "battleplan_grid_internal.h"
 #include "animation.h"
-#include "animation_types.h"
+#include "animation_internal.h"
 #include "contract.h"
 #include "contract_types.h"
 #include "engine_internal.h"
 #include "game_state_internal.h"
-#include "general_internal.h"
+#include "general_internal.h" // very close at remvoing include. only general->render and general.anim/spite depend on it
 #include "inventory.h"
-#include "inventory_internal.h"
+#include "inventory_internal.h" // dependency: engine.inventory->general_count
 #include "letter.h"
 #include "letter_types.h"
 #include "maps.h"
-#include "maps_internal.h"
+#include "maps_internal.h" // dependency: engine.map->mapSizeX/Y
 #include "memory_arena.h"
 #include "scene_handler.h"
 #include "scenes.h"
@@ -27,7 +25,7 @@
 #include <math.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <string.h>
+//#include <string.h>
 #include <stdio.h>
 
 enum Origin {
@@ -1189,18 +1187,6 @@ static void clear_payload(DragPayload *payload) {
 
 static GeneralPayload *save_battleplan_placement(void) {
 
-    if (battleplan.grid_payload != NULL) {
-
-        printf("battleplan_general_placement was not freed prior to this assignment\n");
-        free(battleplan.grid_payload);
-    
-    }
-
-    //GridPlacementPayload *buffer = calloc(1, sizeof(GridPlacementPayload) + sizeof(OccupiedCell) * battleplan.general_in_grid_count);
-    //buffer->grid.dimension.x = GRID_DIMENSION_X;
-    //buffer->grid.dimension.y = GRID_DIMENSION_Y;
-    //buffer->occupied_cell_count = battleplan.general_in_grid_count;
-
     GeneralPayload *general_payload = calloc(1, sizeof(GeneralPayload));
     general_payload->general_and_pos = calloc(battleplan.general_in_grid_count, sizeof(GeneralAndPosition));
     unsigned int idx = 0;
@@ -1212,17 +1198,14 @@ static GeneralPayload *save_battleplan_placement(void) {
                 
                 general_payload->general_and_pos[idx].general = grid[i][j];
                 general_payload->general_and_pos[idx].pos = battleplan_calculate_general_position(grid[i][j], i, j);
-
-                //buffer->occupied_cell[idx].x = i;
-                //buffer->occupied_cell[idx].y = j;
-                //memcpy(&buffer->occupied_cell[idx].general, grid[i][j], sizeof(General));
                 idx++;
                 if (idx == battleplan.general_in_grid_count) {
-                    //battleplan.grid_payload = buffer;
+                    
                     general_payload->general_count = idx;
                     goto return_function;
 
                 }
+
             }
 
         }
@@ -1230,7 +1213,6 @@ static GeneralPayload *save_battleplan_placement(void) {
     }
     return_function:
         return general_payload;
-    //battleplan.grid_payload = buffer;
 
 }
 

@@ -1,6 +1,8 @@
 #ifndef PLAYER_INTERNAL_H
 #define PLAYER_INTERNAL_H
 
+#include "player_types.h"
+
 #define MAX_PLAYERS 1
 
 typedef struct Player {

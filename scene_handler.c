@@ -1,8 +1,6 @@
 #include "scene_handler.h"
-#include "animation.h"
 #include "engine_internal.h"
 #include "game_state_internal.h"
-#include "mailbox.h"
 #include "scene_registry.h"
 
 /*void scene_handler_init(void) {
@@ -12,12 +10,13 @@
 void scene_init(enum Scene scene) {
 
     if (engine.window_running) {
+
+        engine.game->scene_state.scene = scene;
         
         scene_registry[scene].init();
 
-        engine.game->scene_state.scene = scene;
-
     }
+
 }
 
 void scene_input(SDL_Event *e) {
@@ -29,6 +28,7 @@ void scene_input(SDL_Event *e) {
         scene_registry[current_scene].input(e);
 
     }
+
 }
 
 void scene_update(void) {
@@ -40,6 +40,7 @@ void scene_update(void) {
         scene_registry[current_scene].update();
 
     }
+
 }
 
 void scene_render(void) {
@@ -59,6 +60,7 @@ void scene_render(void) {
         SDL_RenderPresent(renderer);
 
     }
+
 }
 
 void scene_destroy(void) {
@@ -84,4 +86,5 @@ void scene_switch(enum Scene next_scene) {
         scene_registry[next_scene].update();
 
     }
+
 }

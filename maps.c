@@ -1,5 +1,4 @@
 #include "maps.h"
-#include "maps_types.h"
 #include "maps_internal.h"
 #include <stdio.h>
 #include <stdlib.h>

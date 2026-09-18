@@ -1,6 +1,8 @@
 #ifndef MAIN_MENU_INTERNAL_H
 #define MAIN_MENU_INTERNAL_H
 
+#include "main_menu_types.h"
+
 typedef struct MainMenu {
 
     unsigned char background_R_color;

@@ -1,7 +1,4 @@
 #include "game_loop.h"
-#include "armies_types.h"
-#include "battalion_types.h"
-#include "unit_collision.h"
 #include "engine_internal.h"
 #include "game_state_internal.h"
 #include "peripherals.h"
