@@ -10,6 +10,7 @@
 #include "general_internal.h" // very close at remvoing include. only general->render and general.anim/spite depend on it
 #include "inventory.h"
 #include "inventory_internal.h" // dependency: engine.inventory->general_count
+#include "json_parser.h"
 #include "letter.h"
 #include "letter_types.h"
 #include "maps.h"
@@ -47,8 +48,9 @@ DragPayload drag_payload = {0};
 // private prototypes
 static void booleans_init(void);
 static void variables_init(void);
+static void enemy_board_init(void);
 static void set_drawer_slot_generals_index(General *general);
-static void set_minimal_general_sprite_and_animation_data(General *general);
+static void set_minimal_general_sprite_and_animation_data(General *general, unsigned int general_count);
 static void handle_mouse_left_button(void);
 static signed int check_if_dragging_general_out_of_grid(void);
 static void check_if_dragging_general_out_of_drawer(void);
@@ -59,6 +61,7 @@ static void battleplan_render_deployment_area(SDL_Renderer *renderer);
 static void battleplan_render_general_drawer(SDL_Renderer *renderer);
 static void render_drawer_generals(SDL_Renderer *renderer);
 static void render_grid_generals(SDL_Renderer *renderer);
+static void render_enemy_grid_generals(SDL_Renderer *renderer);
 static void render_dragged_general(SDL_Renderer *renderer);
 static void open_general_drawer(void);
 static void close_general_drawer(void);
@@ -123,6 +126,13 @@ static signed int const grid_cell_width_x = grid_cell_width_y + 20;
 
 static SDL_Rect deployment_area = {
     window_edge_padding_x,
+    window_edge_padding_y,
+    grid_cell_width_x * GRID_DIMENSION_X,
+    grid_cell_width_y * GRID_DIMENSION_Y
+};
+
+static SDL_Rect enemy_deployment_area = {
+    (signed int)WINDOW_SIZE_X - window_edge_padding_x - GRID_DIMENSION_X * grid_cell_width_x,
     window_edge_padding_y,
     grid_cell_width_x * GRID_DIMENSION_X,
     grid_cell_width_y * GRID_DIMENSION_Y
@@ -219,14 +229,17 @@ void battleplan_init(void) {
         return;
     }
 
+    enemy_board_init();
+
     General *general = inventory_init();
 
     clear_payload(&drag_payload);
 
     set_drawer_slot_generals_index(general);
 
-    set_minimal_general_sprite_and_animation_data(general);
-    
+    set_minimal_general_sprite_and_animation_data(general, engine.inventory->general_count);
+    set_minimal_general_sprite_and_animation_data(battleplan.enemy_board.general, battleplan.enemy_board.general_count);
+
 }
 
 void battleplan_input(SDL_Event *e) {
@@ -311,6 +324,16 @@ void battleplan_update(void) {
         general,
         sizeof(General),
         engine.inventory->general_count,
+        general_field_table,
+        G_ANIM_FIELD,
+        G_SPRITE_FIELD
+    );
+
+    general = battleplan.enemy_board.general;
+        animation_update(
+        general,
+        sizeof(General),
+        battleplan.enemy_board.general_count,
         general_field_table,
         G_ANIM_FIELD,
         G_SPRITE_FIELD
@@ -432,6 +455,65 @@ static void variables_init(void) {
     mouse_y = 0;
     mouse_dragging_origin_x = 0.0f;
     elapsed = 0.0f;
+
+}
+
+static void enemy_board_init(void) {
+
+    #define OBJ_COUNT 5
+    // this value will later come from mission or tutorial specifications indicating how many general enemies there are on that particular fight
+
+    battleplan.enemy_board = (EnemyBoard){
+        .general_count = OBJ_COUNT,
+        .occupied_grid_slot = {
+            0, 0, 0, 0, 0,
+            1, 0, 0, 0, 0,
+            1, 0, 0, 0, 0,
+            1, 1, 0, 0, 0,
+            1, 0, 0, 0, 0,
+            0, 0, 0, 0, 0
+        }
+    };
+    #undef OBJ_COUNT
+
+    General *general = get_json_file_data(
+        "tutorial.json",
+        battleplan.enemy_board.general_count,
+        "generals",
+        sizeof_General,
+        general_field_table,
+        13,
+        "id",
+        "rarity",
+        "hp",
+        "vigour",
+        "attack",
+        "defense",
+        "evasion",
+        "attack_speed",
+        "general_type",
+        "battalion_type",
+        "units_type",
+        "anim",
+        "sprite"
+    );
+
+    battleplan.enemy_board.general = general;
+
+    unsigned int idx = 0;
+    for (unsigned int j = 0; j < GRID_DIMENSION_Y; j++) {
+        
+        for (unsigned int i = 0; i < GRID_DIMENSION_X; i++) {
+        
+            if (battleplan.enemy_board.occupied_grid_slot[j * GRID_DIMENSION_X + i] == 1) {
+
+                battleplan.enemy_board.grid[i][j] = &general[idx++];
+
+            }
+
+        }
+
+    }
 
 }
 
@@ -765,14 +847,7 @@ static void battleplan_render_deployment_area(SDL_Renderer *renderer) {
 
 
     // second area
-    SDL_Rect copy_deployment_area = {
-        deployment_area.x,
-        deployment_area.y,
-        deployment_area.w,
-        deployment_area.h
-    };
 
-    copy_deployment_area.x = (signed int)WINDOW_SIZE_X - copy_deployment_area.x - GRID_DIMENSION_X * grid_cell_width_x;
     SDL_SetRenderDrawColor(
         renderer,
         123,
@@ -780,16 +855,16 @@ static void battleplan_render_deployment_area(SDL_Renderer *renderer) {
         123,
         255
     );
-    SDL_RenderFillRect(renderer, &copy_deployment_area);
+    SDL_RenderFillRect(renderer, &enemy_deployment_area);
     
-    x = copy_deployment_area.x - grid_fishnet_line_width / 2;
+    x = enemy_deployment_area.x - grid_fishnet_line_width / 2;
     for (signed int i = 0; i < GRID_DIMENSION_X + 1; i++) {
         
         SDL_Rect grid_line_vertical = {
             x + i * offset_x,
-            copy_deployment_area.y - 25,
+            enemy_deployment_area.y - 25,
             grid_fishnet_line_width,
-            copy_deployment_area.h + 50
+            enemy_deployment_area.h + 50
         };
         SDL_SetRenderDrawColor(
             renderer,
@@ -805,9 +880,9 @@ static void battleplan_render_deployment_area(SDL_Renderer *renderer) {
     for (signed int i = 0; i < GRID_DIMENSION_Y + 1; i++) {
         
         SDL_Rect grid_line_horizontal = {
-            copy_deployment_area.x - 25,
+            enemy_deployment_area.x - 25,
             y + i * offset_y,
-            copy_deployment_area.w + 50,
+            enemy_deployment_area.w + 50,
             grid_fishnet_line_width
         };
         SDL_SetRenderDrawColor(
@@ -822,6 +897,7 @@ static void battleplan_render_deployment_area(SDL_Renderer *renderer) {
     }
 
     render_grid_generals(renderer);
+    render_enemy_grid_generals(renderer);
 
 }
 
@@ -995,6 +1071,59 @@ static void render_grid_generals(SDL_Renderer *renderer) {
 
 }
 
+static void render_enemy_grid_generals(SDL_Renderer *renderer) {
+
+    Sprite (*sprites)[ANIMATION_COUNT] = engine.sprite_pack->sprite;
+
+    signed int x = enemy_deployment_area.x;
+    signed int offset_x = enemy_deployment_area.w / GRID_DIMENSION_X;
+    signed int y = enemy_deployment_area.y;
+    signed int offset_y = enemy_deployment_area.h / GRID_DIMENSION_Y;
+        
+    for (signed int i = 0; i < GRID_DIMENSION_X; i++) {
+
+        for (signed int j = 0; j < GRID_DIMENSION_Y; j++) {
+
+            if (battleplan.enemy_board.grid[i][j] != NULL) {
+
+                General *general = battleplan.enemy_board.grid[i][j];
+
+                Sprite *sprite = &sprites[general->sprite.type][general->anim.animation];
+                        
+                signed int png_width = sprite->width;
+                signed int png_height = sprite->height;
+                signed int sprite_frame_width = png_width / sprite->frames_count;
+                signed int sprite_frame_height = png_height;
+
+                SDL_Rect sprite_slice = {
+                    (sprite_frame_width * general->anim.current_frame),
+                    0,
+                    sprite_frame_width,
+                    sprite_frame_height
+                };
+
+                SDL_Rect sprite_position = {
+                    (signed int) x + i * offset_x,
+                    (signed int) y + j * offset_y,
+                    (signed int) grid_cell_width_x,
+                    (signed int) grid_cell_width_y
+                };
+
+                const SDL_Rect *rect1 = &sprite_slice;
+                const SDL_Rect *rect2 = &sprite_position;
+
+                SDL_Texture *texture = sprite->texture;
+
+                SDL_RenderCopy(renderer, texture, rect1, rect2);
+
+            }
+
+        }
+
+    }
+
+}
+
 static void open_general_drawer(void) {
 
     float a = WINDOW_SIZE_Y - 200;
@@ -1080,9 +1209,9 @@ static void set_drawer_slot_generals_index(General *general) {
 
 }
 
-static void set_minimal_general_sprite_and_animation_data(General *general) {
+static void set_minimal_general_sprite_and_animation_data(General *general, unsigned int general_count) {
 
-    for (unsigned int i = 0; i < engine.inventory->general_count; i++) {
+    for (unsigned int i = 0; i < general_count; i++) {
 
         general[i].render = true;
         general[i].anim.animation = IDLE;
