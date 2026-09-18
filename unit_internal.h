@@ -6,10 +6,6 @@
 #include "sprites_internal.h"
 #include <SDL2/SDL.h>
 
-//#define MAX_unit 1024
-
-//extern const size_t unit_field_table_count;
-
 typedef struct Unit {
     AnimationState anim;
     SpriteInfo sprite;
@@ -26,20 +22,11 @@ typedef struct Unit {
     Uint32 lastTick;
     int nextMoveDelay;
     int currentQuadrants[4];
-    //unsigned char alreadyInQuadrant;
     unsigned char quadrantOutOfBounds;
     int enemyUnitId;
     _Bool pathFound;
     float constMovX, constMovY;
     float health;
-    //unsigned char *sprite_current_frame;
-    //unsigned char sprite_frames_count;
-    //unsigned char sprite_current_frame;
-    //enum Animation animation;
-    //enum Sprites unit_type;
-    //Sprite sprite;
 } Unit;
-
-//extern Unit *unit;
 
 #endif

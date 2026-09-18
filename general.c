@@ -2,9 +2,6 @@
 #include "general_internal.h"
 #include "animation_internal.h"
 #include "armies_internal.h"
-//#include "battalion_internal.h"
-//#include "battlefield_internal.h"
-//#include "battleplan_grid_internal.h"
 #include "engine_internal.h"
 #include "field_entry_internal.h"
 #include "game_state_internal.h"
@@ -54,8 +51,6 @@ static const FieldEntry field_table[] = {
 
 const FieldEntry *const general_field_table = field_table;
 
-//const size_t general_field_table_count =
-//    sizeof(general_field_table) / sizeof(general_field_table[0]);
 const size_t sizeof_General = sizeof(General);
 
 // private prototypes
@@ -117,17 +112,3 @@ static void set_general_position(General *general, unsigned int x, unsigned int 
     general->positionY = y;
 
 }
-
-/*static void set_general_position(General *general, BattleplanGrid *grid, unsigned int x, unsigned int y) {
-
-    unsigned int cell_width = (engine.map->mapSizeX / 2 - engine.battlefield->padding.in_between_armies / 2 - engine.battlefield->padding.left) / grid->dimension.x;
-    unsigned int cell_height = (engine.map->mapSizeY - engine.battlefield->padding.bottom - engine.battlefield->padding.top ) / grid->dimension.y;
-
-    unsigned int cell_position_x = engine.battlefield->padding.left + x * cell_width;
-    unsigned int cell_position_y = engine.battlefield->padding.top + y * cell_height;
-
-    general->positionX = cell_position_x + cell_width / 2;
-    general->positionY = cell_position_y + cell_height / 2 - general->dimensionY / 2;
-
-}
-*/

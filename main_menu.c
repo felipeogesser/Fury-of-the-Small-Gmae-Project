@@ -126,9 +126,6 @@ void main_menu_render(void) {
 
     SDL_Renderer *renderer = engine.renderer;
 
-    //SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    //SDL_RenderClear(renderer);
-
     SDL_Rect background = {0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y};
     SDL_SetRenderDrawColor(
         renderer,
@@ -172,8 +169,6 @@ void main_menu_render(void) {
     SDL_RenderFillRect(renderer, &button_battleplan);
 
     SDL_RenderCopy(renderer, message, NULL, &button_battleplan);
-
-    //SDL_RenderPresent(renderer);
 
 }
 

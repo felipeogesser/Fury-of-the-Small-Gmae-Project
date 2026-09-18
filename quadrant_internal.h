@@ -25,15 +25,4 @@ typedef struct smallQuadrant {
     unsigned int unit_inside_quad[1000];
 } smallQuadrant;
 
-/*typedef struct unitInsideQuadrant {
-    int unitInsideQuadrantById[10];
-    int unitInQuadrantCount;
-} unitInsideQuadrant;
-
-typedef struct Quadrant {
-    int id;
-    struct unitInsideQuadrant innerEntsInQuad;
-    int objectsInQuadrant[MAX_OBJECTS];
-} Quadrant;*/
-
 #endif

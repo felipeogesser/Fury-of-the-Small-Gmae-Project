@@ -52,12 +52,10 @@ void update_battlefield_formation_with_ini_values(const char *buffer, const char
     char key[KEY_LENGH] = {'\0'};
     char value[VALUE_LENGH] = {'\0'};
     const char *p = buffer;
-    //p++; // prevents indexing out of bounds when doing "*(p - 1)"
     enum Scanning scanning = OBJECT;
     _Bool is_float = false;
     unsigned int idx = 0;
     unsigned int fields_count = field_table_fields_count(field_table);
-    //size_t obj_size = field_table_obj_type_size(field_table);
     unsigned int field_table_idx = 0;
 
     while (*p != '\0') {

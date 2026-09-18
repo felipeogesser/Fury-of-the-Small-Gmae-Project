@@ -33,13 +33,9 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 
-// prototypes
-//static void update_formation_layout(void);
-//static void update_units_formation_layout(void);
-//static void update_battalions_formation_layout(void);
+// private prototypes
 static void render_generals(void);
 static void render_units(void);
-//static void battlefield_grid_formatting(BattleplanGrid *grid);
 
 _Bool show_quads = false;
 _Bool update_formation = false;
@@ -67,29 +63,18 @@ void battlefield_init(void) {
 
     camera_init();
     animation_init();
-
-    //battlefield_grid_formatting(&engine.battleplan->grid_payload->grid);
-
     init_general_battalion_taxonomy();
 
-/*    unsigned int dimension_x = engine.battleplan->grid_payload->grid.dimension.x;
-    unsigned int dimension_y = engine.battleplan->grid_payload->grid.dimension.y;
-    unsigned int map_size_x = battlefield.padding.left + 48 * 10 * dimension_x * 2 + battlefield.padding.right;
-    unsigned int map_size_y = battlefield.padding.top + 48 * 10 * dimension_y + battlefield.padding.bottom;
-    engine.map = map_init(map_size_x, map_size_y);
-*/
     unsigned int player_id = create_player(50 ,1000, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
     engine.player = get_player(player_id);
 
     unsigned int armies_count = 1;
-    //unsigned int battalion_count = engine.battleplan->grid_payload->occupied_cell_count;
     unsigned int battalion_count = battlefield.general_payload->general_count;
     unsigned int battalion_size = 50;
     init_armies_memory_arena(armies_count, battalion_count, battalion_size);
     GeneralPayload *general_payload = battlefield.general_payload;
     load_armies_into_arena(general_payload, armies_count, battalion_count, battalion_size);
     free(general_payload->general_and_pos);
-    //free(general_payload);
     general_payload = NULL;
     mailbag_letters_destroy(&mailbag);
 
@@ -136,32 +121,10 @@ void battlefield_input(SDL_Event *e) {
     }
 
     camera_input(e);
-    //animation_input(e);
 
 }
 
 void battlefield_update(void) {
-    
-/*    if (update_formation) {
-        
-        //update_formation_layout();
-        update_formation = false;
-
-    }
-
-    if (update_units_formation) {
-
-        update_units_formation_layout();
-        update_units_formation = false;
-    
-    }
-
-    if (update_battalions_formation) {
-
-//        update_battalions_formation_layout();
-        update_battalions_formation = false;
-
-    }*/
 
     calculate_player_movement(engine.game);
     
@@ -204,10 +167,6 @@ void battlefield_render(void) {
     Map *map = engine.map;
     Player *player = engine.player;
     SDL_Renderer *renderer = engine.renderer;
-            
-    //SDL_SetRenderDrawColor(renderer, 120, 80, 80, 255);
-
-    //SDL_RenderClear(renderer);
 
     SDL_Rect map_rect = {
         (signed int)map->mapLeftLimit,
@@ -238,18 +197,18 @@ void battlefield_render(void) {
         Unit *unit = battalions[i].unit;
         General *general = armies->army->general;
         if (unit == NULL) {
-            printf("asdasdad\n");
+            fprintf(stderr, "unit is NULL\n");
             exit(EXIT_FAILURE);
         }
-        //printf("unit = %d\n",);
-            SDL_Rect general_render = {
-                (signed int)general[i].positionX,
-                (signed int)general[i].positionY,
-                (signed int)general[i].dimensionX,
-                (signed int)general[i].dimensionY};
-            camera_world_to_screen(&general_render);
-            SDL_SetRenderDrawColor(renderer, general[i].R_color, general[i].G_color, general[i].B_color, general[i].Alpha);
-            SDL_RenderFillRect(renderer, &general_render);
+
+        SDL_Rect general_render = {
+            (signed int)general[i].positionX,
+            (signed int)general[i].positionY,
+            (signed int)general[i].dimensionX,
+            (signed int)general[i].dimensionY};
+        camera_world_to_screen(&general_render);
+        SDL_SetRenderDrawColor(renderer, general[i].R_color, general[i].G_color, general[i].B_color, general[i].Alpha);
+        SDL_RenderFillRect(renderer, &general_render);
 
         for (unsigned int j = 0; j < unit_count; j++) {
 
@@ -263,7 +222,7 @@ void battlefield_render(void) {
             SDL_RenderFillRect(renderer, &unit_render);
 
         }
-    //mudar dps. fazer todos o generais antes, dps todas as units para n perder pre fetch
+
     }
 
     SDL_Rect hp_bar = { 28, 28, player->max_hp + 4, 19 };
@@ -308,60 +267,6 @@ void battlefield_destroy(void) {
     memory_arena_reset();
 
 }
-
-/*static void update_formation_layout(void) {
-
-    char *buffer = open_read_close_ini_file("battlefield_formation_layout.ini");
-    General *general = engine.armies->army->general;
-    Battalion *battalion = general->battalions;
-    //Unit *unit = battalion->unit;
-    update_battlefield_formation_with_ini_values(buffer, battalion, battalion_field_table);
-    free(buffer);
-    Unit *unit = engine.armies->army->battalions->unit;
-        unsigned int formation_width = battalion->unit_formation_width;
-    unsigned int formation_height = battalion->unit_formation_height;
-    unsigned int battalion_pos_x = battalion->initial_map_placement_x;
-    unsigned int battalion_pos_y = battalion->initial_map_placement_y;
-    unsigned int padding_x = battalion->padding_between_units_x;
-    unsigned int padding_y = battalion->padding_between_units_y;
-    unsigned int idx = 0;
-        for (unsigned int i = 0; i <  engine.armies->army->battalions->unit_count; i++) {
-
-        unit[i].dimensionX = 20;
-        unit[i].dimensionY = 20;
-
-    }
-    for (unsigned int i = 0; i < formation_width; i++) {
-
-        for (unsigned int j = 0; j < formation_height ; j++) {
-
-            unsigned int x = battalion_pos_x + padding_x + unit[idx].dimensionX * i;
-            unsigned int y = battalion_pos_y + padding_y + unit[idx].dimensionY * j;
-            unit[idx].positionX = x;
-            unit[idx].positionY = y;
-            idx++;
-            if (idx == engine.armies->army->battalions->unit_count) return;
-            
-        }
-
-    }
-
-}*/
-
-/*static void update_units_formation_layout(void) {
-
-    char *buffer = open_read_close_ini_file("battlefield_formation_layout.ini");
-    General *general = engine.armies->army->general;
-    Battalion *battalion = general->battalions;
-    Unit *unit = battalion->unit;
-    update_battlefield_formation_with_ini_values(buffer, "battalion", battalion, battalion_field_table);
-    free(buffer);
-
-    set_units_position(unit, battalion->unit_count, battalion);
-
-}*/
-
-//static void update_battalions_formation_layout(void) {}
 
 static void render_generals(void) {
 
@@ -456,10 +361,3 @@ static void render_units(void) {
     }
 
 }
-
-/*static void battlefield_grid_formatting(BattleplanGrid *grid) {
-
-    battlefield.grid.dimension.x = grid->dimension.x;
-    battlefield.grid.dimension.y = grid->dimension.y;
-
-}*/

@@ -11,7 +11,6 @@ typedef struct Background {
     unsigned char g;
     unsigned char b;
     unsigned char a;
-    // 32 bits
 
 } Background;
 
@@ -26,7 +25,6 @@ typedef struct Button {
     unsigned char b;
     unsigned char a;
     const char *text;
-    // 150 bits
 
 } Button;
 

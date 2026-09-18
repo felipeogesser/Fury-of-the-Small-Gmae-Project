@@ -8,5 +8,4 @@ _Bool check_contract(Contract *contract);
 void *sign_contract(Contract *contract);
 void contract_destroy(Contract *contract);
 
-
 #endif

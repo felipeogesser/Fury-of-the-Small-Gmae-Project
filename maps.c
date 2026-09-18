@@ -25,8 +25,3 @@ Map *map_init(unsigned int map_size_x, unsigned int map_size_y, Padding *padding
     return &map;
 
 }
-
-/*Map *get_map(unsigned int mapId) {
-    if (mapId <= 0 || mapId > map_count) return NULL;
-    return &maps[mapId - 1];
-}*/

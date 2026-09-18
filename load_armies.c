@@ -4,8 +4,6 @@
 #include "battalion.h"
 #include "battalion_internal.h"
 #include "battleplan_battlefield_handoff.h"
-//#include "battleplan_internal.h"
-//#include "battleplan_grid_internal.h"
 #include "engine_internal.h"
 #include "game_state_internal.h"
 #include "general.h"
@@ -17,13 +15,10 @@
 #include <stddef.h>
 #include <math.h>
 
-// prototypes
+// private prototypes
 static void link_army_memory_hierarchy(
     Armies *armies, Army *army, General *general, Battalion *battalions, Unit *unit,
     unsigned int armies_count, unsigned int battalion_count, unsigned int battalion_size);
-
-//static unsigned int count_battalions_in_battleplan(void);
-//static General *get_general_from_grid(General (*grid)[GRID_DIMENSION_Y], unsigned int *x, unsigned int *y);
 
 size_t armies_total_memory_size = 0;
 
@@ -90,9 +85,6 @@ void load_armies_into_arena(GeneralPayload *general_payload, unsigned int armies
 
     }
 
-    //free(engine.battleplan->grid_payload);
-    //engine.battleplan->grid_payload = NULL;
-
 }
 
 static void link_army_memory_hierarchy(
@@ -125,65 +117,9 @@ static void link_army_memory_hierarchy(
 
 } // future refactor: maintain linking only and put other assignments into obj inits
 
-/*static General *get_general_from_grid(General (*grid)[GRID_DIMENSION_Y], unsigned int *p_x, unsigned int *p_y) {
-
-    unsigned int x = *p_x;
-    unsigned int y = *p_y;
-
-    General general = {0};
-
-    for (; x < GRID_DIMENSION_X; x++) {
-
-        for (; y < GRID_DIMENSION_Y; y++) {
-            
-            if (memcmp(&grid[x][y], &general, sizeof(General)) != 0) {
-                
-                _Bool n = y + 1 == GRID_DIMENSION_Y;
-                *p_x = x + n;
-                *p_y = !n * y + !n;
-                return &grid[x][y];
-
-            }
-
-        }
-
-        y = 0;
-
-    }
-
-    fprintf(stderr, "get general from grid could not find a general in the grid\n");
-    exit(EXIT_FAILURE);
-
-    return NULL;
-
-}*/
-
 void free_army_memory(void) {
     
     memset(engine.army_memory_ptr, 0, armies_total_memory_size);
     engine.army_memory_ptr = NULL;
 
 }
-
-/*static unsigned int count_battalions_in_battleplan(void) {
-
-    unsigned int count = 0;
-    General general = {0};
-
-    for (unsigned int i = 0; i < GRID_DIMENSION_X; i++) {
-
-        for (unsigned int j = 0; j < GRID_DIMENSION_Y; j++) {
-
-            if (memcmp(&engine.battleplan->battleplan_general_placement[i][j], &general, sizeof(General)) != 0) {
-
-                count++;
-
-            }
-
-        }
-
-    }
-
-    return count;
-
-}*/

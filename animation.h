@@ -5,7 +5,6 @@
 #include <stddef.h>
 
 void animation_init(void);
-//void animation_input(SDL_Event *e);
 void animation_update(
     void *object,
     size_t sizeof_obj,
@@ -13,9 +12,6 @@ void animation_update(
     const FieldEntry *field_table,
     signed int anim_field,
     signed int sprite_field);
-//void animation_render(void);
 void animation_destroy(void);
-
-//void battleplan_animation_update(General *general);// temp
 
 #endif

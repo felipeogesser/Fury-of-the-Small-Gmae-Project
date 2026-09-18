@@ -4,8 +4,6 @@
 #include "scenes.h"
 #include <SDL2/SDL.h>
 
-//void scene_handler_init(void);
-
 void scene_init(enum Scene scene);
 
 void scene_input(SDL_Event *e);

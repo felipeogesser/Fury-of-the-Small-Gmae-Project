@@ -18,8 +18,6 @@
 #define OOBQUAD3 ((unsigned char)(1u << 2))
 #define OOBQUAD4 ((unsigned char)(1u << 3))
 
-// futuramente trocar [i] por ->
-
 void initialCheckUnitQuadrant(Armies *armies, GameState *game, BattlefieldGrid *battlefield_grid) {
 
     Unit *unit = armies->army->battalions->unit;
@@ -108,10 +106,6 @@ void check_unit_quadrant(Armies *armies, GameState *game, BattlefieldGrid *battl
         int Y = row * game->low_LOD_quadrant_size;
         
         int indexer = row * amountX + column;
-        
-        /*if (indexer < 0 || indexer >= amountX * amountY) {
-            printf("indexer = %d, column = %d, X = %d, row = %d, Y = %d\n", indexer, column, X, row, Y);
-        }*/
 
         if (unit[i].currentQuadrants[0] != quadrant[indexer].id) {
             unit[i].currentQuadrants[0] = 0; // aqui da de ver, quando quadrant 0 mudar, zerar os outros quads

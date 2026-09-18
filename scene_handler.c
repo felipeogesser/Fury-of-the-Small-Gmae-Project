@@ -3,10 +3,6 @@
 #include "game_state_internal.h"
 #include "scene_registry.h"
 
-/*void scene_handler_init(void) {
-
-}*/
-
 void scene_init(enum Scene scene) {
 
     if (engine.window_running) {

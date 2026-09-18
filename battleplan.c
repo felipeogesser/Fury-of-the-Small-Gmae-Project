@@ -25,7 +25,6 @@
 #include <math.h>
 #include <stddef.h>
 #include <stdbool.h>
-//#include <string.h>
 #include <stdio.h>
 
 enum Origin {
@@ -64,7 +63,6 @@ static void render_dragged_general(SDL_Renderer *renderer);
 static void open_general_drawer(void);
 static void close_general_drawer(void);
 static float ease_out_elastic(float x);
-//static float ease_in_elastic(float x);
 static void place_general_on_grid(General **grid_cell, General **general_to_place);
 static void swap_generals(General **general_in_grid, DragPayload *payload);
 static void insert_general_into_drawer(General **general_to_insert);
@@ -130,8 +128,6 @@ static SDL_Rect deployment_area = {
     grid_cell_width_y * GRID_DIMENSION_Y
 };
 
-//static General *grid[GRID_DIMENSION_X][GRID_DIMENSION_Y];
-//static unsigned char grid_general_count = 0;
 static DrawerSlot drawer_slot[10]; // size needs to be established by general count in inventory
 
 #define DRAWER_HANDLE_THICKNESS 40
@@ -139,14 +135,10 @@ static DrawerSlot drawer_slot[10]; // size needs to be established by general co
 #define GENERAL_SCREEN_WIDTH 100
 #define GENERAL_SCREEN_HEIGHT 100
 
-
-//static signed int drawer_padding_x = 50;
 static signed int const drawer_padding_y = 25;
 static signed int const padding_between_generals_x = GENERAL_SCREEN_WIDTH + 50;
 
-
 static signed int pan_offset = 0;
-//static signed int scroll_offset = 0;
 
 void battleplan_init(void) {
 
@@ -154,9 +146,6 @@ void battleplan_init(void) {
     booleans_init();
     variables_init();
     animation_init();
-
-    // this resets the value as it persists between scenes. battleplan needs a future dedicated struct init/reset function
-    battleplan.general_in_grid_count = 0;
 
     signed int drawer_compartment_size = 200;
     drawer = (SDL_Rect){
@@ -166,7 +155,6 @@ void battleplan_init(void) {
         drawer_compartment_size
     };
 
-    //signed int drawer_handle_thickness = 40;
     drawer_handle = (SDL_Rect){
         0,
         (signed int)WINDOW_SIZE_Y - DRAWER_HANDLE_THICKNESS,
@@ -177,11 +165,8 @@ void battleplan_init(void) {
     SDL_Renderer *renderer = engine.renderer;
 
     engine.battleplan = &battleplan;
-
-    if (TTF_Init() == -1) {
-        SDL_Log("TTF_Init failed: %s", TTF_GetError());
-    }
     
+    battleplan.general_in_grid_count = 0;
     battleplan.background.r = 130;
     battleplan.background.g = 43;
     battleplan.background.b = 95;
@@ -206,6 +191,10 @@ void battleplan_init(void) {
     battleplan.button_init_battle.b = 255;
     battleplan.button_init_battle.a = 255;
     battleplan.button_init_battle.text = "Init battle";
+
+    if (TTF_Init() == -1) {
+        SDL_Log("TTF_Init failed: %s", TTF_GetError());
+    }
 
     battleplan_font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24);
     if (!battleplan_font) {
@@ -414,12 +403,9 @@ void battleplan_destroy(void) {
 
     }
 
-    //animation_destroy();
     memory_arena_reset();
 
 }
-
-// static functions
 
 static void booleans_init(void) {
 
@@ -652,7 +638,7 @@ static void handle_mouse_left_button(void) {
 
     }
 
-}//////////////////////////////////////// fix logic error cleaup tava errado, da pra botar parte to cleanup logo dps do if 
+}
 
 static signed int check_if_dragging_general_out_of_grid(void) {
 
@@ -735,7 +721,7 @@ static void battleplan_render_deployment_area(SDL_Renderer *renderer) {
     SDL_RenderFillRect(renderer, &deployment_area);
     
     signed int grid_fishnet_line_width = 6;
-    signed int x = deployment_area.x - grid_fishnet_line_width / 2/* + deployment_area.w / GRID_DIMENSION_X*/;
+    signed int x = deployment_area.x - grid_fishnet_line_width / 2;
     signed int offset_x = deployment_area.w / GRID_DIMENSION_X;
     for (signed int i = 0; i < GRID_DIMENSION_X + 1; i++) {
         
@@ -756,7 +742,7 @@ static void battleplan_render_deployment_area(SDL_Renderer *renderer) {
 
     }
 
-    signed int y = deployment_area.y - grid_fishnet_line_width / 2/* + deployment_area.h / GRID_DIMENSION_Y*/;
+    signed int y = deployment_area.y - grid_fishnet_line_width / 2;
     signed int offset_y = deployment_area.h / GRID_DIMENSION_Y;
     for (signed int i = 0; i < GRID_DIMENSION_Y + 1; i++) {
         
@@ -796,7 +782,7 @@ static void battleplan_render_deployment_area(SDL_Renderer *renderer) {
     );
     SDL_RenderFillRect(renderer, &copy_deployment_area);
     
-    x = copy_deployment_area.x - grid_fishnet_line_width / 2/* + deployment_area.w / GRID_DIMENSION_X*/;
+    x = copy_deployment_area.x - grid_fishnet_line_width / 2;
     for (signed int i = 0; i < GRID_DIMENSION_X + 1; i++) {
         
         SDL_Rect grid_line_vertical = {
@@ -897,8 +883,6 @@ static void render_drawer_generals(SDL_Renderer *renderer) {
                 (signed int) GENERAL_SCREEN_HEIGHT
             };
 
-            //camera_world_to_screen(&sprite_position);
-
             const SDL_Rect *rect1 = &sprite_slice;
             const SDL_Rect *rect2 = &sprite_position;
 
@@ -937,8 +921,6 @@ static void render_dragged_general(SDL_Renderer *renderer) {
         (signed int) GENERAL_SCREEN_WIDTH,
         (signed int) GENERAL_SCREEN_HEIGHT
     };
-
-    //camera_world_to_screen(&sprite_position);
 
     const SDL_Rect *rect1 = &sprite_slice;
     const SDL_Rect *rect2 = &sprite_position;
@@ -985,8 +967,6 @@ static void render_grid_generals(SDL_Renderer *renderer) {
                     (signed int) grid_cell_width_x,
                     (signed int) grid_cell_width_y
                 };
-
-                //camera_world_to_screen(&sprite_position);
 
                 const SDL_Rect *rect1 = &sprite_slice;
                 const SDL_Rect *rect2 = &sprite_position;
@@ -1080,24 +1060,6 @@ static float ease_out_elastic(float x) {
     return powf(2.0f, (-10.0f * x)) * sinf((x * 10.0f - 0.75f) * 2.094395f) + 1.0f; //2.094395f is 2 * pi / 3 approximately
 
 }
-
-/*static float ease_in_elastic(float x) {
-
-    if (x == 0.0f) {
-        printf("y = %f\n", (double)x);
-        drawer_opened = false;
-        return 0.0f;
-    }
-    if (x >= 1.0f) {
-        printf("yyyy = %f\n", (double)x);
-        close_drawer = false;
-        drawer_closed = true;
-        elapsed = 0.0f;
-        return 1.0f;
-    }
-    return -powf(2.0f, 10.0f * x - 10.0f) * sinf((x * 10.0f - 10.75f) * 2.094395f); //2.094395f is 2 * pi / 3 approximately
-
-}*/
 
 static void set_drawer_slot_generals_index(General *general) {
 

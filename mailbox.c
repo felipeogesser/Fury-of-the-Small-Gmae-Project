@@ -47,10 +47,7 @@ void mailbox_letter_pop(Mailbox *mailbox) {
     unsigned int idx = mailbox->letter_count - (mailbox->stack_count - 1) * LETTER_STACK_SIZE;
     Letter letter = {0};
     mailbox->last_stack->letter[idx] = letter;
-    //Letter *letter = &mailbox->last_stack->letter[idx];
-    //letter_destroy(letter);
 
-    //if ((mailbox->letter_count - 1) / mailbox->stack_count == LETTER_STACK_SIZE) {
     if (mailbox->letter_count / mailbox->stack_count == LETTER_STACK_SIZE) {
 
         mailbox_letter_stack_pop_front(mailbox);
@@ -106,4 +103,3 @@ static void mailbox_letter_stack_pop_front(Mailbox *mailbox) {
     mailbox->stack_count--;
 
 }
-

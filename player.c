@@ -1,17 +1,12 @@
 #include "player.h"
 #include "player_internal.h"
 #include "game_state_internal.h"
-//#include "engine_internal.h"
 #include "window_settings.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <SDL2/SDL.h>
 
 static Player player = {0};
-
-/*void init_player(void) {
-    engine.player = &player;
-}*/
 
 static unsigned int player_count = 0;
 

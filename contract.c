@@ -62,33 +62,6 @@ _Bool check_contract(Contract *contract) {
 
 }
 
-/*void sign_contract(Contract *contract) {
-
-
-
-}
-
-void execute_contract(void) {
-
-    typedef struct Position {
-        
-        unsigned int x, y;
-
-    } Position;
-
-    typedef struct GeneralPosition {
-
-        void *general;
-        Position pos;
-
-    }
-
-    GeneralPosition[] = {}
-
-    mailroom.mailbox[engine.game->scene_state.scene].
-
-}*/
-
 void *sign_contract(Contract *contract) {
 
     return contract->body;

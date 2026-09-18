@@ -78,7 +78,7 @@ void camera_world_to_screen(SDL_Rect *sdl_rect) {
 
 }
 
-void camera_render(void) { //mudar
+void camera_render(void) {
 
 }
 

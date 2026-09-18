@@ -5,6 +5,4 @@
 
 Map *map_init(unsigned int mapSizeX, unsigned int mapSizeY, Padding *padding);
 
-//Map *get_map(unsigned int mapId);
-
 #endif

@@ -1,11 +1,11 @@
 #ifndef UNIT_COLLISIOM_H
 #define UNIT_COLLISIOM_H
 
-#include <SDL2/SDL.h>
 #include "armies_types.h"
 #include "unit_types.h"
 #include "game_state_types.h"
 #include "battlefield_grid_types.h"
+#include <SDL2/SDL.h>
 
 void initialCheckUnitQuadrant(Armies *armies, GameState *game, BattlefieldGrid *battlefield_grid);
 void check_unit_quadrant(Armies *armies, GameState *game, BattlefieldGrid *battlefield_grid);

@@ -6,4 +6,5 @@
 
 unsigned int field_table_fields_count(const FieldEntry *field_table);
 size_t field_table_obj_type_size(const FieldEntry *field_table);
+
 #endif

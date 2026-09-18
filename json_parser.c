@@ -4,17 +4,14 @@
 #include "field_entry_internal.h"
 #include "file_io.h"
 #include "type_tables.h"
-//#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-//#include <libgen.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdarg.h>
 
 // private prototypes
-//char *find_file_path(const char *json_file);
 static void read_file_and_retrieve_data(
     void *memory_p,
     char *p,
@@ -37,101 +34,6 @@ static const StringValueEntry string_value_table[] = {
     { "name" }
 };
 #define JSON_STRING_VALUE_TABLE_COUNT (sizeof(string_value_table) / sizeof(string_value_table[0]))
-
-/*char *find_file_path(const char *json_file) {
-
-    #define PATH_CAPACITY 1024
-
-    char *json_file_path = calloc(1, PATH_CAPACITY);
-    if (!json_file_path) {
-
-        fprintf(stderr, "calloc failed in find_file_path\n");
-        exit(EXIT_FAILURE);
-
-    }
-    char exe_path[PATH_CAPACITY];
-    ssize_t len = readlink("/proc/self/exe", exe_path, sizeof(exe_path) - 1);
-    
-    if (len == -1) {
-        
-        free(json_file_path);
-        fprintf(stderr, "readlink failed\n");
-        exit(EXIT_FAILURE);
-
-    }
-    
-    exe_path[len] = '\0';
-
-    char *dir = dirname(exe_path);
-
-    signed int written = snprintf(json_file_path, PATH_CAPACITY, "%s/%s", dir, json_file);
-    if (written < 0 || written >= PATH_CAPACITY) {
-
-        free(json_file_path);
-        fprintf(stderr, "file path too long or encoding error\n");
-        exit(EXIT_FAILURE);
-
-    }
-    #undef PATH_CAPACITY
-
-    return json_file_path;
-
-}*/
-
-/*char *open_read_close_file(const char *json_file) {
-
-    char *json_file_path = find_file_path(json_file);
-
-    FILE *file = fopen(json_file_path, "rb");
-    if (!file) {
-        
-        printf("fopen returned null\n");
-        free(json_file_path);
-        return NULL;
-
-    }
-
-    fseek(file, 0, SEEK_END);
-    long size = ftell(file);
-    if (size == -1) {
-
-        printf("ftell returned -1\n");
-        fclose(file);
-        free(json_file_path);
-        return NULL;
-
-    }
-    fseek(file, 0, SEEK_SET);
-
-    char *buffer = calloc(1, size + 1);
-    if (!buffer) {
-
-        printf("calloc returned null for buffer at open_read_close_file function\n");
-        fclose(file);
-        free(json_file_path);
-        return NULL;
-
-    }
-
-    size_t read = fread(buffer, 1, size, file);
-    if (read != (size_t)size) {
-        
-        printf("fread read fewer bytes than expected\n");
-        free(buffer);
-        fclose(file);
-        free(json_file_path);
-        return NULL;
-
-    }
-    buffer[size] = '\0';
-    
-    fclose(file);
-    free(json_file_path);
-
-    return buffer;
-
-}*/
-
 
 void *get_json_file_data(
     const char *file_name,
@@ -169,10 +71,9 @@ void *get_json_file_data(
     }
 
     char *p = buffer;
-    //void *memory_p = memory_arena_push(obj_size * obj_count, alignment);
     void *memory_p = calloc(obj_count, obj_size);
     read_file_and_retrieve_data(memory_p, p, field_table, obj_count, obj, keys, args_count);
-    // json parser
+
     free(buffer);
     
     va_end(args);
@@ -221,38 +122,9 @@ static void read_file_and_retrieve_data(
 
 }
 
-/*const char *json_structure[] = {
-        "anim",
-        "sprite",
-        "id",
-        "rarity",
-        "hp",
-        "vigour",
-        "attack",
-        "defense",
-        "evasion",
-        "attack_speed",
-        "general_type",
-        "battalion_type"
-};*/
-
-//#define JSON_STRUCTURE_KEYS_COUNT (sizeof(json_structure) / sizeof(json_structure[0]))
-
 static void check_if_keys_needs_reordering(const FieldEntry *field_table, char **keys, unsigned int keys_count) {
 
     unsigned int fields_count = field_table_fields_count(field_table);
-
-    /*_Bool run = true;
-    unsigned int var = 0;
-    unsigned int field_table_count = 0;
-    while (run) {
-
-        run = !(strcmp(field_table[var].key, "obj_size") == 0); 
-        var++;
-        field_table_count++;
-
-    }
-    field_table_count--;*/ // decrement to not count the "obj_size" field entry
 
     signed int tmp[fields_count];
     memset(tmp, -1, sizeof(tmp));
@@ -348,17 +220,6 @@ static signed int key_value_parser(
 
 
     unsigned int fields_count = field_table_fields_count(field_table);
-    /*_Bool run = true;
-    unsigned int var = 0;
-    unsigned int field_table_count = 0;
-    while (run) {
-
-        run = !(strcmp(field_table[var].key, "obj_size") == 0); 
-        var++;
-        field_table_count++;
-
-    }
-    field_table_count--;*/ // decrement to not count the "obj_size" field entry
     size_t obj_size = field_table_obj_type_size(field_table);
 
     char *p = *pp;
@@ -369,7 +230,7 @@ static signed int key_value_parser(
         size_t key_str_len = strlen(keys[j]);
 
         while (*p != '\0') {
-            //printf("%c", *p);
+
             if (*p == *(keys[j]) && *(p - 1) == '"' && *(p + key_str_len) == '"') {
 
                 _Bool key_found = (key_str_len == 1);
@@ -526,10 +387,11 @@ static signed int key_value_parser(
                     }
 
                     if (j + 1 == keys_count) {
+                        
                         *pp = p;
                         parsing_succesful = true;
-                        //printf("parsing success\n");
                         return 0;
+                        
                     }
 
                     break;

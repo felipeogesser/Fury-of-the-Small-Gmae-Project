@@ -4,9 +4,7 @@
 #include <math.h>
 
 // private prototypes
-//static void set_battalion_position(Battalion *battalion, unsigned int x, unsigned int y);
 static void set_battalion_formation(Battalion *battalion, unsigned int formation_width, unsigned int formation_height, unsigned int padding_between_units_x, unsigned int padding_between_units_y);
-//static void set_battalion_dimension(Battalion *battalion, unsigned int battalion_width, unsigned int battalion_height);
 
 static const FieldEntry field_table[] = {
 
@@ -25,8 +23,6 @@ static const FieldEntry field_table[] = {
     #undef SIZE_OF
 
 };
-//const size_t battalion_field_table_count =
-//    sizeof(battalion_field_table) / sizeof(battalion_field_table[0]);
 
 const FieldEntry *const battalion_field_table = field_table;
 
@@ -34,8 +30,6 @@ void init_battalion(Battalion *battalion, unsigned int battalion_size) {
     
     battalion->unit_count = battalion_size;
 
-    //unsigned int battalion_width = 50;
-    //unsigned int battalion_height = 100;
     unsigned int formation_height = 10;
     unsigned int formation_width = ceilf(battalion_size / formation_height);
     unsigned int padding_between_units_x = 5;
@@ -48,8 +42,6 @@ void init_battalion(Battalion *battalion, unsigned int battalion_size) {
         padding_between_units_x,
         padding_between_units_y
     );
-
-    //set_battalion_dimension(battalion, battalion_width, battalion_height);
 
 }
 
@@ -66,10 +58,3 @@ static void set_battalion_formation(
     battalion->padding_between_units_y = padding_between_units_y;
 
 }
-
-/*static void set_battalion_dimension(Battalion *battalion, unsigned int battalion_width, unsigned int battalion_height) {
-
-    battalion->area_width = battalion_width;
-    battalion->area_height = battalion_height;
-
-}*/
