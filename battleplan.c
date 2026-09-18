@@ -319,6 +319,8 @@ void battleplan_update(void) {
 
     }
 
+    animation_tick();
+    
     void *general = drawer_slot[0].general;
     animation_update(
         general,

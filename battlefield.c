@@ -140,6 +140,8 @@ void battlefield_update(void) {
 
     camera_update();
 
+    animation_tick();
+    
     animation_update(
         engine.armies->army->general->battalions->unit,
         sizeof(Unit),

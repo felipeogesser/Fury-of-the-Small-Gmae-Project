@@ -5,6 +5,7 @@
 #include <stddef.h>
 
 void animation_init(void);
+void animation_tick(void);
 void animation_update(
     void *object,
     size_t sizeof_obj,
