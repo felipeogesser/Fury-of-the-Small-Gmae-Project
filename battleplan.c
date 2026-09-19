@@ -1116,7 +1116,7 @@ static void render_enemy_grid_generals(SDL_Renderer *renderer) {
 
                 SDL_Texture *texture = sprite->texture;
 
-                SDL_RenderCopy(renderer, texture, rect1, rect2);
+                SDL_RenderCopyEx(renderer, texture, rect1, rect2, 0, NULL, SDL_FLIP_HORIZONTAL);
 
             }
 
