@@ -13,5 +13,4 @@ void battlefield_render(void);
 
 void battlefield_destroy(void);
 
-
 #endif

@@ -1,0 +1,28 @@
+name: Build
+ 
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+ 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+ 
+      - name: Install SDL2 and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsdl2-dev libsdl2-ttf-dev libsdl2-image-dev
+ 
+      - name: Compile game (release)
+        run: make
+ 
+      - name: Confirm binary was produced
+        run: |
+          test -f game && echo "Build succeeded"
+ 

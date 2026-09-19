@@ -1,5 +1,6 @@
 #include "window.h"
-#include "engine.h"
+#include "engine_internal.h"
+#include "window_settings.h"
 #include <SDL2/SDL.h>
 
 static void create_SDL_window(void) {

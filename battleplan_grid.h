@@ -1,0 +1,4 @@
+#ifndef BATTLEPLAN_GRID_H
+#define BATTLEPLAN_GRID_H
+
+#endif
