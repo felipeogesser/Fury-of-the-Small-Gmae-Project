@@ -6,7 +6,7 @@
 
 typedef struct Battlefield {
 
-    GeneralPayload *general_payload;
+    GeneralPayload *general_payload[2]; // 2 == max number of armies per battlefield
 
 } Battlefield;
 

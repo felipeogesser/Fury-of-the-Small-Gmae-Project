@@ -33,10 +33,10 @@ void update_units_position(Unit *unit, unsigned int unit_count, signed int x, si
 static void set_units_id(Unit *unit, unsigned int battalion_size);
 static void set_units_dimension(Unit *unit, unsigned int battalion_size);
 static void set_units_sprite_and_animation(Unit *unit, General *general, unsigned int battalion_size);
-static void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *battalion, unsigned int x, unsigned int y);
+static void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *battalion, unsigned int x, unsigned int y, _Bool is_enemy_army);
 
 
-void init_units(Battalion *battalion, unsigned int x, unsigned int y) {
+void init_units(Battalion *battalion, unsigned int x, unsigned int y, _Bool is_enemy_army) {
     // this function expects to be called only when generals are already initialized
     General *general = battalion->general;
     Unit *unit = battalion->unit;
@@ -45,7 +45,7 @@ void init_units(Battalion *battalion, unsigned int x, unsigned int y) {
     set_units_id(unit, battalion_size);
     set_units_sprite_and_animation(unit, general, battalion_size);
     set_units_dimension(unit, battalion_size);
-    set_units_position(unit, battalion_size, battalion, x, y);
+    set_units_position(unit, battalion_size, battalion, x, y, is_enemy_army);
 
 }
 
@@ -109,7 +109,7 @@ static void set_units_dimension(Unit *unit, unsigned int battalion_size) {
 
 }
 
-static void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *battalion, unsigned int x, unsigned int y) {
+static void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *battalion, unsigned int x, unsigned int y, _Bool is_enemy_army) {
 
     unsigned int formation_height = battalion->unit_formation_height;
     unsigned int formation_width = ceilf(battalion_size / battalion->unit_formation_height);
@@ -121,17 +121,11 @@ static void set_units_position(Unit *unit, unsigned int battalion_size, Battalio
     unsigned int pos_y = y;
     unsigned int dim_x = unit->dimensionX;
     unsigned int dim_y = unit->dimensionY;
-    if (battalion_size < formation_height) {
 
-        pos_x -= dim_x * 2;
-        pos_y -= dim_y / 2 - (dim_y + pad_y) * battalion_size / 2;
-        
-    } else {
-
-        pos_x -= dim_x * 2;
-        pos_y += dim_y / 2 - (dim_y + pad_y) * formation_height / 2;
-        
-    }
+    signed int aux = dim_x * 2;
+    pos_x += is_enemy_army ? aux : -aux;
+    pos_y += (dim_y / 2 - (dim_y + pad_y) * battalion_size / 2) * (battalion_size < formation_height);
+    pos_y += (dim_y / 2 - (dim_y + pad_y) * formation_height / 2) * (battalion_size < formation_height);
 
     unsigned int idx = 0;
     for (unsigned int i = 0; i < formation_width; i++) {

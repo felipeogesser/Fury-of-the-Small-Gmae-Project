@@ -34,6 +34,7 @@
 #include <stdbool.h>
 
 // private prototypes
+static void load_armies_onto_battlefield(GeneralPayload **general_payload, unsigned int armies_count, unsigned int battalion_size);
 static void render_generals(void);
 static void render_units(void);
 
@@ -50,12 +51,12 @@ void battlefield_init(void) {
 
     Mailbag mailbag = mailroom_fetch_new_letters();
 
-    for (unsigned int i = 0; i < mailbag.new_letter_count; i++) {
+    for (unsigned int i = 0, j = 0; i < mailbag.new_letter_count; i++) {
 
         Contract *contract = mailbag.letters[i].contract;
         if (check_contract(contract)) {
 
-            battlefield.general_payload = sign_contract(contract);
+            battlefield.general_payload[j++] = (GeneralPayload *)sign_contract(contract);
 
         }
 
@@ -68,14 +69,10 @@ void battlefield_init(void) {
     unsigned int player_id = create_player(50 ,1000, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
     engine.player = get_player(player_id);
 
-    unsigned int armies_count = 1;
-    unsigned int battalion_count = battlefield.general_payload->general_count;
-    unsigned int battalion_size = 50;
-    init_armies_memory_arena(armies_count, battalion_count, battalion_size);
-    GeneralPayload *general_payload = battlefield.general_payload;
-    load_armies_into_arena(general_payload, armies_count, battalion_count, battalion_size);
-    free(general_payload->general_and_pos);
-    general_payload = NULL;
+    unsigned int armies_count = 2;
+    unsigned int battalion_size = 50;    
+    load_armies_onto_battlefield(battlefield.general_payload, armies_count, battalion_size);
+
     mailbag_letters_destroy(&mailbag);
 
     calculateAmountOfQuadrants();
@@ -270,96 +267,133 @@ void battlefield_destroy(void) {
 
 }
 
-static void render_generals(void) {
+static void load_armies_onto_battlefield(GeneralPayload **general_payload, unsigned int armies_count, unsigned int battalion_size) {
 
-
-    SDL_Renderer *renderer = engine.renderer;
-    General *general = engine.armies->army->general;
-    unsigned int general_count = engine.armies->army->general_count;
-
-    for (unsigned int i = 0; i < general_count; i++) {
-
-        AnimationState *anim = &general[i].anim;
-        SpriteInfo *spr = &general[i].sprite;
-
-        enum Animation animation = anim->animation;
-        enum Sprites type = spr->type;
-        
-        Sprite *sprite = &engine.sprite_pack->sprite[type][animation];
-
-        signed int png_width = sprite->width;
-        signed int png_height = sprite->height;
-        signed int sprite_frame_width = png_width / sprite->frames_count;
-        signed int sprite_frame_height = png_height;
-
-        SDL_Rect sprite_slice = {
-            (sprite_frame_width * anim->current_frame),
-            0,
-            sprite_frame_width,
-            sprite_frame_height
-        };
-
-        SDL_Rect sprite_position = {
-            (signed int)general[i].positionX,
-            (signed int)general[i].positionY,
-            (signed int)sprite_frame_width,
-            (signed int)sprite_frame_height
-        };
-        
-        camera_world_to_screen(&sprite_position);
-
-        const SDL_Rect *rect1 = &sprite_slice;
-        const SDL_Rect *rect2 = &sprite_position;
-
-        SDL_Texture *texture = sprite->texture;
-        SDL_RenderCopy(renderer, texture, rect1, rect2);
+    init_armies_memory_arena(general_payload, armies_count, battalion_size);
     
+    load_armies_into_arena(general_payload, armies_count, battalion_size);
+    
+    for (unsigned int i = 0; i < armies_count; i++) {
+
+        free(general_payload[i]->general_and_pos);
+        general_payload[i]->general_and_pos = NULL;
+
+    }
+
+}
+
+static void render_generals(void) {
+    
+    for (unsigned int h = 0; h < engine.armies->armies_count; h++) {
+
+        General *general = engine.armies->army[h].general;
+        unsigned int general_count = engine.armies->army[h].general_count;
+        for (unsigned int i = 0; i < general_count; i++) {
+
+            AnimationState *anim = &general[i].anim;
+            SpriteInfo *spr = &general[i].sprite;
+
+            enum Animation animation = anim->animation;
+            enum Sprites type = spr->type;
+            
+            Sprite *sprite = &engine.sprite_pack->sprite[type][animation];
+
+            signed int png_width = sprite->width;
+            signed int png_height = sprite->height;
+            signed int sprite_frame_width = png_width / sprite->frames_count;
+            signed int sprite_frame_height = png_height;
+
+            SDL_Rect sprite_slice = {
+                (sprite_frame_width * anim->current_frame),
+                0,
+                sprite_frame_width,
+                sprite_frame_height
+            };
+
+            SDL_Rect sprite_position = {
+                (signed int)general[i].positionX,
+                (signed int)general[i].positionY,
+                (signed int)sprite_frame_width,
+                (signed int)sprite_frame_height
+            };
+            
+            camera_world_to_screen(&sprite_position);
+
+            const SDL_Rect *rect1 = &sprite_slice;
+            const SDL_Rect *rect2 = &sprite_position;
+
+            SDL_Renderer *renderer = engine.renderer;
+            SDL_Texture *texture = sprite->texture;
+            if (h == 0) {
+            
+                SDL_RenderCopy(renderer, texture, rect1, rect2);
+
+            } else if (h == 1) {
+
+                SDL_RenderCopyEx(renderer, texture, rect1, rect2, 0, NULL, SDL_FLIP_HORIZONTAL);
+
+            }
+        
+        }
+
     }
 
 }
 static void render_units(void) {
-
-    SDL_Renderer *renderer = engine.renderer;
-    Unit *unit = engine.armies->army->general->battalions->unit;
-    unsigned int unit_count = engine.armies->army->general->battalions->unit_count;
-    unsigned int battalion_count =  engine.armies->army->battalion_count;
-    for (unsigned int i = 0; i < battalion_count * unit_count; i++) {
-
-        AnimationState *anim = &unit[i].anim;
-        SpriteInfo *spr = &unit[i].sprite;
-
-        enum Animation animation = anim->animation;
-        enum Sprites type = spr->type;
-        
-        Sprite *sprite = &engine.sprite_pack->sprite[type][animation];
-
-        signed int png_width = sprite->width;
-        signed int png_height = sprite->height;
-        signed int sprite_frame_width = png_width / sprite->frames_count;
-        signed int sprite_frame_height = png_height;
-
-        SDL_Rect sprite_slice = {
-            (sprite_frame_width * anim->current_frame),
-            0,
-            sprite_frame_width,
-            sprite_frame_height
-        };
-
-        SDL_Rect sprite_position = {
-            (signed int)unit[i].positionX,
-            (signed int)unit[i].positionY,
-            (signed int)sprite_frame_width,
-            (signed int)sprite_frame_height
-        };
-        
-        camera_world_to_screen(&sprite_position);
-
-        const SDL_Rect *rect1 = &sprite_slice;
-        const SDL_Rect *rect2 = &sprite_position;
-
-        SDL_Texture *texture = sprite->texture;
-        SDL_RenderCopy(renderer, texture, rect1, rect2);
     
+    for (unsigned int h = 0; h < engine.armies->armies_count; h++) {
+
+        Unit *unit = engine.armies->army[h].general->battalions->unit;
+        unsigned int battalion_size = engine.armies->army[h].general->battalions->unit_count;
+        unsigned int battalion_count =  engine.armies->army[h].battalion_count;
+        for (unsigned int i = 0; i < battalion_count * battalion_size; i++) {
+
+            AnimationState *anim = &unit[i].anim;
+            SpriteInfo *spr = &unit[i].sprite;
+
+            enum Animation animation = anim->animation;
+            enum Sprites type = spr->type;
+            
+            Sprite *sprite = &engine.sprite_pack->sprite[type][animation];
+
+            signed int png_width = sprite->width;
+            signed int png_height = sprite->height;
+            signed int sprite_frame_width = png_width / sprite->frames_count;
+            signed int sprite_frame_height = png_height;
+
+            SDL_Rect sprite_slice = {
+                (sprite_frame_width * anim->current_frame),
+                0,
+                sprite_frame_width,
+                sprite_frame_height
+            };
+
+            SDL_Rect sprite_position = {
+                (signed int)unit[i].positionX,
+                (signed int)unit[i].positionY,
+                (signed int)sprite_frame_width,
+                (signed int)sprite_frame_height
+            };
+            
+            camera_world_to_screen(&sprite_position);
+
+            const SDL_Rect *rect1 = &sprite_slice;
+            const SDL_Rect *rect2 = &sprite_position;
+
+            SDL_Renderer *renderer = engine.renderer;
+            SDL_Texture *texture = sprite->texture;
+            if (h == 0) {
+                
+                SDL_RenderCopy(renderer, texture, rect1, rect2);
+
+            } else if (h == 1) {
+
+                SDL_RenderCopyEx(renderer, texture, rect1, rect2, 0, NULL, SDL_FLIP_HORIZONTAL);
+
+            }
+        
+        }
+
     }
 
 }
