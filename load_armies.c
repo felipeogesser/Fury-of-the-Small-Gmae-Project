@@ -70,6 +70,8 @@ void init_armies_memory_arena(GeneralPayload **general_payload, unsigned int arm
         general_payload, armies, army, general, battalions, unit,
         armies_count, battalion_size);
 
+    engine.armies->total_battalion_count = total_battalion_count;
+
 }
 
 void load_armies_into_arena(GeneralPayload **general_payload, unsigned int armies_count, unsigned int battalion_size) {
@@ -124,7 +126,7 @@ static void link_army_memory_hierarchy(
             engine.armies->army[i].battalions[j].unit_screen_height = 20;
         }
 
-        previous_battalion_count = battalion_count;
+        previous_battalion_count += battalion_count;
 
     }
 

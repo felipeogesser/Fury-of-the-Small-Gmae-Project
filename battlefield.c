@@ -185,13 +185,9 @@ void battlefield_render(void) {
     SDL_SetRenderDrawColor(renderer, 255, 104, 230, 255);
     SDL_RenderFillRect(renderer, &player_render);
 
-    unsigned int armies_count = armies->armies_count;
-    unsigned int battalion_count = armies->army->battalion_count;
-
     Battalion *battalions = armies->army->battalions;
     unsigned int unit_count = battalions->unit_count;
-
-    for (unsigned int i = 0; i < armies_count * battalion_count; i++) {
+    for (unsigned int i = 0; i < armies->total_battalion_count; i++) {
         
         Unit *unit = battalions[i].unit;
         General *general = armies->army->general;

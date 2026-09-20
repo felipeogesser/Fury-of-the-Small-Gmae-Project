@@ -124,8 +124,6 @@ static void set_units_position(Unit *unit, unsigned int battalion_size, Battalio
 
     pos_x -= (dim_x + pad_x) * !is_enemy_army;
     pos_x += (dim_x + pad_x) * formation_width * is_enemy_army;
-    //signed int aux = (dim_x + pad_x) * formation_width * is_enemy_army;
-    //pos_x += is_enemy_army ? aux : -aux;
     pos_y += (dim_y / 2 - (dim_y + pad_y) * battalion_size / 2) * (battalion_size < formation_height);
     pos_y += (dim_y / 2 - (dim_y + pad_y) * formation_height / 2) * !(battalion_size < formation_height);
 
