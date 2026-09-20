@@ -2,6 +2,8 @@
 #include "mailbag_internal.h"
 #include "letter.h"
 #include "letter_internal.h"
+#include <stddef.h>
+#include <stdlib.h>
 
 void mailbag_letters_destroy(Mailbag *mailbag) {
 
@@ -10,5 +12,8 @@ void mailbag_letters_destroy(Mailbag *mailbag) {
         letter_destroy(&mailbag->letters[i]);
 
     }
+    free(mailbag->letters);
+    mailbag->letters = NULL;
+    //letter_destroy(&mailbag->letters);
 
 }
