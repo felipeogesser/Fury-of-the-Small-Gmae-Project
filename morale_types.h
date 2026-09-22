@@ -1,0 +1,34 @@
+#ifndef MORALE_TYPES_H
+#define MORALE_TYPES_H
+
+enum MoraleModifierValues {
+
+    VALUE_SORROUNDED = -10,
+    VALUE_GENERAL_WOUNDED = -5,
+    VALUE_FLANKED = -5,
+    VALUE_STRONGER_ENEMIES_NEARBY = -5,
+    VALUE_LOSING_CURRENT_COMBAT = -5,
+    VALUE_BEING_CHARGED_AT = -5,
+    VALUE_ARMY_LOSSES = -5, // dynamic
+    VALUE_DAMAGE_SUSTAINED = -1, // dynamic
+    VALUE_FLANKS_SECURED = 5,
+    VALUE_WINNING_CURRENT_COMBAT = 5
+
+};
+
+enum MoraleModifierFlags {
+
+    FLAG_SORROUNDED = (1 << 0),
+    FLAG_GENERAL_WOUNDED = (1 << 1),
+    FLAG_FLANKED = (1 << 2),
+    FLAG_STRONGER_ENEMIES_NEARBY = (1 << 3),
+    FLAG_LOSING_CURRENT_COMBAT = (1 << 4),
+    FLAG_BEING_CHARGED_AT = (1 << 5),
+    FLAG_ARMY_LOSSES = (1 << 6),
+    FLAG_DAMAGE_SUSTAINED = (1 << 7),
+    FLAG_FLANKS_SECURED = (1 << 8),
+    FLAG_WINNING_CURRENT_COMBAT = (1 << 9)
+
+};
+
+#endif
