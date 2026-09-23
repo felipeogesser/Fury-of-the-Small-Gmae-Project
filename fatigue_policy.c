@@ -1,6 +1,5 @@
 #include "fatigue_policy.h"
 #include "fatigue_types.h"
-#include <SDL2/SDL.h>
 
 float evaluate_fatigue_current(unsigned int base, float current, _Bool is_active, float dt) {
 
