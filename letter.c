@@ -26,6 +26,8 @@ void letter_send(Letter *letter) {
 void letter_destroy(Letter *letter) {
 
     contract_destroy(letter->contract);
-    free(letter);
+    Letter letter_aux = {0};
+    *letter = letter_aux;
+    //free(letter);
 
 }

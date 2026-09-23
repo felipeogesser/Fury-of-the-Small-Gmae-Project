@@ -1,33 +1,24 @@
 #include "game_loop.h"
 #include "engine_internal.h"
+#include "game_clock.h"
 #include "game_state_internal.h"
 #include "peripherals.h"
 #include "scene_handler.h"
 #include "scenes.h"
 #include "window.h"
-#include <SDL2/SDL.h>
 
 void game_loop(void) {
 
     GameState *game = engine.game;
+    _Bool *window_running = &engine.window_running;
 
     scene_init(MAIN_MENU);
 
-    Uint64 FrameStart = SDL_GetPerformanceCounter();
-    engine.FrameStart = FrameStart;
-    Uint64 FrameEnd;
-    Uint64 FrameTicks;
-
-    _Bool *window_running = &engine.window_running;
-
+    game_clock_start();
+    
     while (*window_running) {
 
-        FrameEnd = SDL_GetPerformanceCounter();
-        engine.FrameEnd = FrameEnd;
-        FrameTicks = SDL_GetPerformanceFrequency();
-        engine.FrameTicks = FrameTicks;
-        game->delta = (float)(FrameEnd - FrameStart) / (float)FrameTicks;
-        FrameStart = FrameEnd;
+        game->delta = game_clock_advance();
 
         switch(game->scene_state.scene) {
 
