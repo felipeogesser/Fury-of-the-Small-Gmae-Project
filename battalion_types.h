@@ -3,6 +3,8 @@
 
 #include "field_entry_types.h"
 
+#define RALLY_TIMER 5.0f // 5 seconds
+
 typedef struct Battalion Battalion;
 
 extern const FieldEntry *const battalion_field_table;

@@ -35,6 +35,17 @@ void animation_tick(void) {
     }
 }
 
+/*static float frame_timer = FRAME_DURATION;
+void animation_tick(float dt) {
+    frame_timer -= dt;
+    if (frame_timer <= 0.0f) {
+        frame_timer = FRAME_DURATION;
+        advance_frame = true;
+    } else {
+        advance_frame = false;
+    }
+}*/
+
 void animation_update(
     void *object,
     const size_t sizeof_obj,

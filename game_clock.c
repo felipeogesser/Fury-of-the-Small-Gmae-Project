@@ -20,9 +20,9 @@ void game_clock_start(void) {
 
 float game_clock_advance(void) {
 
-    Uint64 frame_end = SDL_GetPerformanceCounter()
-    Uint64 frame_ticks = SDL_GetPerformanceFrequency();
-    float delta_time = (float)(frame_end - clock.frame_start) / (float)frame_ticks;
+    Uint64 frame_end = SDL_GetPerformanceCounter();
+    Uint64 frequency = SDL_GetPerformanceFrequency();
+    float delta_time = (float)(frame_end - clock.frame_start) / (float)frequency;
     clock.frame_start = frame_end;
     clock.frame_end = frame_end;
     return delta_time;

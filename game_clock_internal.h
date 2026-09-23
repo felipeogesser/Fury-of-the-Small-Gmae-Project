@@ -6,9 +6,9 @@
 
 typedef struct GameClock {
 
-    Uint64 FrameStart;
-    Uint64 FrameEnd;
-    Uint64 FrameTicks;
+    Uint64 frame_start;
+    Uint64 frame_end;
+    Uint64 frequency;
 
 } GameClock;
 
