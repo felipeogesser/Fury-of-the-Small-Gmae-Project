@@ -8,6 +8,7 @@
 #include "battlefield_types.h"
 #include "battleplan_types.h"
 #include "camera_types.h"
+#include "game_clock_types.h"
 #include "game_state_types.h"
 #include "inventory_types.h"
 #include "main_menu_types.h"
@@ -35,9 +36,7 @@ typedef struct Engine {
     
     // timing
     float delta;
-    Uint64 FrameStart;
-    Uint64 FrameEnd;
-    Uint64 FrameTicks;
+    GameClock *clock;
     Uint64 perfFreq;
 
     // animation
