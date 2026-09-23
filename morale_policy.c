@@ -1,12 +1,23 @@
 #include "morale_policy.h"
 #include "morale_types.h"
-#include "battalion_types.h"
 
 // private prototypes
 static signed int army_losses(signed int balance_of_power);
 static signed int damage_sustained(unsigned int max_hp, unsigned int current_hp);
 
-signed int evaluate_static_morale_modifiers(unsigned int modifiers) {
+
+enum MoraleState evaluate_morale_state(unsigned int base, signed int current) {
+
+    unsigned int aux = base / MORALE_STATE_COUNT;
+    signed int result = ((signed int)base - current + (aux)) / aux - 1;
+    enum MoraleState state = result * !(result < 0);
+    state = (state < MORALE_STATE_COUNT) ? state : (MORALE_STATE_COUNT - 1);
+
+    return state;
+
+}
+
+signed int evaluate_morale_static_modifiers(unsigned int modifiers) {
 
     signed int delta = 0;
 
@@ -25,7 +36,7 @@ signed int evaluate_static_morale_modifiers(unsigned int modifiers) {
 
 }
 
-signed int evaluate_dynamic_morale_modifiers(unsigned int modifiers, unsigned int max_hp, unsigned int current_hp, signed int balance_of_power) {
+signed int evaluate_morale_dynamic_modifiers(unsigned int modifiers, unsigned int max_hp, unsigned int current_hp, signed int balance_of_power) {
 
     signed int delta = 0;
     if (modifiers & FLAG_ARMY_LOSSES) {
@@ -50,6 +61,6 @@ static signed int army_losses(signed int balance_of_power) {
 
 static signed int damage_sustained(unsigned int max_hp, unsigned int current_hp) {
 
-    return ((float)max_hp / (float)(current_hp + 0.1f)) * VALUE_DAMAGE_SUSTAINED;
+    return (max_hp / (current_hp + 1)) * VALUE_DAMAGE_SUSTAINED;
 
 }

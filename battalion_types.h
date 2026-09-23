@@ -8,7 +8,7 @@ typedef struct Battalion Battalion;
 extern const FieldEntry *const battalion_field_table;
 
 // Battalion AI policies
-enum BattalionFLags {
+/*enum BattalionPolicies {
 
     STATIONARY = (1 << 0),
     WALKING = (1 << 1),
@@ -21,6 +21,21 @@ enum BattalionFLags {
     WITHDRAWN = (1 << 8),
     WIPED_OUT = (1 << 9)
 
+};*/
+
+enum BattalionLifecycle {
+    NORMAL,
+    ROUTING,
+    WITHDRAWN,
+    WIPED_OUT
+};
+
+enum BattalionMovementMode {
+    STATIONARY,
+    WALKING,
+    RUNNING,
+    CHARGING,
+    BRACING
 };
 
 #endif

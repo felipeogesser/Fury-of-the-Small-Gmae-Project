@@ -1,6 +1,8 @@
 #ifndef MORALE_TYPES_H
 #define MORALE_TYPES_H
 
+typedef struct Morale Morale;
+
 enum MoraleModifierValues {
 
     VALUE_SORROUNDED = -10,
@@ -28,6 +30,16 @@ enum MoraleModifierFlags {
     FLAG_DAMAGE_SUSTAINED = (1 << 7),
     FLAG_FLANKS_SECURED = (1 << 8),
     FLAG_WINNING_CURRENT_COMBAT = (1 << 9)
+
+};
+
+enum MoraleState {
+
+    EAGER = 0,
+    CONFIDENT,
+    WAVERING,
+    SHATTERED,
+    MORALE_STATE_COUNT
 
 };
 
