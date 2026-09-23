@@ -8,8 +8,8 @@ static signed int damage_sustained(unsigned int max_hp, unsigned int current_hp)
 
 enum MoraleState evaluate_morale_state(unsigned int base, signed int current) {
 
-    unsigned int aux = base / MORALE_STATE_COUNT;
-    signed int result = ((signed int)base - current + (aux)) / aux - 1;
+    unsigned int bucket_size = base / MORALE_STATE_COUNT;
+    signed int result = ((signed int)base - current + (bucket_size)) / bucket_size - 1;
     enum MoraleState state = result * !(result < 0);
     state = (state < MORALE_STATE_COUNT) ? state : (MORALE_STATE_COUNT - 1);
 

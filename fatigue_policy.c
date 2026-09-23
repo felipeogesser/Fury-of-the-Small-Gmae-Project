@@ -21,3 +21,33 @@ enum FatigueState evaluate_fatigue_state(unsigned int base, float current) {
     return (base - current + (aux)) / aux - 1;
 
 }
+
+
+
+
+
+
+
+
+enum FatigueState evaluate_fatigue_state(unsigned int base, float current) {
+
+    unsigned int bucket_size = base / FATIGUE_STATE_COUNT;
+    //current = (current < 1.0f) ? 1.0f : current;
+    signed int result = (base - current + (bucket_size)) / bucket_size - 1;
+    enum FatigueState state = result * !(result < 0);
+    state = (state < FATIGUE_STATE_COUNT) ? state : (FATIGUE_STATE_COUNT - 1);
+    return state;
+    
+}
+
+
+enum MoraleState evaluate_morale_state(unsigned int base, signed int current) {
+
+    unsigned int bucket_size = base / MORALE_STATE_COUNT;
+    signed int result = ((signed int)base - current + (bucket_size)) / bucket_size - 1;
+    enum MoraleState state = result * !(result < 0);
+    state = (state < MORALE_STATE_COUNT) ? state : (MORALE_STATE_COUNT - 1);
+
+    return state;
+
+}
