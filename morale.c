@@ -16,6 +16,7 @@ void morale_update(Battalion *battalion, signed int balance_of_power) {
 
     unsigned int base = morale.base;
     signed int current = morale.current;
-    battalion->morale.state = evaluate_morale_state(base, current);
+    morale.state = evaluate_morale_state(base, current);
+    battalion->morale = morale;
 
 }

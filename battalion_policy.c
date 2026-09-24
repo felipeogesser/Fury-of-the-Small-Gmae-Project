@@ -4,31 +4,26 @@
 #include <stdbool.h>
 
 // private prototypes
+static void update_rally(Battalion *battalion, float dt);
+static void update_lifecycle(Battalion *battalion);
 static Rally evaluate_rally(Rally rally, enum BattalionLifecycle lifecycle, signed int morale_current, float dt);
 static enum BattalionLifecycle evaluate_lifecycle(BattalionStatistics statistics, _Bool rallying, signed int morale_current);
 
-/* future stuff
 void evaluate_battalion_state(Battalion *battalion) {
 
-
-
-
-}
-
-void battalion_update_flags(Battalion *battalion) {
-
-    battalion->state.lifecycle = evaluate_lifecycle(battalion->state.lifecycle);
     //battalion->state.movement = evaluate_movement(battalion->state.movement);
     //battalion->state.headless = evaluate_headless(battalion->state.headless);
     
+    update_rally(battalion, dt);
+    update_lifecycle(battalion);
 
+}
 
+void battalion_update_flags(Battalion *battalion, float dt) {
 
+}
 
-
-}*/
-
-void update_rally(Battalion *battalion,float dt) {
+static void update_rally(Battalion *battalion, float dt) {
 
     Rally rally = battalion->state.rally;
     enum BattalionLifecycle lifecycle = battalion->state.lifecycle;
@@ -38,14 +33,13 @@ void update_rally(Battalion *battalion,float dt) {
 
 }
 
-void update_lifecycle(Battalion *battalion) {
+static void update_lifecycle(Battalion *battalion) {
 
     BattalionStatistics statistics = battalion->statistics;
     _Bool rallying = battalion->state.rally.rallying;
     signed int morale_current = battalion->morale.current;
     
     battalion->state.lifecycle = evaluate_lifecycle(statistics, rallying, morale_current);
-
 
 }
 
