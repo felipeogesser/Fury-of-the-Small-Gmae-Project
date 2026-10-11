@@ -3,15 +3,14 @@
 #include "field_entry.h"
 #include "field_entry_internal.h"
 #include "memory_arena.h"
-#include "table_types.h"
+#include "table_internal.h"
 #include <stddef.h>
 
 // private prototypes
 static void allocate_soa_memory(
     unsigned int obj_count,
     BattalionOrderTable *player_order_table,
-    BattalionOrderTable *enemy_order_table,
-    ComplexFieldEntry *battalion_order_table_field_table_ptr);
+    BattalionOrderTable *enemy_order_table);
 static void allocate_mem(unsigned int obj_count, const ComplexFieldEntry *field_table, void *order_table);
 
 static void *battalion_order_table_start_address_alloc = NULL;
@@ -44,20 +43,18 @@ void battalion_order_table_init(Table *player_tables, Table *enemy_tables, unsig
     allocate_soa_memory(
         battalion_count,
         &player_order_table,
-        &enemy_order_table,
-        battalion_order_table_field_table_ptr
+        &enemy_order_table
     );
 
-    player_tables->battalion_order = (BattalionOrderTable)player_order_table;
-    enemy_tables->battalion_order = (BattalionOrderTable)enemy_order_table;
+    player_tables->battalion_order = player_order_table;
+    enemy_tables->battalion_order = enemy_order_table;
 
 }
 
 static void allocate_soa_memory(
     unsigned int obj_count,
     BattalionOrderTable *player_order_table,
-    BattalionOrderTable *enemy_order_table,
-    ComplexFieldEntry *battalion_order_table_field_table_ptr) {
+    BattalionOrderTable *enemy_order_table) {
 
     battalion_order_table_start_address_alloc = memory_arena_current_pointer();
     allocate_mem(obj_count, battalion_order_table_field_table_ptr, player_order_table);
@@ -69,15 +66,15 @@ static void allocate_mem(unsigned int obj_count, const ComplexFieldEntry *field_
 
     unsigned int fields_count = complex_field_table_fields_count(field_table);
     size_t size = 0;
-    size_t aligment = 64;
+    size_t alignment = 64;
     for (unsigned int i = 0; i < fields_count; i++) {
 
         size = field_table[i].size * obj_count;
-        //aligment = size & -size;
-        //aligment = (alignment <= 64) ? aligment : 64;
+        //alignment = size & -size;
+        //alignment = (alignment <= 64) ? alignment : 64;
 
         size_t size_padded = (size + 63) & ~(size_t)63;
-        void **dest = &((char *)mock + field_table[i].offset);
+        void **dest = (void **)((char *)order_table + field_table[i].offset);
         *dest = memory_arena_push(size_padded, alignment);
 
     }

@@ -1,6 +1,8 @@
 #ifndef AI_ORDER_TYPES_H
 #define AI_ORDER_TYPES_H
 
+#include "field_entry_types.h"
+
 typedef struct BattalionOrderTable BattalionOrderTable;
 
 enum OrderType {

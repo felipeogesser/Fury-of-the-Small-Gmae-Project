@@ -6,11 +6,11 @@
 
 typedef struct BattalionOrderTable {
 
-    enum OrderType *const type;
-    enum BattalionMovementPace *const pace;
-    unsigned int *const target;
-    float *const dest_x;
-    float *const dest_y;
+    enum OrderType *type;
+    enum BattalionMovementPace *pace;
+    unsigned int *target;
+    float *dest_x;
+    float *dest_y;
 
 } BattalionOrderTable;
 

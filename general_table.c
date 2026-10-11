@@ -724,12 +724,12 @@ static void allocate_mem_for_mock(unsigned int obj_count, const ComplexFieldEntr
 
     unsigned int fields_count = complex_field_table_fields_count(field_table);
     size_t size = 0;
-    size_t aligment = 64;
+    size_t alignment = 64;
     for (unsigned int i = 0; i < fields_count; i++) {
 
         size = field_table[i].size * obj_count;
-        //aligment = size & -size;
-        //aligment = (alignment <= 64) ? aligment : 64;
+        //alignment = size & -size;
+        //alignment = (alignment <= 64) ? alignment : 64;
 
         size_t size_padded = (size + 63) & ~(size_t)63;
         void **dest = &((char *)mock + field_table[i].offset);
