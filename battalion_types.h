@@ -7,7 +7,7 @@
 
 typedef struct Battalion Battalion;
 
-extern const FieldEntry *const battalion_field_table;
+extern const ComplexFieldEntry *const battalion_field_table;
 
 // Battalion AI policies
 /*enum BattalionPolicies {
@@ -25,19 +25,44 @@ extern const FieldEntry *const battalion_field_table;
 
 };*/
 
+enum BattalionType {
+
+    BATTALION_TYPE_UNKNOWN = -1,
+    INFANTRY,
+    CAVALRY,
+    SPEARMEN,
+    ARCHERS,
+    BATTALION_TYPE_COUNT = 32
+
+};
+
 enum BattalionLifecycle {
+
+    UNKWON_LIFECYCLE = -1,
     NORMAL,
     ROUTING,
     WITHDRAWN,
     WIPED_OUT
+
 };
 
 enum BattalionMovementMode {
+
+    UNKNOWN_MOVEMENT = -1,
     STATIONARY,
     WALKING,
     RUNNING,
     CHARGING,
-    BRACING
+    FIGHTING
+
+};
+
+enum BattalionMovementPace {
+
+    UNKNOWN_PACE = -1,
+    PACE_MOVE,
+    PACE_RUN
+
 };
 
 #endif
