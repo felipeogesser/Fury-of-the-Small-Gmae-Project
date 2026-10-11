@@ -1,0 +1,167 @@
+#ifndef GENERAL_TABLE_INTERNAL_H
+#define GENERAL_TABLE_INTERNAL_H
+
+#include "general_table_types.h"
+#include "animation_types.h"
+#include "direction_types.h"
+#include "target_types.h"
+
+// static table
+
+typedef struct GeneralStaticTable {
+    
+    float *base_meele_attack;
+    float *base_meele_defense;
+    float *range;
+    float *charge_bonus;
+    float *armor;
+    float *attack_speed;
+
+    _Bool *shielded;
+    _Bool *ranged;
+    _Bool *large;
+    _Bool *armor_piercing;
+    _Bool *anti_large;
+
+} GeneralStaticTable;
+
+typedef struct GeneralStaticTableDiff {
+
+    float *diff_armor;
+
+} GeneralStaticTableDiff;
+
+// dynamic tables
+
+typedef struct GeneralDynamicTable {
+
+    enum Direction *direction;
+    enum TargetType *target_type;
+    unsigned int *personal_target_idx;
+    enum Animation *animation;
+    unsigned char *current_frame;
+    float *vec_x;
+    float *vec_y;
+    float *x;
+    float *y;
+    float *hp;
+    float *meele_attack;
+    float *meele_defense;
+    float *strength;
+    float *attack_timer;
+    //_Bool *const is_routing;
+    //_Bool *const controllable;
+
+    _Bool *is_target_in_range;
+    //_Bool *collision_with_enemy;
+    // status
+    _Bool *is_present;
+    _Bool *is_engaged;
+    _Bool *is_engaging;
+
+} GeneralDynamicTable;
+
+typedef struct GeneralDynamicTableDiff {
+
+    float *dx;
+    float *dy;
+    float *distance;
+    float *diff_hp;
+    float *diff_meele_attack;
+    float *diff_meele_defense;
+    float *diff_strength;
+
+} GeneralDynamicTableDiff;
+
+// comparison table
+
+typedef struct GeneralComparisonTable {
+
+    GeneralStaticTable friendly_static, enemy_static;
+    GeneralStaticTableDiff friendly_static_diff;
+    GeneralStaticTableDiff enemy_static_diff;
+
+    GeneralDynamicTable friendly_dynamic, enemy_dynamic;
+    GeneralDynamicTableDiff friendly_dynamic_diff;
+    GeneralDynamicTableDiff enemy_dynamic_diff;
+
+} GeneralComparisonTable;
+
+// mock tables
+
+// mock static tables
+
+typedef struct MockGeneralStaticTable {
+
+    float *base_meele_attack;
+    float *base_meele_defense;
+    float *range;
+    float *charge_bonus;
+    float *armor;
+    float *attack_speed;
+
+    _Bool *shielded;
+    _Bool *ranged;
+    _Bool *large;
+    _Bool *armor_piercing;
+    _Bool *anti_large;
+
+} MockGeneralStaticTable;
+
+typedef struct MockGeneralStaticTableDiff {
+
+    float *diff_armor;
+
+} MockGeneralStaticTableDiff;
+
+// mock dynamic tables
+
+typedef struct MockGeneralDynamicTable {
+    
+    enum Direction *direction;
+
+    enum TargetType *target_type;
+    unsigned int *personal_target_idx;
+    enum Animation *animation;
+    unsigned char *current_frame;
+    float *vec_x;
+    float *vec_y;
+    float *x;
+    float *y;
+    float *hp;
+    float *meele_attack;
+    float *meele_defense;
+    float *strength;
+    float *attack_timer;
+
+    //                                                                 _Bool *is_routing;
+    //_Bool *controllable;
+    _Bool *is_target_in_range;
+    _Bool *is_present;
+    _Bool *is_engaged;
+    _Bool *is_engaging;
+
+} MockGeneralDynamicTable;
+
+typedef struct MockGeneralDynamicTableDiff {
+
+    float *dx;
+    float *dy;
+    float *distance;
+    float *diff_hp;
+    float *diff_meele_attack;
+    float *diff_meele_defense;
+    float *diff_strength;
+
+} MockGeneralDynamicTableDiff;
+
+typedef struct GeneralTable {
+
+    GeneralStaticTable friendly_static;
+    GeneralStaticTable enemy_static;
+    GeneralDynamicTable friendly_dynamic;
+    GeneralDynamicTable enemy_dynamic;
+
+} GeneralTable;
+
+#endif
