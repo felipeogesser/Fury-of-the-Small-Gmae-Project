@@ -12,8 +12,40 @@
 #define ANIMATION_FPS 10
 #define FRAME_DURATION (1000 / ANIMATION_FPS)
 
+const ComplexFieldEntry animation_state_complex_field_table[] = {
+
+    #define OFFSET_OF(type, member) offsetof(type, member)
+    #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
+
+    { "animation",      OFFSET_OF(AnimationState, animation),      SIZE_OF(AnimationState, animation),      S_INT,       NULL },
+    { "frames_count",   OFFSET_OF(AnimationState, frames_count),   SIZE_OF(AnimationState, frames_count),   U_CHAR,      NULL },
+    { "current_frame",  OFFSET_OF(AnimationState, current_frame),  SIZE_OF(AnimationState, current_frame),  U_CHAR,      NULL },
+    { "obj_size",       0,                                         sizeof(AnimationState),                  NOT_DEFINED, NULL },
+
+    #undef OFFSET_OF
+    #undef SIZE_OF
+
+};
+
+static const FieldEntry animation_state_field_table[] = {
+
+    #define OFFSET_OF(type, member) offsetof(type, member)
+    #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
+
+    { "animation",      OFFSET_OF(AnimationState, animation),      SIZE_OF(AnimationState, animation)      },
+    { "frames_count",   OFFSET_OF(AnimationState, frames_count),   SIZE_OF(AnimationState, frames_count)   },
+    { "current_frame",  OFFSET_OF(AnimationState, current_frame),  SIZE_OF(AnimationState, current_frame)  },
+    { "obj_size",       0,                                         sizeof(AnimationState)                  },
+
+    #undef OFFSET_OF
+    #undef SIZE_OF
+
+};
+
+const FieldEntry *const animation_state_field_table_ptr = animation_state_field_table;
+
 static Uint32 last_frame_time = 0;
-static _Bool change_animation = false;
+static _Bool change_animation = false; // maybe remove, not used
 static enum Animation new_animation = 0;
 static bool advance_frame = false;
 
@@ -25,7 +57,7 @@ void animation_init(void) {
 
 }
 
-void animation_tick(void) {
+_Bool animation_tick(void) {
     Uint32 current_time = SDL_GetTicks();
     if (current_time - last_frame_time >= FRAME_DURATION) {
         last_frame_time = current_time;
@@ -33,7 +65,20 @@ void animation_tick(void) {
     } else {
         advance_frame = false;
     }
+    return advance_frame;
+    
 }
+
+/*static float frame_timer = FRAME_DURATION;
+void animation_tick(float dt) {
+    frame_timer -= dt;
+    if (frame_timer <= 0.0f) {
+        frame_timer = FRAME_DURATION;
+        advance_frame = true;
+    } else {
+        advance_frame = false;
+    }
+}*/
 
 void animation_update(
     void *object,

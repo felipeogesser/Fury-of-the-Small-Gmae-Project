@@ -2,12 +2,45 @@
 #define BATTALION_INTERNAL_H
 
 #include "battalion_types.h"
+#include "fatigue_internal.h"
 #include "general_types.h"
+#include "health_pool.h"
+#include "morale_internal.h"
 #include "unit_types.h"
+
+typedef struct Rally {
+
+    float timer;
+    _Bool rallying;
+
+} Rally;
+
+typedef struct BattalionState {
+
+    enum BattalionLifecycle lifecycle;
+    enum BattalionMovementMode movement;
+    Rally rally;
+    _Bool headless;
+    
+} BattalionState;
+
+typedef struct BattalionStatistics {
+
+    unsigned int unit_base_count;
+    unsigned int unit_dead_count;
+    unsigned int unit_withdrawed_count;
+
+} BattalionStatistics;
 
 typedef struct Battalion {
     General *general;
     Unit *unit;
+    BattalionState state;
+    Morale morale;
+    Fatigue fatigue;
+    HealthPool health_pool;
+    BattalionStatistics statistics;
+    _Bool is_active;
     unsigned int unit_count;
     unsigned int padding_between_units_x;
     unsigned int padding_between_units_y;
