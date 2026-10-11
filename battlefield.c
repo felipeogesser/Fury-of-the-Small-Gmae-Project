@@ -33,10 +33,19 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 
+#include "ai_order_internal.h"
+#include "table.h"
+#include "table_internal.h"
+#include "battalion_table.h"
+#include "general_table.h"
+#include "spreadsheet_types.h"
+#include "unit_table.h"
+
 // private prototypes
-static void load_armies_onto_battlefield(GeneralPayload **general_payload, unsigned int armies_count, unsigned int battalion_size);
-static void render_generals(void);
-static void render_units(void);
+static Armies *load_armies_onto_battlefield(GeneralPayload **general_payload, unsigned int armies_count, unsigned int battalion_size);
+//static void render_generals(void);
+//static void render_units(void);
+static void update_balance_of_power(Table *player_tables, Table *enemy_tables, unsigned int battalion_count, signed int *balance_of_power);
 
 _Bool show_quads = false;
 _Bool update_formation = false;
@@ -70,24 +79,45 @@ void battlefield_init(void) {
     engine.player = get_player(player_id);
 
     unsigned int armies_count = 2;
-    unsigned int battalion_size = 50;    
-    load_armies_onto_battlefield(battlefield.general_payload, armies_count, battalion_size);
+    unsigned int battalion_size = 50;
+    unsigned int battalion_count = battlefield.general_payload[0]->general_count + battlefield.general_payload[1]->general_count;
+    Armies *armies = load_armies_onto_battlefield(battlefield.general_payload, armies_count, battalion_size);
+    battlefield.battalion_count = battalion_count;
+    battlefield.battalion_size = battalion_size;
+    battlefield.balance_of_power = 0;
+
+    Battalion *player_battalion = armies->army[0].battalions;
+    Battalion *enemy_battalion = armies->army[1].battalions;
+    General *player_general = armies->army[0].general;
+    General *enemy_general = armies->army[1].general;
+    Unit *player_unit = armies->army[0].battalions->unit;
+    Unit *enemy_unit = armies->army[1].battalions->unit;
+    battalion_table_init(&battlefield.player_tables, &battlefield.enemy_tables, player_battalion, enemy_battalion, battalion_field_table, battalion_count);
+    general_table_init(&battlefield.player_tables, &battlefield.enemy_tables, player_general, enemy_general, general_complex_field_table_ptr, battalion_count);
+    unit_table_init(&battlefield.player_tables, &battlefield.enemy_tables, player_unit, enemy_unit, unit_complex_field_table_ptr, battalion_count, battalion_size);
+
 
     mailbag_letters_destroy(&mailbag);
 
-    calculateAmountOfQuadrants();
-    init_grids();
-    initialCheckUnitQuadrant(engine.armies, engine.game, engine.battlefield_grid);
-    renderQuadrantsSetup(engine.armies, engine.game);
+    //calculateAmountOfQuadrants();
+    //init_grids();
+    //initialCheckUnitQuadrant(engine.armies, engine.game, engine.battlefield_grid);
+    //renderQuadrantsSetup(engine.armies, engine.game);
 
 }
 
 void battlefield_input(SDL_Event *e) {
 
-    if (e->key.keysym.sym == SDLK_1) show_quads = !show_quads;
+    /*if (e->key.keysym.sym == SDLK_1) show_quads = !show_quads;
     if (e->key.keysym.sym == SDLK_2) update_formation = true;
     if (e->key.keysym.sym == SDLK_3) update_units_formation = true;
-    if (e->key.keysym.sym == SDLK_4) update_battalions_formation = true;
+    if (e->key.keysym.sym == SDLK_4) update_battalions_formation = true;*/
+
+    if (e->key.keysym.sym == SDLK_1) {
+
+        battlefield.player_tables.battalion_order.target[0] = 1;
+
+    }
 
     Player *player = engine.player;
         
@@ -123,23 +153,44 @@ void battlefield_input(SDL_Event *e) {
 
 void battlefield_update(void) {
 
+    float dt = engine.game->delta;
+    unsigned int battalion_count = battlefield.battalion_count;
+    unsigned int battalion_size = battlefield.battalion_size;
+    unsigned int unit_count = battalion_count * battalion_size;
+    Table *player_tables = &battlefield.player_tables;
+    Table *enemy_tables = &battlefield.enemy_tables;
+    signed int *balance_of_power = &battlefield.balance_of_power;
+
     calculate_player_movement(engine.game);
     
     player_map_edge_collision(engine.game, engine.map, engine.player);
 
-    check_unit_quadrant(engine.armies, engine.game, engine.battlefield_grid);
+    //check_unit_quadrant(engine.armies, engine.game, engine.battlefield_grid);
 
     update_player(engine.game);
 
-    update_units(engine.armies, engine.game);
+    update_balance_of_power(player_tables, enemy_tables, battalion_count, balance_of_power);
 
-    update_generals(engine.armies, engine.game);
+    battalion_table_update(spreadsheet_ptr, player_tables, *balance_of_power, battalion_size, dt);
+    battalion_table_update(spreadsheet_ptr, enemy_tables, *balance_of_power, battalion_size, dt);
+
+    //update_generals(engine.armies, engine.game);
+    general_table_update(player_tables, battalion_count, ARMY_SIDE_LEFT, battalion_size, dt);
+    general_table_update(enemy_tables, battalion_count, ARMY_SIDE_RIGHT, battalion_size, dt);
+
+    //update_units(engine.armies, engine.game);
+
+    unit_table_update(player_tables, battalion_count, battalion_size, dt);
+    unit_table_update(enemy_tables, battalion_count, battalion_size, dt);
+
+    clear_table_vectors(player_tables, unit_count, battalion_size);
+    clear_table_vectors(enemy_tables, unit_count, battalion_size);
 
     camera_update();
 
-    animation_tick();
+    //animation_tick();
     
-    animation_update(
+    /*animation_update(
         engine.armies->army->general->battalions->unit,
         sizeof(Unit),
         engine.game->unit_created_count,
@@ -154,7 +205,7 @@ void battlefield_update(void) {
         general_field_table,
         G_ANIM_FIELD,
         G_SPRITE_FIELD
-    );
+    );*/
 
     update_game_state();
 
@@ -162,7 +213,7 @@ void battlefield_update(void) {
 
 void battlefield_render(void) {
 
-    Armies *armies = engine.armies;
+    //Armies *armies = engine.armies;
     Map *map = engine.map;
     Player *player = engine.player;
     SDL_Renderer *renderer = engine.renderer;
@@ -185,7 +236,17 @@ void battlefield_render(void) {
     SDL_SetRenderDrawColor(renderer, 255, 104, 230, 255);
     SDL_RenderFillRect(renderer, &player_render);
 
-    Battalion *battalions = armies->army->battalions;
+    unit_table_render(&battlefield.player_tables, battlefield.battalion_count, battlefield.battalion_size);
+    unit_table_render(&battlefield.enemy_tables, battlefield.battalion_count, battlefield.battalion_size);
+
+    for (unsigned int i = 0; i < battlefield.battalion_count; i++) {
+
+        general_table_render(&battlefield.player_tables, i);
+        general_table_render(&battlefield.enemy_tables, i);
+    
+    }
+
+    /*Battalion *battalions = armies->army->battalions;
     unsigned int unit_count = battalions->unit_count;
     for (unsigned int i = 0; i < armies->total_battalion_count; i++) {
         
@@ -218,7 +279,7 @@ void battlefield_render(void) {
 
         }
 
-    }
+    }*/
 
     SDL_Rect hp_bar = { 28, 28, player->max_hp + 4, 19 };
     SDL_SetRenderDrawColor(renderer, 204, 204, 255, 255);
@@ -244,30 +305,30 @@ void battlefield_render(void) {
     SDL_SetRenderDrawColor(renderer, 102, 255, 51, 255);
     SDL_RenderFillRect(renderer, &st);
 
-    render_generals();
-    render_units();
+    //render_generals();
+    //render_units();
 
-    if (show_quads) {
+    /*if (show_quads) {
         Unit *unit = battalions->unit;
         GameState *game = engine.game;
         renderQuadrants(unit, game, renderer);
-    }
+    }*/
 
 }
 
 void battlefield_destroy(void) {
 
     animation_destroy();
-
+    table_destroy();
     memory_arena_reset();
 
 }
 
-static void load_armies_onto_battlefield(GeneralPayload **general_payload, unsigned int armies_count, unsigned int battalion_size) {
+static Armies *load_armies_onto_battlefield(GeneralPayload **general_payload, unsigned int armies_count, unsigned int battalion_size) {
 
     init_armies_memory_arena(general_payload, armies_count, battalion_size);
     
-    load_armies_into_arena(general_payload, armies_count, battalion_size);
+    Armies *armies = load_armies_into_arena(general_payload, armies_count, battalion_size);
     
     for (unsigned int i = 0; i < armies_count; i++) {
 
@@ -276,9 +337,36 @@ static void load_armies_onto_battlefield(GeneralPayload **general_payload, unsig
 
     }
 
+    return armies;
+
 }
 
-static void render_generals(void) {
+static void update_balance_of_power(Table *player_tables, Table *enemy_tables, unsigned int battalion_count, signed int *balance_of_power) {
+
+    float player_hp = 0.0f, enemy_hp = 0.0f;
+    for (unsigned int i = 0; i < battalion_count; i++) {
+
+        player_hp += player_tables->battalion_tables.friendly_dynamic.hp[i];
+        enemy_hp +=enemy_tables->battalion_tables.friendly_dynamic.hp[i];
+    
+    }
+
+    float total_hp = player_hp + enemy_hp;
+    float balance = 0.0f;
+
+    if (total_hp > 0.0f) {
+        float player_share = player_hp / total_hp;
+        balance = (0.5f - player_share) * (10.0f / 0.3f);
+
+        if (balance < -10.0f) balance = -10.0f;
+        if (balance >  10.0f) balance =  10.0f;
+    }
+
+    *balance_of_power = balance;
+
+}
+
+/*static void render_generals(void) {
     
     for (unsigned int h = 0; h < engine.armies->armies_count; h++) {
 
@@ -392,4 +480,4 @@ static void render_units(void) {
 
     }
 
-}
+}*/
