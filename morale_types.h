@@ -1,7 +1,11 @@
 #ifndef MORALE_TYPES_H
 #define MORALE_TYPES_H
 
+#include "field_entry_internal.h"
+
 typedef struct Morale Morale;
+
+extern const ComplexFieldEntry morale_field_table[];
 
 enum MoraleModifierValues {
 
@@ -35,7 +39,8 @@ enum MoraleModifierFlags {
 
 enum MoraleState {
 
-    EAGER = 0,
+    MORALE_UNKNOWN = -1,
+    EAGER,
     CONFIDENT,
     WAVERING,
     SHATTERED,
