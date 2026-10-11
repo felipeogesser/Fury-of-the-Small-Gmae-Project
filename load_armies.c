@@ -10,6 +10,7 @@
 #include "general_internal.h"
 #include "memory_arena.h"
 #include "sprites_internal.h"
+#include "target_types.h"
 #include "unit.h"
 #include "unit_internal.h"
 #include <stddef.h>
@@ -74,7 +75,7 @@ void init_armies_memory_arena(GeneralPayload **general_payload, unsigned int arm
 
 }
 
-void load_armies_into_arena(GeneralPayload **general_payload, unsigned int armies_count, unsigned int battalion_size) {
+Armies *load_armies_into_arena(GeneralPayload **general_payload, unsigned int armies_count, unsigned int battalion_size) {
     
     Army *army = engine.armies->army;
     for (unsigned int i = 0; i < armies_count; i++) {
@@ -85,7 +86,7 @@ void load_armies_into_arena(GeneralPayload **general_payload, unsigned int armie
         GeneralAndPosition *general_and_pos = general_payload[i]->general_and_pos;
         for (unsigned int j = 0; j < battalion_count; j++) {
 
-            init_battalion(&battalion[j], battalion_size);
+            init_battalion(&battalion[j], battalion_size, general_and_pos[j].general->battalion_type);
 
             init_general(&general[j], general_and_pos[j].general, general_and_pos[j].pos.x, general_and_pos[j].pos.y);
 
@@ -94,6 +95,8 @@ void load_armies_into_arena(GeneralPayload **general_payload, unsigned int armie
         }
 
     }
+
+    return engine.armies;
 
 }
 
