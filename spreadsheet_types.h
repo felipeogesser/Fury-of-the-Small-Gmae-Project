@@ -5,6 +5,7 @@ typedef struct Spreadsheet Spreadsheet;
 typedef struct BattalionSpreadsheet BattalionSpreadsheet;
 typedef struct GeneralSpreadSheet GeneralSpreadSheet;
 
+extern const Spreadsheet spreadsheet;
 extern const Spreadsheet *spreadsheet_ptr;
 
 #endif

@@ -11,73 +11,10 @@
 #include "sprites_internal.h"
 #include <stddef.h>
 
-/*static const FieldEntry field_table[] = {
-
-    #define OFFSET_OF(type, member) ((size_t) &(((type *)0)->member))
-    #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
-
-    { "anim",            OFFSET_OF(Unit, anim),            SIZE_OF(Unit, anim) },
-    { "sprite",          OFFSET_OF(Unit, sprite),          SIZE_OF(Unit, sprite) },
-    { "id",              OFFSET_OF(Unit, id),              SIZE_OF(Unit, id) },
-    { "obj_size",        0,                                sizeof(Unit) },
-
-    #undef OFFSET_OF
-    #undef SIZE_OF
-
-};
-
-const FieldEntry *const unit_field_table = field_table;*/
-
-static const ComplexFieldEntry unit_complex_field_table[] = {
-
-    #define OFFSET_OF(type, member) offsetof(type, member)
-    #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
-
-    { "anim",                OFFSET_OF(Unit, anim),                SIZE_OF(Unit, anim),                STRUCT, animation_state_complex_field_table },
-    { "sprite",              OFFSET_OF(Unit, sprite),              SIZE_OF(Unit, sprite),              STRUCT, sprite_info_complex_field_table },
-    { "id",                  OFFSET_OF(Unit, id),                  SIZE_OF(Unit, id),                  U_INT,       NULL },
-    { "name",                OFFSET_OF(Unit, name),                SIZE_OF(Unit, name),                S_CHAR,      NULL },
-    { "positionX",           OFFSET_OF(Unit, positionX),           SIZE_OF(Unit, positionX),           FLOAT,       NULL },
-    { "positionY",           OFFSET_OF(Unit, positionY),           SIZE_OF(Unit, positionY),           FLOAT,       NULL },
-    { "dimensionX",          OFFSET_OF(Unit, dimensionX),          SIZE_OF(Unit, dimensionX),          FLOAT,       NULL },
-    { "dimensionY",          OFFSET_OF(Unit, dimensionY),          SIZE_OF(Unit, dimensionY),          FLOAT,       NULL },
-    { "quadrantOccupiedX",   OFFSET_OF(Unit, quadrantOccupiedX),   SIZE_OF(Unit, quadrantOccupiedX),   FLOAT,       NULL },
-    { "quadrantOccupiedY",   OFFSET_OF(Unit, quadrantOccupiedY),   SIZE_OF(Unit, quadrantOccupiedY),   FLOAT,       NULL },
-    { "previousCol",         OFFSET_OF(Unit, previousCol),         SIZE_OF(Unit, previousCol),         S_INT,       NULL },
-    { "previousRow",         OFFSET_OF(Unit, previousRow),         SIZE_OF(Unit, previousRow),         S_INT,       NULL },
-    { "previousX",           OFFSET_OF(Unit, previousX),           SIZE_OF(Unit, previousX),           S_INT,       NULL },
-    { "previousY",           OFFSET_OF(Unit, previousY),           SIZE_OF(Unit, previousY),           S_INT,       NULL },
-    { "collision",           OFFSET_OF(Unit, collision),           SIZE_OF(Unit, collision),           BOOL,        NULL },
-    { "speed",               OFFSET_OF(Unit, speed),               SIZE_OF(Unit, speed),               FLOAT,       NULL },
-    { "vectorX",             OFFSET_OF(Unit, vectorX),             SIZE_OF(Unit, vectorX),             FLOAT,       NULL },
-    { "vectorY",             OFFSET_OF(Unit, vectorY),             SIZE_OF(Unit, vectorY),             FLOAT,       NULL },
-    { "lastTick",            OFFSET_OF(Unit, lastTick),            SIZE_OF(Unit, lastTick),            U_INT,       NULL },
-    { "nextMoveDelay",       OFFSET_OF(Unit, nextMoveDelay),       SIZE_OF(Unit, nextMoveDelay),       S_INT,       NULL },
-    { "currentQuadrants",    OFFSET_OF(Unit, currentQuadrants),    SIZE_OF(Unit, currentQuadrants),    S_INT,       NULL },
-    { "quadrantOutOfBounds", OFFSET_OF(Unit, quadrantOutOfBounds), SIZE_OF(Unit, quadrantOutOfBounds), U_CHAR,      NULL },
-    { "enemyUnitId",         OFFSET_OF(Unit, enemyUnitId),         SIZE_OF(Unit, enemyUnitId),         S_INT,       NULL },
-    { "pathFound",           OFFSET_OF(Unit, pathFound),           SIZE_OF(Unit, pathFound),           BOOL,        NULL },
-    { "constMovX",           OFFSET_OF(Unit, constMovX),           SIZE_OF(Unit, constMovX),           FLOAT,       NULL },
-    { "constMovY",           OFFSET_OF(Unit, constMovY),           SIZE_OF(Unit, constMovY),           FLOAT,       NULL },
-    { "health",              OFFSET_OF(Unit, health),              SIZE_OF(Unit, health),              FLOAT,       NULL },
-    { "direction",           OFFSET_OF(Unit, direction),           SIZE_OF(Unit, direction),           S_INT,       NULL },
-    { "target_idx",          OFFSET_OF(Unit, target_idx),          SIZE_OF(Unit, target_idx),          U_INT,       NULL },
-    { "target_type",         OFFSET_OF(Unit, target_type),         SIZE_OF(Unit, target_type),         S_INT,       NULL },
-    { "is_engaged",             OFFSET_OF(Unit, is_engaged),             SIZE_OF(Unit, is_engaged),             BOOL,        NULL },
-    { "is_alive",            OFFSET_OF(Unit, is_alive),            SIZE_OF(Unit, is_alive),            BOOL,        NULL },
-    { "obj_size",            0,                                    sizeof(Unit),                       NOT_DEFINED, NULL },
-
-    #undef OFFSET_OF
-    #undef SIZE_OF
-
-};
-
-const ComplexFieldEntry *const unit_complex_field_table_ptr = unit_complex_field_table;
+#define OFFSET_OF(type, member) offsetof(type, member)
+#define SIZE_OF(type, member) (sizeof(((type *)0)->member))
 
 static const FieldEntry field_table[] = {
-
-    #define OFFSET_OF(type, member) offsetof(type, member)
-    #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
 
     { "anim",                OFFSET_OF(Unit, anim),                SIZE_OF(Unit, anim)                },
     { "sprite",              OFFSET_OF(Unit, sprite),              SIZE_OF(Unit, sprite)              },
@@ -109,16 +46,50 @@ static const FieldEntry field_table[] = {
     { "direction",           OFFSET_OF(Unit, direction),           SIZE_OF(Unit, direction)           },
     { "target_idx",          OFFSET_OF(Unit, target_idx),          SIZE_OF(Unit, target_idx)          },
     { "target_type",         OFFSET_OF(Unit, target_type),         SIZE_OF(Unit, target_type)         },
-    { "is_engaged",             OFFSET_OF(Unit, is_engaged),             SIZE_OF(Unit, is_engaged)             },
-    { "is_alive",            OFFSET_OF(Unit, is_alive),            SIZE_OF(Unit, is_alive)            },
-    { "obj_size",            0,                                    sizeof(Unit)                       },
-
-    #undef OFFSET_OF
-    #undef SIZE_OF
+    { "obj_size", 0, sizeof(Unit) }
 
 };
-
 const FieldEntry *const unit_field_table = field_table;
+
+static const ComplexFieldEntry unit_complex_field_table[] = {
+
+    { "anim",                OFFSET_OF(Unit, anim),                SIZE_OF(Unit, anim),                STRUCT, animation_state_complex_field_table },
+    { "sprite",              OFFSET_OF(Unit, sprite),              SIZE_OF(Unit, sprite),              STRUCT, sprite_info_complex_field_table },
+    { "id",                  OFFSET_OF(Unit, id),                  SIZE_OF(Unit, id),                  U_INT,  NULL },
+    { "name",                OFFSET_OF(Unit, name),                SIZE_OF(Unit, name),                S_CHAR, NULL },
+    { "positionX",           OFFSET_OF(Unit, positionX),           SIZE_OF(Unit, positionX),           FLOAT,  NULL },
+    { "positionY",           OFFSET_OF(Unit, positionY),           SIZE_OF(Unit, positionY),           FLOAT,  NULL },
+    { "dimensionX",          OFFSET_OF(Unit, dimensionX),          SIZE_OF(Unit, dimensionX),          FLOAT,  NULL },
+    { "dimensionY",          OFFSET_OF(Unit, dimensionY),          SIZE_OF(Unit, dimensionY),          FLOAT,  NULL },
+    { "quadrantOccupiedX",   OFFSET_OF(Unit, quadrantOccupiedX),   SIZE_OF(Unit, quadrantOccupiedX),   FLOAT,  NULL },
+    { "quadrantOccupiedY",   OFFSET_OF(Unit, quadrantOccupiedY),   SIZE_OF(Unit, quadrantOccupiedY),   FLOAT,  NULL },
+    { "previousCol",         OFFSET_OF(Unit, previousCol),         SIZE_OF(Unit, previousCol),         S_INT,  NULL },
+    { "previousRow",         OFFSET_OF(Unit, previousRow),         SIZE_OF(Unit, previousRow),         S_INT,  NULL },
+    { "previousX",           OFFSET_OF(Unit, previousX),           SIZE_OF(Unit, previousX),           S_INT,  NULL },
+    { "previousY",           OFFSET_OF(Unit, previousY),           SIZE_OF(Unit, previousY),           S_INT,  NULL },
+    { "collision",           OFFSET_OF(Unit, collision),           SIZE_OF(Unit, collision),           BOOL,   NULL },
+    { "speed",               OFFSET_OF(Unit, speed),               SIZE_OF(Unit, speed),               FLOAT,  NULL },
+    { "vectorX",             OFFSET_OF(Unit, vectorX),             SIZE_OF(Unit, vectorX),             FLOAT,  NULL },
+    { "vectorY",             OFFSET_OF(Unit, vectorY),             SIZE_OF(Unit, vectorY),             FLOAT,  NULL },
+    { "lastTick",            OFFSET_OF(Unit, lastTick),            SIZE_OF(Unit, lastTick),            U_INT,  NULL },
+    { "nextMoveDelay",       OFFSET_OF(Unit, nextMoveDelay),       SIZE_OF(Unit, nextMoveDelay),       S_INT,  NULL },
+    { "currentQuadrants",    OFFSET_OF(Unit, currentQuadrants),    SIZE_OF(Unit, currentQuadrants),    S_INT,  NULL },
+    { "quadrantOutOfBounds", OFFSET_OF(Unit, quadrantOutOfBounds), SIZE_OF(Unit, quadrantOutOfBounds), U_CHAR, NULL },
+    { "enemyUnitId",         OFFSET_OF(Unit, enemyUnitId),         SIZE_OF(Unit, enemyUnitId),         S_INT,  NULL },
+    { "pathFound",           OFFSET_OF(Unit, pathFound),           SIZE_OF(Unit, pathFound),           BOOL,   NULL },
+    { "constMovX",           OFFSET_OF(Unit, constMovX),           SIZE_OF(Unit, constMovX),           FLOAT,  NULL },
+    { "constMovY",           OFFSET_OF(Unit, constMovY),           SIZE_OF(Unit, constMovY),           FLOAT,  NULL },
+    { "health",              OFFSET_OF(Unit, health),              SIZE_OF(Unit, health),              FLOAT,  NULL },
+    { "direction",           OFFSET_OF(Unit, direction),           SIZE_OF(Unit, direction),           S_INT,  NULL },
+    { "target_idx",          OFFSET_OF(Unit, target_idx),          SIZE_OF(Unit, target_idx),          U_INT,  NULL },
+    { "target_type",         OFFSET_OF(Unit, target_type),         SIZE_OF(Unit, target_type),         S_INT,  NULL },
+    { "obj_size", 0, sizeof(Unit), NOT_DEFINED, NULL }
+
+};
+const ComplexFieldEntry *const unit_complex_field_table_ptr = unit_complex_field_table;
+
+#undef OFFSET_OF
+#undef SIZE_OF
 
 // private prototypes
 void update_units_position(Unit *unit, unsigned int unit_count, signed int x, signed int y);
