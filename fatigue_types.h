@@ -1,11 +1,14 @@
 #ifndef FATIGUE_TYPES_H
 #define FATIGUE_TYPES_H
 
+#include "field_entry_internal.h"
+
 typedef struct Fatigue Fatigue;
 
 enum FatigueState {
 
-    FRESH = 0,
+    FATIGUE_UNKNOWN = -1,
+    FRESH,
     ACTIVE,
     WINDED,
     TIRED,
@@ -14,5 +17,7 @@ enum FatigueState {
     FATIGUE_STATE_COUNT
 
 };
+
+extern const ComplexFieldEntry fatigue_field_table[];
 
 #endif
