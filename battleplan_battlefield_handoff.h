@@ -2,12 +2,7 @@
 #define BATTLEPLAN_BATTLEFIELD_H
 
 #include "general_types.h"
-
-typedef struct position {
-
-    unsigned int x, y;
-
-} Position;
+#include "position.h"
 
 typedef struct GeneralAndPosition {
 

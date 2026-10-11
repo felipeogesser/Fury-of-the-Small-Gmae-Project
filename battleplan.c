@@ -320,7 +320,7 @@ void battleplan_update(void) {
 
     }
 
-    animation_tick();
+    (void)animation_tick();
     
     void *general = drawer_slot[0].general;
     animation_update(
@@ -485,20 +485,28 @@ static void enemy_board_init(void) {
         "generals",
         sizeof_General,
         general_field_table,
-        13,
+        21,
         "id",
         "rarity",
         "hp",
         "vigour",
-        "attack",
-        "defense",
-        "evasion",
+        "base_meele_attack",
+        "base_meele_defense",
+        "armor",
         "attack_speed",
         "general_type",
         "battalion_type",
         "units_type",
-        "anim",
-        "sprite"
+        "animation",
+        "sprite",
+        "strength",
+        "range",
+        "charge_bonus",
+        "shielded",
+        "ranged",
+        "large",
+        "armor_piercing",
+        "anti_large"
     );
 
     battleplan.enemy_board.general = general;
