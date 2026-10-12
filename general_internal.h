@@ -18,7 +18,7 @@ typedef struct General {
     signed int base_meele_attack;
     signed int base_meele_defense;
     signed int armor;
-    float strength;
+    float base_strength;
     float attack_speed;
     float positionX, positionY;
     float dimensionX, dimensionY;
@@ -35,11 +35,11 @@ typedef struct General {
     float range;
     float charge_bonus;
 
-    _Bool shielded;
-    _Bool ranged;
-    _Bool large;
-    _Bool armor_piercing;
-    _Bool anti_large;
+    _Bool is_shielded;
+    _Bool is_ranged;
+    _Bool is_large;
+    _Bool is_armor_piercing;
+    _Bool is_anti_large;
 
 } General;
 

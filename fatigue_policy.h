@@ -5,6 +5,6 @@
 
 float evaluate_fatigue_current(unsigned int base, float current, _Bool is_active, _Bool is_fighting, float dt);
 
-enum FatigueState evaluate_fatigue_state(unsigned int base, unsigned int current);
+enum FatigueState evaluate_fatigue_state(unsigned int base, float current);
 
 #endif

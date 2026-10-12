@@ -10,21 +10,15 @@ static void separate_pair(float *ax, float *ay, float *bx, float *by, float min_
 /* Collisions (run after all movement, for every unit, headless or not)   */
 /* ---------------------------------------------------------------------- */
 
-/* Resolve overlaps inside one army. 2 to 4 passes is usually enough.
-   Stops each scan early once all alive units have been seen. */
+/* Resolve overlaps inside one army. 2 to 4 passes is usually enough.*/
 void resolve_collisions(float *unit_x, float *unit_y, const _Bool *unit_alive,
-                        unsigned int unit_count, unsigned int unit_alive_count,
-                        float min_dist, unsigned int passes) {
+                        unsigned int unit_count, float min_dist, unsigned int passes) {
     for (unsigned int p = 0; p < passes; p++) {
-        unsigned int remaining_a = unit_alive_count;
-        for (unsigned int a = 0; a < unit_count && remaining_a > 1; a++) {
+        for (unsigned int a = 0; a < unit_count; a++) {
             if (!unit_alive[a]) continue;
-            remaining_a--;                    /* alive units still after a */
 
-            unsigned int remaining_b = remaining_a;
-            for (unsigned int b = a + 1; b < unit_count && remaining_b > 0; b++) {
+            for (unsigned int b = a + 1; b < unit_count; b++) {
                 if (!unit_alive[b]) continue;
-                remaining_b--;
                 separate_pair(&unit_x[a], &unit_y[a], &unit_x[b], &unit_y[b], min_dist);
             }
         }
@@ -33,20 +27,16 @@ void resolve_collisions(float *unit_x, float *unit_y, const _Bool *unit_alive,
 
 /* Resolve overlaps between two armies. */
 void resolve_collisions_between(float *a_x, float *a_y, const _Bool *a_alive,
-                                unsigned int a_count, unsigned int a_alive_count,
+                                unsigned int a_count,
                                 float *b_x, float *b_y, const _Bool *b_alive,
-                                unsigned int b_count, unsigned int b_alive_count,
+                                unsigned int b_count,
                                 float min_dist, unsigned int passes) {
     for (unsigned int p = 0; p < passes; p++) {
-        unsigned int remaining_a = a_alive_count;
-        for (unsigned int a = 0; a < a_count && remaining_a > 0; a++) {
+        for (unsigned int a = 0; a < a_count; a++) {
             if (!a_alive[a]) continue;
-            remaining_a--;
 
-            unsigned int remaining_b = b_alive_count;
-            for (unsigned int b = 0; b < b_count && remaining_b > 0; b++) {
+            for (unsigned int b = 0; b < b_count; b++) {
                 if (!b_alive[b]) continue;
-                remaining_b--;
                 separate_pair(&a_x[a], &a_y[a], &b_x[b], &b_y[b], min_dist);
             }
         }

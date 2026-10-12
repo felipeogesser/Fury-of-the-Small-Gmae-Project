@@ -65,13 +65,13 @@ typedef struct Battalion {
     float range;
     float charge_bonus;
     float armor;
-    _Bool shielded;
-    _Bool ranged;
-    _Bool large;
-    _Bool armor_piercing;
-    _Bool anti_large;
+    _Bool is_shielded;
+    _Bool is_ranged;
+    _Bool is_large;
+    _Bool is_armor_piercing;
+    _Bool is_anti_large;
     _Bool is_routing;
-    _Bool controllable;
+    _Bool is_controllable;
     _Bool is_present;
 
     unsigned int unit_alive_count;

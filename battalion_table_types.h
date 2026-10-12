@@ -13,18 +13,6 @@ typedef struct BattalionStaticTableDiff BattalionStaticTableDiff;
 typedef struct BattalionDynamicTable BattalionDynamicTable;
 typedef struct BattalionDynamicTableDiff BattalionDynamicTableDiff;
 
-// comparison table
-typedef struct BattalionComparisonTable BattalionComparisonTable;
-
-// mock tables
-// mock static tables
-typedef struct MockBattalionStaticTable MockBattalionStaticTable;
-typedef struct MockBattalionStaticTableDiff MockBattalionStaticTableDiff;
-
-// mock dynamic tables
-typedef struct MockBattalionDynamicTable MockBattalionDynamicTable;
-typedef struct MockBattalionDynamicTableDiff MockBattalionDynamicTableDiff;
-
 enum HeadlessMovementMode {
 
     UNKNOWN_HEADLESS_MOVEMENT_MODE = -1,

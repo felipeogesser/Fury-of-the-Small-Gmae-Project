@@ -7,7 +7,7 @@
 
 typedef struct Battalion Battalion;
 
-extern const ComplexFieldEntry *const battalion_field_table;
+extern const ComplexFieldEntry *const battalion_field_table_ptr;
 
 // Battalion AI policies
 /*enum BattalionPolicies {
@@ -60,7 +60,7 @@ enum BattalionMovementMode {
 enum BattalionMovementPace {
 
     UNKNOWN_PACE = -1,
-    PACE_MOVE,
+    PACE_WALK,
     PACE_RUN
 
 };

@@ -1,7 +1,7 @@
 #ifndef AOS_SOA_TRANSFORMER
 #define AOS_SOA_TRANSFORMER
 
-#include "field_table_types.h"
+#include "field_entry_types.h"
 #include <stddef.h>
 
 void aos_soa_transform(

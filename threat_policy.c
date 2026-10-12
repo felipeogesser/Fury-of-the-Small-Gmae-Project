@@ -12,7 +12,7 @@ enum ThreatLevel evaluate_battalion_threat(enum BattalionType friendly_type, enu
                 case SPEARMEN: return LOW;
                 case INFANTRY: return MODERATE;
                 case CAVALRY:  return MODERATE;
-                default:       return UNKWOWN_THREAT;
+                default:       return UNKNOWN_THREAT;
             }
 
         case SPEARMEN:
@@ -21,7 +21,7 @@ enum ThreatLevel evaluate_battalion_threat(enum BattalionType friendly_type, enu
                 case ARCHERS:  return MODERATE;
                 case INFANTRY: return MODERATE;
                 case SPEARMEN: return MODERATE;
-                default:       return UNKWOWN_THREAT;
+                default:       return UNKNOWN_THREAT;
             }
 
         case ARCHERS:
@@ -30,7 +30,7 @@ enum ThreatLevel evaluate_battalion_threat(enum BattalionType friendly_type, enu
                 case SPEARMEN: return MODERATE;
                 case INFANTRY: return MODERATE;
                 case ARCHERS:  return MODERATE;
-                default:       return UNKWOWN_THREAT;
+                default:       return UNKNOWN_THREAT;
             }
 
         case INFANTRY:
@@ -39,11 +39,11 @@ enum ThreatLevel evaluate_battalion_threat(enum BattalionType friendly_type, enu
                 case SPEARMEN: return MODERATE;
                 case ARCHERS:  return MODERATE;
                 case INFANTRY: return MODERATE;
-                default:       return UNKWOWN_THREAT;
+                default:       return UNKNOWN_THREAT;
             }
 
         default:
-            return UNKWOWN_THREAT;
+            return UNKNOWN_THREAT;
 
     }
 

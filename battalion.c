@@ -9,6 +9,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#include "spreadsheet.h"
 #include "spreadsheet_internal.h"
 
 // private prototypes
@@ -74,7 +75,7 @@ static const ComplexFieldEntry battalion_statistics_field_table[] = {
 
 };
 
-static const ComplexFieldEntry field_table[] = {
+static const ComplexFieldEntry battalion_field_table[] = {
 
     { "general",                 OFFSET_OF(Battalion, general),                 SIZE_OF(Battalion, general),                 NOT_DEFINED, NULL },
     { "unit",                    OFFSET_OF(Battalion, unit),                    SIZE_OF(Battalion, unit),                    NOT_DEFINED, NULL },
@@ -105,13 +106,13 @@ static const ComplexFieldEntry field_table[] = {
     { "range",                   OFFSET_OF(Battalion, range),                   SIZE_OF(Battalion, range),                   FLOAT,       NULL },
     { "charge_bonus",            OFFSET_OF(Battalion, charge_bonus),            SIZE_OF(Battalion, charge_bonus),            FLOAT,       NULL },
     { "armor",                   OFFSET_OF(Battalion, armor),                   SIZE_OF(Battalion, armor),                   FLOAT,       NULL },
-    { "shielded",                OFFSET_OF(Battalion, shielded),                SIZE_OF(Battalion, shielded),                BOOL,        NULL },
-    { "ranged",                  OFFSET_OF(Battalion, ranged),                  SIZE_OF(Battalion, ranged),                  BOOL,        NULL },
-    { "large",                   OFFSET_OF(Battalion, large),                   SIZE_OF(Battalion, large),                   BOOL,        NULL },
-    { "armor_piercing",          OFFSET_OF(Battalion, armor_piercing),          SIZE_OF(Battalion, armor_piercing),          BOOL,        NULL },
-    { "anti_large",              OFFSET_OF(Battalion, anti_large),              SIZE_OF(Battalion, anti_large),              BOOL,        NULL },
+    { "is_shielded",                OFFSET_OF(Battalion, is_shielded),                SIZE_OF(Battalion, is_shielded),                BOOL,        NULL },
+    { "is_ranged",                  OFFSET_OF(Battalion, is_ranged),                  SIZE_OF(Battalion, is_ranged),                  BOOL,        NULL },
+    { "is_large",                   OFFSET_OF(Battalion, is_large),                   SIZE_OF(Battalion, is_large),                   BOOL,        NULL },
+    { "is_armor_piercing",          OFFSET_OF(Battalion, is_armor_piercing),          SIZE_OF(Battalion, is_armor_piercing),          BOOL,        NULL },
+    { "is_anti_large",              OFFSET_OF(Battalion, is_anti_large),              SIZE_OF(Battalion, is_anti_large),              BOOL,        NULL },
     { "is_routing",                 OFFSET_OF(Battalion, is_routing),                 SIZE_OF(Battalion, is_routing),                 BOOL,        NULL },
-    { "controllable",            OFFSET_OF(Battalion, controllable),            SIZE_OF(Battalion, controllable),            BOOL,        NULL },
+    { "is_controllable",            OFFSET_OF(Battalion, is_controllable),            SIZE_OF(Battalion, is_controllable),            BOOL,        NULL },
     { "is_present",                 OFFSET_OF(Battalion, is_present),                 SIZE_OF(Battalion, is_present),                 BOOL,        NULL },
     { "unit_alive_count",        OFFSET_OF(Battalion, unit_alive_count),        SIZE_OF(Battalion, unit_alive_count),        U_INT,       NULL },
     { "start_entity_count",      OFFSET_OF(Battalion, start_entity_count),      SIZE_OF(Battalion, start_entity_count),      U_INT,       NULL },
@@ -120,14 +121,14 @@ static const ComplexFieldEntry field_table[] = {
     { "obj_size",                0,                                             sizeof(Battalion),                           NOT_DEFINED, NULL }
 
 };
-const ComplexFieldEntry *const battalion_field_table = field_table;
+const ComplexFieldEntry *const battalion_field_table_ptr = battalion_field_table;
 
 #undef OFFSET_OF
 #undef SIZE_OF
 
 void init_battalion(Battalion *battalion, unsigned int battalion_size, enum BattalionType type) {
 
-    BattalionSpreadsheet battalion_default = spreadsheet.battalion_spreadsheet[type];
+    BattalionSpreadsheet battalion_default = get_battalion_spreadsheet(type);
 
     unsigned int unit_alive_count = battalion_size;
 
@@ -167,13 +168,13 @@ void init_battalion(Battalion *battalion, unsigned int battalion_size, enum Batt
     battalion->range = battalion_default.range;
     battalion->charge_bonus = battalion_default.charge_bonus;
     battalion->armor = battalion_default.armor;
-    battalion->shielded = battalion_default.shielded;
-    battalion->ranged = battalion_default.ranged;
-    battalion->large = battalion_default.large;
-    battalion->armor_piercing = battalion_default.armor_piercing;
-    battalion->anti_large = battalion_default.anti_large;
+    battalion->is_shielded = battalion_default.is_shielded;
+    battalion->is_ranged = battalion_default.is_ranged;
+    battalion->is_large = battalion_default.is_large;
+    battalion->is_armor_piercing = battalion_default.is_armor_piercing;
+    battalion->is_anti_large = battalion_default.is_anti_large;
     battalion->is_routing = false;
-    battalion->controllable = true;
+    battalion->is_controllable = true;
     battalion->is_present = true;
 
     unsigned int formation_height = battalion_default.formation_x;

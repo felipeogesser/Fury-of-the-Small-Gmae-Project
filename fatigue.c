@@ -11,7 +11,7 @@
 
 const ComplexFieldEntry fatigue_field_table[] = {
 
-    { "fatigue_state",           OFFSET_OF(Fatigue, max_hp),           SIZE_OF(Fatigue, state),           S_INT, NULL },
+    { "fatigue_state",           OFFSET_OF(Fatigue, state),           SIZE_OF(Fatigue, state),           S_INT, NULL },
     { "fatigue_base",     OFFSET_OF(Fatigue, base),     SIZE_OF(Fatigue, base),     U_INT, NULL },
     { "fatigue",     OFFSET_OF(Fatigue, current),     SIZE_OF(Fatigue, current),     FLOAT, NULL },
     { "obj_size", 0, sizeof(Fatigue), STRUCT, NULL }

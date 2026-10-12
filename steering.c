@@ -5,6 +5,8 @@
 #include "table_internal.h"
 #include <math.h>
 
+#define PI 3.14159274f
+#define DIR_STEPS 4.0f   /* direction values for a full circle (0..4, 4 wraps to 0) */
 #define DAMPING            0.85f  /* velocity kept per tick; lower = settles faster     */
 #define STOP_SPEED         0.02f  /* slower than this per tick: velocity becomes 0      */
 #define ARRIVE_GAIN        0.15f  /* desired speed per unit of distance to a slot       */
@@ -38,11 +40,19 @@ static void steer_alignment(const float *unit_x, const float *unit_y,
                     float radius, float *force_x, float *force_y);
 static void integrate_unit(float *x, float *y, float *vx, float *vy,
                     float force_x, float force_y, float max_speed);
-
-/* How units sit in the arrays:
-   battalion b owns battalion_size units in a row, so unit k of battalion b
-   is at index b * battalion_size + k. The last battalion can be smaller if
-   unit_count isn't a multiple of battalion_size. */
+static float wrap_direction(float dir);
+static void direction_to_forward(float direction, float *forward_x, float *forward_y);
+static float centered_offset(unsigned int index, unsigned int count, float step);
+static unsigned int ceil_div(unsigned int a, unsigned int b);
+static unsigned int min_uint(unsigned int a, unsigned int b);
+static void formation_slot(unsigned int iter, unsigned int to_place, unsigned int files,
+                    float center_x, float center_y,
+                    float forward_x, float forward_y,
+                    float step_depth, float step_side,
+                    float *slot_x, float *slot_y);
+static unsigned int count_in_formation(const _Bool *is_unit_present, const _Bool *is_unit_engaged,
+                                unsigned int b, unsigned int battalion_size,
+                                unsigned int unit_count);
 
 /* ---------------------------------------------------------------------- */
 /* Headless battalions                                                    */
@@ -66,6 +76,7 @@ static void integrate_unit(float *x, float *y, float *vx, float *vy,
    take a formation slot. */
 void steer_headless_units(Table *tables, const unsigned int battalion_count,
                         const unsigned int unit_count, const unsigned int battalion_size,
+                        const float unit_w, const float unit_h, const float padding_x, const float padding_y,
                         const float max_speed) {
 
     float *unit_x = tables->unit_tables.friendly_dynamic.x;
@@ -73,15 +84,18 @@ void steer_headless_units(Table *tables, const unsigned int battalion_count,
     float *unit_vx = tables->unit_tables.friendly_dynamic.vec_x;
     float *unit_vy = tables->unit_tables.friendly_dynamic.vec_y;
     const _Bool *is_headless = tables->battalion_tables.friendly_dynamic.is_headless;
+    const enum HeadlessMovementMode *headless_mode = tables->battalion_tables.friendly_dynamic.headless_movement_mode;
     const _Bool *is_unit_present = tables->unit_tables.friendly_dynamic.is_present;
-    const _Bool *is_engaged = tables->unit_tables.friendly_dynamic.is_engaged;
-    const unsigned char *formation_x = tables->battalion_tables.friendly_dynamic.formation_x;
-    const unsigned char *formation_y = tables->battalion_tables.friendly_dynamic.formation_y;
+    const _Bool *is_unit_engaged = tables->unit_tables.friendly_dynamic.is_engaged;
+    const _Bool *is_battalion_engaged = tables->battalion_tables.friendly_dynamic.is_engaged;
+    const unsigned char *formation_x = tables->battalion_tables.friendly_static.formation_x;
+    const unsigned char *formation_y = tables->battalion_tables.friendly_static.formation_y;
+    const float *target_x = tables->battalion_tables.friendly_dynamic.target_x;
+    const float *target_y = tables->battalion_tables.friendly_dynamic.target_y;
     const float *anchor_x = tables->battalion_tables.friendly_dynamic.x;
     const float *anchor_y = tables->battalion_tables.friendly_dynamic.y;
-    const enum Direction *direction = tables->battalion_tables.friendly_dynamic.direction;
-    const float *battalion_target_x = tables->battalion_tables.friendly_dynamic.battalion_target_x;
-    const float *battalion_target_y = tables->battalion_tables.friendly_dynamic.battalion_target_y;
+    const enum Direction *direction = tables->general_tables.friendly_dynamic.direction;
+    const unsigned int *alive_entity_count = tables->battalion_tables.friendly_dynamic.alive_entity_count;
 
     float step_depth = unit_h + padding_x;
     float step_side = unit_w + padding_y;
@@ -92,13 +106,13 @@ void steer_headless_units(Table *tables, const unsigned int battalion_count,
     float align_radius = ALIGN_RADIUS * step_side;
 
     for (unsigned int b = 0; b < battalion_count; b++) {
-        if (!is_headless[b] || is_engaged[b]) continue;
+        if (!is_headless[b] || is_battalion_engaged[b]) continue;
 
         unsigned int ranks = formation_x[b];
         unsigned int files = formation_y[b];
         if (ranks == 0 || files == 0) continue;
 
-        unsigned int alive_n = unit_alive_count[b];
+        unsigned int alive_n = alive_entity_count[b];
         if (alive_n == 0) continue;
 
         float loose_radius = sqrtf((float)alive_n) * step_side * COHESION_SPREAD;
@@ -108,7 +122,7 @@ void steer_headless_units(Table *tables, const unsigned int battalion_count,
         unsigned int to_place = 0;
         if (mode == HEADLESS_HOLD) {
             direction_to_forward(direction[b], &forward_x, &forward_y);
-            to_place = min_uint(count_in_formation(is_unit_present, is_engaged,
+            to_place = min_uint(count_in_formation(is_unit_present, is_unit_engaged,
                                                    b, battalion_size, unit_count),
                                 ranks * files);
         }
@@ -118,7 +132,7 @@ void steer_headless_units(Table *tables, const unsigned int battalion_count,
         for (unsigned int idx = b * battalion_size, k = 0; k < battalion_size; k++) {
             idx += k;
             if (idx >= unit_count) break;
-            if (!is_unit_present || is_engaged) continue;
+            if (!is_unit_present[idx] || is_unit_engaged[idx]) continue;
 
             float fx = 0.0f, fy = 0.0f;
 
@@ -279,4 +293,68 @@ static void integrate_unit(float *x, float *y, float *vx, float *vy,
     }
     *x += *vx;
     *y += *vy;
+}
+
+/* Keep direction inside 0..DIR_STEPS, wrapping negatives and overflow. */
+static float wrap_direction(float dir) {
+    dir = fmodf(dir, DIR_STEPS);
+    if (dir < 0.0f) dir += DIR_STEPS;
+    return dir;
+}
+
+/* Unit vector pointing the way the battalion faces. */
+static void direction_to_forward(float direction, float *forward_x, float *forward_y) {
+    float angle = wrap_direction(direction) * (2.0f * PI / DIR_STEPS);
+    *forward_x = cosf(angle);
+    *forward_y = sinf(angle);
+}
+
+
+
+/* Offset of slot `index` in a centered line of `count` slots.
+   count 5 -> -2, -1, 0, 1, 2 (times step)
+   count 4 -> -1.5, -0.5, 0.5, 1.5 (times step) */
+static float centered_offset(unsigned int index, unsigned int count, float step) {
+    return ((float)index - ((float)count - 1.0f) / 2.0f) * step;
+}
+
+/* Integer division rounding up. */
+static unsigned int ceil_div(unsigned int a, unsigned int b) {
+    return (a + b - 1) / b;
+}
+
+static unsigned int min_uint(unsigned int a, unsigned int b) {
+    return a < b ? a : b;
+}
+
+/* Position of slot `iter` in a centered formation of `to_place` units. */
+static void formation_slot(unsigned int iter, unsigned int to_place, unsigned int files,
+                    float center_x, float center_y,
+                    float forward_x, float forward_y,
+                    float step_depth, float step_side,
+                    float *slot_x, float *slot_y) {
+    unsigned int ranks_used = ceil_div(to_place, files);
+    unsigned int rank = iter / files;
+    unsigned int file = iter % files;
+    unsigned int in_rank = min_uint(to_place - rank * files, files);
+
+    float depth = -centered_offset(rank, ranks_used, step_depth);
+    float t     =  centered_offset(file, in_rank, step_side);
+
+    *slot_x = center_x + depth * forward_x - t * forward_y;
+    *slot_y = center_y + depth * forward_y + t * forward_x;
+}
+
+/* How many units of battalion b take a formation slot (alive, not engaged).
+   Needed before placing, because centering the ranks depends on it. */
+static unsigned int count_in_formation(const _Bool *is_unit_present, const _Bool *is_unit_engaged,
+                                unsigned int b, unsigned int battalion_size,
+                                unsigned int unit_count) {
+    unsigned int n = 0;
+    for (unsigned int idx = b * battalion_size, k = 0; k < battalion_size; k++) {
+        idx += k;
+        if (idx >= unit_count) break;
+        if (is_unit_present[idx] && !is_unit_engaged[idx]) n++;
+    }
+    return n;
 }

@@ -3,7 +3,7 @@
 
 enum ThreatLevel {
 
-    UNKWOWN_THREAT = -1,
+    UNKNOWN_THREAT = -1,
     VERY_LOW,
     LOW,
     MODERATE,

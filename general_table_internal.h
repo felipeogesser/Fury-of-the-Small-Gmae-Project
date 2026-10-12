@@ -12,16 +12,17 @@ typedef struct GeneralStaticTable {
     
     float *base_meele_attack;
     float *base_meele_defense;
+    float *base_strength;
     float *range;
     float *charge_bonus;
     float *armor;
     float *attack_speed;
 
-    _Bool *shielded;
-    _Bool *ranged;
-    _Bool *large;
-    _Bool *armor_piercing;
-    _Bool *anti_large;
+    _Bool *is_shielded;
+    _Bool *is_ranged;
+    _Bool *is_large;
+    _Bool *is_armor_piercing;
+    _Bool *is_anti_large;
 
 } GeneralStaticTable;
 
@@ -40,6 +41,8 @@ typedef struct GeneralDynamicTable {
     unsigned int *personal_target_idx;
     enum Animation *animation;
     unsigned char *current_frame;
+    float *order_x;
+    float *order_y;
     float *vec_x;
     float *vec_y;
     float *x;
@@ -72,7 +75,7 @@ typedef struct GeneralDynamicTableDiff {
     float *diff_strength;
 
 } GeneralDynamicTableDiff;
-
+/*
 // comparison table
 
 typedef struct GeneralComparisonTable {
@@ -154,7 +157,7 @@ typedef struct MockGeneralDynamicTableDiff {
     float *diff_strength;
 
 } MockGeneralDynamicTableDiff;
-
+*/
 typedef struct GeneralTable {
 
     GeneralStaticTable friendly_static;

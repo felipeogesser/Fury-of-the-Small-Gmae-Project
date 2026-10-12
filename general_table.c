@@ -1,9 +1,21 @@
 #include "general_table.h"
 #include "general_table_internal.h"
+#include "animation.h"
+#include "animation_types.h"
+#include "aos_soa_transformer.h"
 #include "battlefield_types.h"
+#include "camera.h"
 #include "combat.h"
 #include "direction_types.h"
+#include "engine_internal.h"
+#include "field_entry.h"
 #include "formation.h"
+#include "maps_internal.h"
+#include "memory_arena.h"
+#include "sprites_internal.h"
+#include "spreadsheet.h"
+#include "spreadsheet_internal.h"
+#include "table_internal.h"
 #include <stddef.h>
 #include <stdbool.h>
 #include <math.h>
@@ -12,33 +24,35 @@
 // private prototypes
 static void allocate_mock_soa_memory(
     unsigned int obj_count,
-    MockGeneralStaticTable *mock_friendly_static_table,
-    MockGeneralStaticTable *mock_enemy_static_table,
+    GeneralStaticTable *mock_friendly_static_table,
+    GeneralStaticTable *mock_enemy_static_table,
     //MockGeneralStaticTableDiff *mock_static_table_diff,
-    MockGeneralDynamicTable *mock_friendly_dynamic_table,
-    MockGeneralDynamicTable *mock_enemy_dynamic_table
+    GeneralDynamicTable *mock_friendly_dynamic_table,
+    GeneralDynamicTable *mock_enemy_dynamic_table
     //MockGeneralDynamicTableDiff *mock_dynamic_table_diff
     );
 static void allocate_mem_for_mock(unsigned int obj_count, const ComplexFieldEntry *field_table, void *mock);
 static void general_static_table_init(
     General *general,
-    MockGeneralStaticTable *mock_static_table,
-    const ComplexFieldEntry *general_field_table,
+    GeneralStaticTable *mock_static_table,
+    const ComplexFieldEntry *general_complex_field_table,
     const ComplexFieldEntry *mock_static_field_table,
     unsigned int battalion_count);
 static void general_dynamic_table_init(
     General *general,
-    MockGeneralDynamicTable *mock_dynamic_table,
-    const ComplexFieldEntry *general_field_table,
+    GeneralDynamicTable *mock_dynamic_table,
+    const ComplexFieldEntry *general_complex_field_table,
     const ComplexFieldEntry *mock_dynamic_field_table,
     unsigned int battalion_count);
 static void update_stats(Table *tables, unsigned int i);
-static void update_status(Table *tables, unsigned int i);
-static void try_engage_enemy(Table *tables, unsigned int i);
-static void update_position(Table *tables, enum ArmyBattlefieldSide side, unsigned int i, unsigned int battalion_size);
+static void update_status(Table *tables, Map *map, unsigned int i);
+static void try_engage_enemy(Table *tables, unsigned int battalion_count, unsigned int battalion_size, unsigned int i);
+static void update_position(Table *tables, enum ArmyBattlefieldSide side, unsigned int i);
 static void update_direction(Table *tables, unsigned int i);
-static void resolve_attack(Table *tables, unsigned int i, float dt);
+static void resolve_attack(Table *tables, unsigned int i, unsigned int battalion_size, float dt);
 static void animation_table_update(Table *tables, unsigned int i);
+static float direction_from_vec(float vec_x, float vec_y, float fallback);
+static float wrap_direction(float dir);
 
 static void *general_table_start_address_alloc = NULL;
 
@@ -49,15 +63,16 @@ static const ComplexFieldEntry general_static_table_field_table[] = {
 
     { "base_meele_attack",  OFFSET_OF(GeneralStaticTable, base_meele_attack),  ELEMENT_SIZE_OF(GeneralStaticTable, base_meele_attack),  FLOAT, NULL },
     { "base_meele_defense", OFFSET_OF(GeneralStaticTable, base_meele_defense), ELEMENT_SIZE_OF(GeneralStaticTable, base_meele_defense), FLOAT, NULL },
+    { "base_strength",      OFFSET_OF(GeneralStaticTable, base_strength),      ELEMENT_SIZE_OF(GeneralStaticTable, base_strength),      FLOAT, NULL },
     { "range",              OFFSET_OF(GeneralStaticTable, range),              ELEMENT_SIZE_OF(GeneralStaticTable, range),              FLOAT, NULL },
     { "charge_bonus",       OFFSET_OF(GeneralStaticTable, charge_bonus),       ELEMENT_SIZE_OF(GeneralStaticTable, charge_bonus),       FLOAT, NULL },
     { "armor",              OFFSET_OF(GeneralStaticTable, armor),              ELEMENT_SIZE_OF(GeneralStaticTable, armor),              FLOAT, NULL },
     { "attack_speed",       OFFSET_OF(GeneralStaticTable, attack_speed),       ELEMENT_SIZE_OF(GeneralStaticTable, attack_speed),       FLOAT, NULL },
-    { "shielded",           OFFSET_OF(GeneralStaticTable, shielded),           ELEMENT_SIZE_OF(GeneralStaticTable, shielded),           BOOL,  NULL },
-    { "ranged",             OFFSET_OF(GeneralStaticTable, ranged),             ELEMENT_SIZE_OF(GeneralStaticTable, ranged),             BOOL,  NULL },
-    { "large",              OFFSET_OF(GeneralStaticTable, large),              ELEMENT_SIZE_OF(GeneralStaticTable, large),              BOOL,  NULL },
-    { "armor_piercing",     OFFSET_OF(GeneralStaticTable, armor_piercing),     ELEMENT_SIZE_OF(GeneralStaticTable, armor_piercing),     BOOL,  NULL },
-    { "anti_large",         OFFSET_OF(GeneralStaticTable, anti_large),         ELEMENT_SIZE_OF(GeneralStaticTable, anti_large),         BOOL,  NULL },
+    { "is_shielded",           OFFSET_OF(GeneralStaticTable, is_shielded),           ELEMENT_SIZE_OF(GeneralStaticTable, is_shielded),           BOOL,  NULL },
+    { "is_ranged",             OFFSET_OF(GeneralStaticTable, is_ranged),             ELEMENT_SIZE_OF(GeneralStaticTable, is_ranged),             BOOL,  NULL },
+    { "is_large",              OFFSET_OF(GeneralStaticTable, is_large),              ELEMENT_SIZE_OF(GeneralStaticTable, is_large),              BOOL,  NULL },
+    { "is_armor_piercing",     OFFSET_OF(GeneralStaticTable, is_armor_piercing),     ELEMENT_SIZE_OF(GeneralStaticTable, is_armor_piercing),     BOOL,  NULL },
+    { "is_anti_large",         OFFSET_OF(GeneralStaticTable, is_anti_large),         ELEMENT_SIZE_OF(GeneralStaticTable, is_anti_large),         BOOL,  NULL },
     { "obj_size", 0, sizeof(GeneralStaticTable), NOT_DEFINED, NULL }
 
 };
@@ -70,6 +85,8 @@ static const ComplexFieldEntry general_dynamic_table_field_table[] = {
     { "personal_target_idx", OFFSET_OF(GeneralDynamicTable, personal_target_idx), ELEMENT_SIZE_OF(GeneralDynamicTable, personal_target_idx), U_INT,  NULL },
     { "animation",           OFFSET_OF(GeneralDynamicTable, animation),           ELEMENT_SIZE_OF(GeneralDynamicTable, animation),           S_INT,  NULL },
     { "current_frame",       OFFSET_OF(GeneralDynamicTable, current_frame),       ELEMENT_SIZE_OF(GeneralDynamicTable, current_frame),       U_CHAR, NULL },
+    { "order_x",             OFFSET_OF(GeneralDynamicTable, order_x),             ELEMENT_SIZE_OF(GeneralDynamicTable, order_x),             FLOAT,  NULL },
+    { "order_y",             OFFSET_OF(GeneralDynamicTable, order_y),             ELEMENT_SIZE_OF(GeneralDynamicTable, order_y),             FLOAT,  NULL },
     { "vec_x",               OFFSET_OF(GeneralDynamicTable, vec_x),               ELEMENT_SIZE_OF(GeneralDynamicTable, vec_x),               FLOAT,  NULL },
     { "vec_y",               OFFSET_OF(GeneralDynamicTable, vec_y),               ELEMENT_SIZE_OF(GeneralDynamicTable, vec_y),               FLOAT,  NULL },
     { "x",                   OFFSET_OF(GeneralDynamicTable, x),                   ELEMENT_SIZE_OF(GeneralDynamicTable, x),                   FLOAT,  NULL },
@@ -88,65 +105,17 @@ static const ComplexFieldEntry general_dynamic_table_field_table[] = {
 };
 const ComplexFieldEntry *const general_dynamic_table_field_table_ptr = general_dynamic_table_field_table;
 
-static const ComplexFieldEntry general_static_table_field_table[] = {
-
-    { "range",          OFFSET_OF(GeneralStaticTable, range),          ELEMENT_SIZE_OF(GeneralStaticTable, range),          FLOAT, NULL },
-    { "charge_bonus",   OFFSET_OF(GeneralStaticTable, charge_bonus),   ELEMENT_SIZE_OF(GeneralStaticTable, charge_bonus),   FLOAT, NULL },
-    { "armor",          OFFSET_OF(GeneralStaticTable, armor),          ELEMENT_SIZE_OF(GeneralStaticTable, armor),          FLOAT, NULL },
-    { "shielded",       OFFSET_OF(GeneralStaticTable, shielded),       ELEMENT_SIZE_OF(GeneralStaticTable, shielded),       BOOL,  NULL },
-    { "ranged",         OFFSET_OF(GeneralStaticTable, ranged),         ELEMENT_SIZE_OF(GeneralStaticTable, ranged),         BOOL,  NULL },
-    { "large",          OFFSET_OF(GeneralStaticTable, large),          ELEMENT_SIZE_OF(GeneralStaticTable, large),          BOOL,  NULL },
-    { "armor_piercing", OFFSET_OF(GeneralStaticTable, armor_piercing), ELEMENT_SIZE_OF(GeneralStaticTable, armor_piercing), BOOL,  NULL },
-    { "anti_large",     OFFSET_OF(GeneralStaticTable, anti_large),     ELEMENT_SIZE_OF(GeneralStaticTable, anti_large),     BOOL,  NULL },
-    { "obj_size", 0, sizeof(GeneralStaticTable), NOT_DEFINED, NULL }
-
-};
-const ComplexFieldEntry *const general_static_table_field_table_ptr = general_static_table_field_table;
-
-static const ComplexFieldEntry general_dynamic_table_field_table[] = {
-
-    { "attack_speed",  OFFSET_OF(GeneralDynamicTable, attack_speed),  ELEMENT_SIZE_OF(GeneralDynamicTable, attack_speed),  FLOAT, NULL },
-    { "vec_x",         OFFSET_OF(GeneralDynamicTable, vec_x),         ELEMENT_SIZE_OF(GeneralDynamicTable, vec_x),         FLOAT, NULL },
-    { "vec_y",         OFFSET_OF(GeneralDynamicTable, vec_y),         ELEMENT_SIZE_OF(GeneralDynamicTable, vec_y),         FLOAT, NULL },
-    { "x",             OFFSET_OF(GeneralDynamicTable, x),             ELEMENT_SIZE_OF(GeneralDynamicTable, x),             FLOAT, NULL },
-    { "y",             OFFSET_OF(GeneralDynamicTable, y),             ELEMENT_SIZE_OF(GeneralDynamicTable, y),             FLOAT, NULL },
-    { "hp",            OFFSET_OF(GeneralDynamicTable, hp),            ELEMENT_SIZE_OF(GeneralDynamicTable, hp),            FLOAT, NULL },
-    { "meele_attack",  OFFSET_OF(GeneralDynamicTable, meele_attack),  ELEMENT_SIZE_OF(GeneralDynamicTable, meele_attack),  FLOAT, NULL },
-    { "meele_defense", OFFSET_OF(GeneralDynamicTable, meele_defense), ELEMENT_SIZE_OF(GeneralDynamicTable, meele_defense), FLOAT, NULL },
-    { "strength",       OFFSET_OF(GeneralDynamicTable, strength),       ELEMENT_SIZE_OF(GeneralDynamicTable, strength),       FLOAT, NULL },
-    { "is_routing",       OFFSET_OF(GeneralDynamicTable, is_routing),       ELEMENT_SIZE_OF(GeneralDynamicTable, is_routing),       BOOL,  NULL },
-    { "controllable",  OFFSET_OF(GeneralDynamicTable, controllable),  ELEMENT_SIZE_OF(GeneralDynamicTable, controllable),  BOOL,  NULL },
-    { "is_present",       OFFSET_OF(GeneralDynamicTable, is_present),       ELEMENT_SIZE_OF(GeneralDynamicTable, is_present),       BOOL,  NULL },
-    { "obj_size", 0, sizeof(GeneralDynamicTable), NOT_DEFINED, NULL }
-
-};
-const ComplexFieldEntry *const general_dynamic_table_field_table_ptr = general_dynamic_table_field_table;
-
-#define SIZE_OF(type, member) (sizeof(((type *)0)->member))
-
-static const ComplexFieldEntry general_comparison_table_field_table[] = {
-
-    { "friendly_static",  OFFSET_OF(GeneralComparisonTable, friendly_static),  SIZE_OF(GeneralComparisonTable, friendly_static),  STRUCT, general_static_table_field_table },
-    { "enemy_static",     OFFSET_OF(GeneralComparisonTable, enemy_static),     SIZE_OF(GeneralComparisonTable, enemy_static),     STRUCT, general_static_table_field_table },
-    { "friendly_dynamic", OFFSET_OF(GeneralComparisonTable, friendly_dynamic), SIZE_OF(GeneralComparisonTable, friendly_dynamic), STRUCT, general_dynamic_table_field_table },
-    { "enemy_dynamic",    OFFSET_OF(GeneralComparisonTable, enemy_dynamic),    SIZE_OF(GeneralComparisonTable, enemy_dynamic),    STRUCT, general_dynamic_table_field_table },
-    { "obj_size", 0, sizeof(GeneralComparisonTable), NOT_DEFINED, NULL }
-
-};
-const ComplexFieldEntry *const general_comparison_table_field_table_ptr = general_comparison_table_field_table;
-
 #undef OFFSET_OF
-#undef SIZE_OF
 #undef ELEMENT_SIZE_OF
 
-void general_table_init(Table *player_tables, Table *enemy_tables, General *player_general, General *enemy_general, const ComplexFieldEntry *general_field_table, unsigned int battalion_count) {
+void general_table_init(Table *player_tables, Table *enemy_tables, General *player_general, General *enemy_general, unsigned int battalion_count) {
 
-    MockGeneralStaticTable mock_friendly_static_table = {0};
-    MockGeneralStaticTable mock_enemy_static_table = {0};
+    GeneralStaticTable mock_friendly_static_table = {0};
+    GeneralStaticTable mock_enemy_static_table = {0};
     //MockGeneralStaticTableDiff mock_friendly_static_table_diff = {0};
     //MockGeneralStaticTableDiff mock_enemy_static_table_diff = {0};
-    MockGeneralDynamicTable mock_friendly_dynamic_table = {0};
-    MockGeneralDynamicTable mock_enemy_dynamic_table = {0};
+    GeneralDynamicTable mock_friendly_dynamic_table = {0};
+    GeneralDynamicTable mock_enemy_dynamic_table = {0};
     //MockGeneralDynamicTableDiff mock_friendly_dynamic_table_diff = {0};
     //MockGeneralDynamicTableDiff mock_enemy_dynamic_table_diff = {0};
 
@@ -158,14 +127,13 @@ void general_table_init(Table *player_tables, Table *enemy_tables, General *play
         &mock_enemy_static_table,
         //&mock_static_table_diff,
         &mock_friendly_dynamic_table,
-        &mock_enemy_dynamic_table,
+        &mock_enemy_dynamic_table);
         //&mock_dynamic_table_diff
-    );
 
-    general_static_table_init(player_general, mock_friendly_static_table, general_field_table, general_static_table_field_table_ptr, battalion_count);
-    general_static_table_init(enemy_general, mock_enemy_static_table, general_field_table, general_static_table_field_table_ptr, battalion_count);
-    general_dynamic_table_init(player_general, mock_friendly_dynamic_table, general_field_table, general_dynamic_table_field_table_ptr, battalion_count);
-    general_dynamic_table_init(enemy_general, mock_enemy_dynamic_table, general_field_table, general_dynamic_table_field_table_ptr, battalion_count);
+    general_static_table_init(player_general, &mock_friendly_static_table, general_complex_field_table_ptr, general_static_table_field_table_ptr, battalion_count);
+    general_static_table_init(enemy_general, &mock_enemy_static_table, general_complex_field_table_ptr, general_static_table_field_table_ptr, battalion_count);
+    general_dynamic_table_init(player_general, &mock_friendly_dynamic_table, general_complex_field_table_ptr, general_dynamic_table_field_table_ptr, battalion_count);
+    general_dynamic_table_init(enemy_general, &mock_enemy_dynamic_table, general_complex_field_table_ptr, general_dynamic_table_field_table_ptr, battalion_count);
     //battalion_static_diff_table_init(battalion_count, mock_friendly_static_table_diff, mock_friendly_static_table, mock_enemy_static_table, mock_static_field_table_diff, mock_static_field_table);
     //battalion_dynamic_diff_table_init(battalion_count, mock_friendly_dynamic_table_diff, mock_friendly_dynamic_table, mock_enemy_dynamic_table, mock_dynamic_field_table_diff, mock_dynamic_field_table);
 
@@ -183,19 +151,19 @@ void general_table_init(Table *player_tables, Table *enemy_tables, General *play
         //.enemy_dynamic_diff = (GeneralDynamicTableDiff)mock_enemy_dynamic_table_diff;
     };*/
 
-    player_tables->general_tables.friendly_static = (GeneralStaticTable)mock_friendly_static_table;
-    player_tables->general_tables.enemy_static = (GeneralStaticTable)mock_enemy_static_table;
-    enemy_tables->general_tables.friendly_static = (GeneralStaticTable)mock_enemy_static_table;
-    enemy_tables->general_tables.enemy_static = (GeneralStaticTable)mock_friendly_static_table;
+    player_tables->general_tables.friendly_static = mock_friendly_static_table;
+    player_tables->general_tables.enemy_static = mock_enemy_static_table;
+    enemy_tables->general_tables.friendly_static = mock_enemy_static_table;
+    enemy_tables->general_tables.enemy_static = mock_friendly_static_table;
 
-    player_tables->general_tables.friendly_dynamic = (GeneralDynamicTable)mock_friendly_dynamic_table;
-    player_tables->general_tables.enemy_dynamic = (GeneralDynamicTable)mock_enemy_dynamic_table;
-    enemy_tables->general_tables.friendly_dynamic = (GeneralDynamicTable)mock_enemy_dynamic_table;
-    enemy_tables->general_tables.enemy_dynamic = (GeneralDynamicTable)mock_friendly_dynamic_table;
+    player_tables->general_tables.friendly_dynamic = mock_friendly_dynamic_table;
+    player_tables->general_tables.enemy_dynamic = mock_enemy_dynamic_table;
+    enemy_tables->general_tables.friendly_dynamic = mock_enemy_dynamic_table;
+    enemy_tables->general_tables.enemy_dynamic = mock_friendly_dynamic_table;
 
 }
 
-void general_table_update(Table *tables, unsigned int battalion_count, enum ArmyBattlefieldSide side, unsigned int battalion_size, float dt) {
+void general_table_update(Table *tables, Map *map, enum ArmyBattlefieldSide side, unsigned int battalion_count, unsigned int battalion_size, float dt) {
 
     for (unsigned int i = 0; i < battalion_count; i++) {
 
@@ -203,11 +171,11 @@ void general_table_update(Table *tables, unsigned int battalion_count, enum Army
         if (!is_present) continue;
 
         update_stats(tables, i);
-        update_status(tables, i);
-        try_engage_enemy(tables, i);
-        update_position(tables, side, i, battalion_size);
+        update_status(tables, map, i);
+        try_engage_enemy(tables, battalion_count, battalion_size, i);
+        update_position(tables, side, i);
         update_direction(tables, i);
-        resolve_attack(tables, i, dt);
+        resolve_attack(tables, i, battalion_size, dt);
         animation_table_update(tables, i);
 
     }
@@ -216,18 +184,14 @@ void general_table_update(Table *tables, unsigned int battalion_count, enum Army
 
 void general_table_render(Table *tables, unsigned int i) {
 
-    const float vx = tables->general_tables.friendly_dynamic.vec_x[i];
-    const float vy = tables->general_tables.friendly_dynamic.vec_y[i];
     const enum Direction direction = tables->general_tables.friendly_dynamic.direction[i];
     const float x = tables->general_tables.friendly_dynamic.x[i];
     const float y = tables->general_tables.friendly_dynamic.y[i];
-    const _Bool alive = tables->general_tables.friendly_dynamic.is_present[i];
-    const _Bool is_engaged = tables->general_tables.friendly_dynamic.is_engaged[i];
     const enum BattalionType battalion_type = tables->battalion_tables.friendly_static.battalion_type[i];
     //enum BattalionState battalion_state = tables->battalion_tables.friendly_static.state[i];
     const unsigned char current_frame = tables->general_tables.friendly_dynamic.current_frame[i];
     const enum Animation anim_type = tables->general_tables.friendly_dynamic.animation[i];
-    const enum Sprites sprite_type = battalion_spreadsheet[battalion_type].sprite_type;
+    const enum Sprites sprite_type = get_battalion_spreadsheet(battalion_type).sprite_type;
     const Sprite *sprite = &engine.sprite_pack->sprite[sprite_type][anim_type];
     signed int png_width = sprite->width;
     signed int png_height = sprite->height;
@@ -283,7 +247,7 @@ static void update_stats(Table *tables, unsigned int i) {
     float base_strength = tables->general_tables.friendly_static.base_strength[i];
     float meele_attack = tables->general_tables.friendly_dynamic.meele_attack[i];
     float meele_defense = tables->general_tables.friendly_dynamic.meele_defense[i];
-    float strength = tables->general_tables.friendly_static.strength[i];
+    float strength = tables->general_tables.friendly_dynamic.strength[i];
 
     meele_attack = base_meele_attack - (morale_state * 2 + fatigue_state * 3);
     meele_defense = base_meele_defense - (morale_state * 2 + fatigue_state * 3);
@@ -295,15 +259,16 @@ static void update_stats(Table *tables, unsigned int i) {
 
 }
 
-static void update_status(Table *tables, unsigned int i) {
+static void update_status(Table *tables, Map *map, unsigned int i) {
 
     // is is_present
     const float hp = tables->general_tables.friendly_dynamic.hp[i];
     unsigned int dead_entity_count = tables->battalion_tables.friendly_dynamic.dead_entity_count[i];
     unsigned int withdrawed_entity_count = tables->battalion_tables.friendly_dynamic.withdrawed_entity_count[i];
-
+    const float x = tables->battalion_tables.friendly_dynamic.x[i];
+    const float y = tables->battalion_tables.friendly_dynamic.y[i];
     const _Bool is_dead = hp <= 0.0f;
-    const _Bool withdrawed = x < mapLeftLimit | x > mapRightLimit | y < mapTopLimit | y > mapBottomLimit;
+    const _Bool withdrawed = (x < map->mapLeftLimit) | (x > map->mapRightLimit) | (y < map->mapTopLimit) | (y > map->mapBottomLimit);
     dead_entity_count += is_dead;
     withdrawed_entity_count += withdrawed;
     const _Bool is_present = !(is_dead | withdrawed);
@@ -312,21 +277,21 @@ static void update_status(Table *tables, unsigned int i) {
     tables->battalion_tables.friendly_dynamic.withdrawed_entity_count[i] = withdrawed_entity_count;
     tables->general_tables.friendly_dynamic.is_present[i] = is_present;
 
-    // is engaged
-    // is engaging
+    // is is_engaged
+    // is is_engaging
     _Bool is_target_in_range = tables->general_tables.friendly_dynamic.is_target_in_range[i];
-    enum TargetType personal_target_type = tables->general_tables.friendly_dynamic.personal_target_type[i];
-    enum OrderType order_type = tables->battalion_order[i].type;
+    enum TargetType personal_target_type = tables->general_tables.friendly_dynamic.target_type[i];
+    enum OrderType order_type = tables->battalion_order.type[i];
 
-    const _Bool is_engaged = is_target_in_range & order_type == ORDER_ATTACK & personal_target_type != UNKNOWN_TARGET;
+    const _Bool is_engaged = is_target_in_range & (order_type == ORDER_ATTACK) & (personal_target_type != UNKNOWN_TARGET);
     tables->general_tables.friendly_dynamic.is_engaged[i] = is_engaged;
 
-    const _Bool is_engaging = !is_target_in_range & order_type == ORDER_ATTACK & personal_target_type != UNKNOWN_TARGET;
+    const _Bool is_engaging = !is_target_in_range & (order_type == ORDER_ATTACK) & (personal_target_type != UNKNOWN_TARGET);
     tables->general_tables.friendly_dynamic.is_engaging[i] = is_engaging;
 
 }
 
-static void try_engage_enemy(Table *tables, unsigned int i) {
+static void try_engage_enemy(Table *tables, unsigned int battalion_count, unsigned int battalion_size, unsigned int i) {
 
     if (!tables->battalion_tables.friendly_dynamic.is_engaging[i] ||
         !tables->battalion_tables.friendly_dynamic.is_engaged) return;
@@ -334,14 +299,13 @@ static void try_engage_enemy(Table *tables, unsigned int i) {
 
     const float x = tables->general_tables.friendly_dynamic.x[i];
     const float y = tables->general_tables.friendly_dynamic.y[i];
-    const float speed = tables->battalion_tables.friendly_dynamic.speed[i];
 
     _Bool is_engaged = false;
     unsigned int closest_enemy_idx = -1U;
     enum TargetType personal_target_type = UNKNOWN_TARGET;
     #define MEELE_SEARCH_RANGE 300.0f
     float shortest_dist = MEELE_SEARCH_RANGE * MEELE_SEARCH_RANGE;
-    #undef MEELE_SEARCH_RANGE
+    unsigned int enemy_battalion_count = battalion_count / 2;
     for (unsigned int j = 0; j < enemy_battalion_count; j++) {
 
         if (!tables->battalion_tables.enemy_dynamic.is_present[j]) continue;
@@ -353,7 +317,7 @@ static void try_engage_enemy(Table *tables, unsigned int i) {
         float dy = enemy_y - y;
         float dist = dx * dx + dy * dy;
         if (dist > MEELE_SEARCH_RANGE * MEELE_SEARCH_RANGE) continue;
-
+        #undef MEELE_SEARCH_RANGE
         if (tables->general_tables.enemy_dynamic.is_present[j]) {
 
             enemy_x = tables->general_tables.enemy_dynamic.x[j];
@@ -373,9 +337,9 @@ static void try_engage_enemy(Table *tables, unsigned int i) {
 
         }
 
-        for (unsigned int idx = battalion_size * j, unsigned int k = 0; k < battalion_size; k++) {
+        for (unsigned int idx = battalion_size * j, k = 0; k < battalion_size; k++) {
 
-            unsigned int idx += k;
+            idx += k;
             if (!tables->unit_tables.enemy_dynamic.is_present[idx]) continue;
             
             enemy_x = tables->unit_tables.enemy_dynamic.x[idx];
@@ -397,14 +361,14 @@ static void try_engage_enemy(Table *tables, unsigned int i) {
 
     }
 
-    is_engaged = personal_target_type != UNKNOWN_TARGET & closest_enemy_idx != -1U;
+    is_engaged = (personal_target_type != UNKNOWN_TARGET) & (closest_enemy_idx != -1U);
     tables->general_tables.friendly_dynamic.is_engaged[i] = is_engaged;
-    tables->general_tables.friendly_dynamic.personal_target_type[i] = personal_target_type;
+    tables->general_tables.friendly_dynamic.target_type[i] = personal_target_type;
     tables->general_tables.friendly_dynamic.personal_target_idx[i] = closest_enemy_idx;
 
 }
 
-static void update_position(Table *tables, Map map, enum ArmyBattlefieldSide side, unsigned int i, unsigned int battalion_size) {
+static void update_position(Table *tables, enum ArmyBattlefieldSide side, unsigned int i) {
 
     float x = tables->general_tables.friendly_dynamic.x[i];
     float y = tables->general_tables.friendly_dynamic.y[i];
@@ -412,7 +376,7 @@ static void update_position(Table *tables, Map map, enum ArmyBattlefieldSide sid
     float vec_y = tables->general_tables.friendly_dynamic.vec_y[i];
     float speed = tables->battalion_tables.friendly_dynamic.speed[i];
 
-    if (tables->battalion_tables.friendly_dynamic.lifecycle[i] == ROUTING) {
+    if (tables->battalion_tables.friendly_dynamic.lifecycle_state[i] == ROUTING) {
 
         if (side == ARMY_SIDE_LEFT) {
 
@@ -448,7 +412,7 @@ static void update_position(Table *tables, Map map, enum ArmyBattlefieldSide sid
         #undef ENTITY_CAN_START_ENGAGING_RANGE
         if (!tables->general_tables.friendly_dynamic.is_engaging[i]) {
 
-            enum TargetType personal_target_type = tables->general_tables.friendly_dynamic.personal_target_type[i];
+            enum TargetType personal_target_type = tables->general_tables.friendly_dynamic.target_type[i];
             unsigned int personal_target_idx = tables->general_tables.friendly_dynamic.personal_target_idx[i];
             float enemy_x = 0;
             float enemy_y = 0;
@@ -577,14 +541,31 @@ static void update_direction(Table *tables, unsigned int i) {
 
     float vx = tables->general_tables.friendly_dynamic.vec_x[i];
     float vy = tables->general_tables.friendly_dynamic.vec_y[i];
-    float dir = 0;
-    (void)direction_from_movement(vx, vy, &dir);
-    enum Direction direction = (dir < 2) ? RIGHT : LEFT;
+    enum Direction direction = tables->general_tables.friendly_dynamic.direction[i];
+    float dir = direction_from_vec(vx, vy, direction == LEFT ? 2.0f : 0.0f);
+    direction = (dir < 2.0f) ? RIGHT : LEFT;
     tables->general_tables.friendly_dynamic.direction[i] = direction;
 
 }
 
-static void resolve_attack(Table *tables, unsigned int i, float dt) {
+#define PI 3.14159274f
+#define DIR_STEPS 4.0f
+static float direction_from_vec(float vec_x, float vec_y, float fallback) {
+    if (vec_x * vec_x + vec_y * vec_y < 0.0001f) return fallback;
+
+    float angle = atan2f(vec_y, vec_x);
+    return wrap_direction(angle * (DIR_STEPS / (2.0f * PI)));
+}
+
+static float wrap_direction(float dir) {
+    dir = fmodf(dir, DIR_STEPS);
+    if (dir < 0.0f) dir += DIR_STEPS;
+    return dir;
+}
+#undef PI
+#undef DIR_STEPS
+
+static void resolve_attack(Table *tables, unsigned int i, unsigned int battalion_size, float dt) {
 
     if (!tables->general_tables.friendly_dynamic.is_engaged[i]) return;
     float attack_timer = tables->general_tables.friendly_dynamic.attack_timer[i];
@@ -598,19 +579,19 @@ static void resolve_attack(Table *tables, unsigned int i, float dt) {
     float charge_bonus = tables->general_tables.friendly_static.charge_bonus[i];
     float meele_attack = tables->general_tables.friendly_dynamic.meele_attack[i];
     unsigned int personal_target_idx = tables->general_tables.friendly_dynamic.personal_target_idx[i];
-    enum TargetType personal_target_type = tables->general_tables.friendly_dynamic.personal_target_type[i];
-    _Bool armor_piercing = tables->general_tables.friendly_static.armor_piercing[i];
-    float *const target_hp = 0.0f;
+    enum TargetType personal_target_type = tables->general_tables.friendly_dynamic.target_type[i];
+    _Bool is_armor_piercing = tables->general_tables.friendly_static.is_armor_piercing[i];
+    float *target_hp = NULL;
     float target_meele_defense = 0.0f;
     float target_armor = 0.0f;
     _Bool is_target_large = 0;
     
     if (personal_target_type == TARGET_UNIT) {
 
-        target_hp = &tables->battalion_tables.enemy_dynamic.hp[personal_target_idx];
-        target_meele_defense = tables->battalion_tables.enemy_dynamic.meele_defense[personal_target_idx];
-        target_armor = tables->battalion_tables.enemy_static.armor[personal_target_idx];
-        is_target_large = tables->battalion_tables.enemy_static.is_large[personal_target_idx];
+        target_hp = &tables->unit_tables.enemy_dynamic.hp[personal_target_idx];
+        target_meele_defense = tables->battalion_tables.enemy_dynamic.meele_defense[personal_target_idx / battalion_size];
+        target_armor = tables->battalion_tables.enemy_static.armor[personal_target_idx / battalion_size];
+        is_target_large = tables->battalion_tables.enemy_static.is_large[personal_target_idx / battalion_size];
 
     } else if (personal_target_type == TARGET_GENERAL) {
 
@@ -625,7 +606,7 @@ static void resolve_attack(Table *tables, unsigned int i, float dt) {
 
         tables->general_tables.friendly_dynamic.is_engaged[i] = false;
         tables->general_tables.friendly_dynamic.personal_target_idx[i] = -1U;
-        tables->general_tables.friendly_dynamic.personal_target_type[i] = UNKNOWN_TARGET;
+        tables->general_tables.friendly_dynamic.target_type[i] = UNKNOWN_TARGET;
         return;
         
     }
@@ -633,9 +614,9 @@ static void resolve_attack(Table *tables, unsigned int i, float dt) {
     _Bool is_charging = tables->battalion_tables.friendly_dynamic.is_charging[i];
     float damage = strength + charge_bonus * is_charging;
     damage *= (is_target_large) ? 1.5f : 1.0f;
-    target_armor = (armor_piercing) ? armor / 2 : armor;
+    target_armor = (is_armor_piercing) ? target_armor / 2 : target_armor;
     damage = apply_armor(damage, target_armor);
-    float chance = hit_chance(melee_attack, target_meele_defense);
+    float chance = hit_chance(meele_attack, target_meele_defense);
     _Bool hit = roll_hit(chance);
 
     if (hit) *target_hp -= damage;
@@ -651,9 +632,9 @@ static void animation_table_update(Table *tables, unsigned int i) {
     const enum BattalionMovementMode movement_state = tables->battalion_tables.friendly_dynamic.movement_state[i];
     const enum BattalionLifecycle lifecycle_state = tables->battalion_tables.friendly_dynamic.lifecycle_state[i];
     const _Bool is_engaged = tables->general_tables.friendly_dynamic.is_engaged[i];
-    const _Bool target_in_range = tables->general_tables.friendly_dynamic.target_in_range[i];
+    const _Bool is_target_in_range = tables->general_tables.friendly_dynamic.is_target_in_range[i];
     unsigned char current_frame = tables->general_tables.friendly_dynamic.current_frame[i];
-    const enum Sprites sprite_type = battalion_spreadsheet[battalion_type].sprite_type;
+    const enum Sprites sprite_type = get_battalion_spreadsheet(battalion_type).sprite_type;
     enum Animation anim = tables->general_tables.friendly_dynamic.animation[i];
     const Sprite *sprite = &engine.sprite_pack->sprite[sprite_type][anim];
     unsigned int frames_count = sprite->frames_count;
@@ -663,14 +644,19 @@ static void animation_table_update(Table *tables, unsigned int i) {
 
         case STATIONARY:
             new_animation = IDLE;
+            break;
         case WALKING:
             new_animation = RUN;
+            break;
         case RUNNING:
             new_animation = RUN;
+            break;
         case CHARGING:
             new_animation = RUN;
+            break;
         case FIGHTING:
             new_animation = ATTACK;
+            break;
         default:
             break;
 
@@ -678,7 +664,7 @@ static void animation_table_update(Table *tables, unsigned int i) {
 
     if (lifecycle_state == ROUTING) new_animation = RUN;
     if (is_engaged) new_animation = RUN;
-    if (target_in_range) new_animation = ATTACK;
+    if (is_target_in_range) new_animation = ATTACK;
 
     if (frames_count == 0) {
         fprintf(stderr, "Frame count is 0.\n");
@@ -702,11 +688,11 @@ static void animation_table_update(Table *tables, unsigned int i) {
 
 static void allocate_mock_soa_memory(
     unsigned int obj_count,
-    MockGeneralStaticTable *mock_friendly_static_table,
-    MockGeneralStaticTable *mock_enemy_static_table,
+    GeneralStaticTable *mock_friendly_static_table,
+    GeneralStaticTable *mock_enemy_static_table,
     //MockGeneralStaticTableDiff *mock_static_table_diff,
-    MockGeneralDynamicTable *mock_friendly_dynamic_table,
-    MockGeneralDynamicTable *mock_enemy_dynamic_table
+    GeneralDynamicTable *mock_friendly_dynamic_table,
+    GeneralDynamicTable *mock_enemy_dynamic_table
     //MockGeneralDynamicTableDiff *mock_dynamic_table_diff
     ) {
 
@@ -732,7 +718,7 @@ static void allocate_mem_for_mock(unsigned int obj_count, const ComplexFieldEntr
         //alignment = (alignment <= 64) ? alignment : 64;
 
         size_t size_padded = (size + 63) & ~(size_t)63;
-        void **dest = &((char *)mock + field_table[i].offset);
+        void **dest = (void **)((char *)mock + field_table[i].offset);
         *dest = memory_arena_push(size_padded, alignment);
 
     }
@@ -741,33 +727,33 @@ static void allocate_mem_for_mock(unsigned int obj_count, const ComplexFieldEntr
 
 static void general_static_table_init(
     General *general,
-    MockGeneralStaticTable *mock_static_table,
-    const ComplexFieldEntry *general_field_table,
+    GeneralStaticTable *mock_static_table,
+    const ComplexFieldEntry *general_complex_field_table,
     const ComplexFieldEntry *mock_static_field_table,
     unsigned int battalion_count) {
 
-    aos_soa_transform(general, (void **)mock_static_table, general_field_table, mock_static_field_table, battalion_count, 11,
-    "base_meele_attack", "base_meele_defense", "range", "charge_bonus", "armor", "attack_speed", "shielded", "ranged", "large", "armor_piercing", "anti_large");
+    aos_soa_transform(general, (void **)mock_static_table, general_complex_field_table, mock_static_field_table, battalion_count, 11,
+    "base_meele_attack", "base_meele_defense", "base_strength", "range", "charge_bonus", "armor", "attack_speed", "is_shielded", "is_ranged", "is_large", "is_armor_piercing", "is_anti_large");
 
 }
 
 static void general_dynamic_table_init(
     General *general,
-    MockGeneralDynamicTable *mock_dynamic_table,
-    const ComplexFieldEntry *general_field_table,
+    GeneralDynamicTable *mock_dynamic_table,
+    const ComplexFieldEntry *general_complex_field_table,
     const ComplexFieldEntry *mock_dynamic_field_table,
     unsigned int battalion_count) {
 
-    aos_soa_transform(general, (void **)mock_dynamic_table, general_field_table, mock_dynamic_field_table, battalion_count, 5,
-    "direction", "animation", "attack_speed", "hp", "strength");
+    aos_soa_transform(general, (void **)mock_dynamic_table, general_complex_field_table, mock_dynamic_field_table, battalion_count, 5,
+    "direction", "animation", "attack_speed", "hp");
 
 }
 
 /*static void general_static_diff_table_init(
     unsigned int obj_count,
     MockGeneralStaticTableDiff *mock_static_table_diff,
-    MockGeneralStaticTable *mock_friendly_static_table,
-    MockGeneralStaticTable *mock_enemy_static_table,
+    GeneralStaticTable *mock_friendly_static_table,
+    GeneralStaticTable *mock_enemy_static_table,
     const ComplexFieldEntry *mock_static_field_table_diff,
     const ComplexFieldEntry *mock_static_field_table) {
 
@@ -828,8 +814,8 @@ static void general_dynamic_table_init(
 /*static void general_dynamic_diff_table_init(
     unsigned int obj_count,
     MockGeneralStaticTableDiff *mock_dynamic_table_diff,
-    MockGeneralStaticTable *mock_friendly_dynamic_table,
-    MockGeneralStaticTable *mock_enemy_dynamic_table,
+    GeneralStaticTable *mock_friendly_dynamic_table,
+    GeneralStaticTable *mock_enemy_dynamic_table,
     const ComplexFieldEntry *mock_dynamic_field_table_diff,
     const ComplexFieldEntry *mock_dynamic_field_table) {
 

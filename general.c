@@ -40,7 +40,7 @@ static const FieldEntry field_table[] = {
     { "base_meele_attack",  OFFSET_OF(General, base_meele_attack),  SIZE_OF(General, base_meele_attack)  },
     { "base_meele_defense", OFFSET_OF(General, base_meele_defense), SIZE_OF(General, base_meele_defense) },
     { "armor",              OFFSET_OF(General, armor),              SIZE_OF(General, armor)              },
-    { "strength",           OFFSET_OF(General, strength),           SIZE_OF(General, strength)           },
+    { "base_strength",           OFFSET_OF(General, base_strength),           SIZE_OF(General, base_strength)           },
     { "attack_speed",       OFFSET_OF(General, attack_speed),       SIZE_OF(General, attack_speed)       },
     { "positionX",          OFFSET_OF(General, positionX),          SIZE_OF(General, positionX)          },
     { "positionY",          OFFSET_OF(General, positionY),          SIZE_OF(General, positionY)          },
@@ -60,11 +60,11 @@ static const FieldEntry field_table[] = {
     { "units_type",         OFFSET_OF(General, units_type),         SIZE_OF(General, units_type)         },
     { "range",              OFFSET_OF(General, range),              SIZE_OF(General, range)              },
     { "charge_bonus",       OFFSET_OF(General, charge_bonus),       SIZE_OF(General, charge_bonus)       },
-    { "shielded",           OFFSET_OF(General, shielded),           SIZE_OF(General, shielded)           },
-    { "ranged",             OFFSET_OF(General, ranged),             SIZE_OF(General, ranged)             },
-    { "large",              OFFSET_OF(General, large),              SIZE_OF(General, large)              },
-    { "armor_piercing",     OFFSET_OF(General, armor_piercing),     SIZE_OF(General, armor_piercing)     },
-    { "anti_large",         OFFSET_OF(General, anti_large),         SIZE_OF(General, anti_large)         },
+    { "is_shielded",           OFFSET_OF(General, is_shielded),           SIZE_OF(General, is_shielded)           },
+    { "is_ranged",             OFFSET_OF(General, is_ranged),             SIZE_OF(General, is_ranged)             },
+    { "is_large",              OFFSET_OF(General, is_large),              SIZE_OF(General, is_large)              },
+    { "is_armor_piercing",     OFFSET_OF(General, is_armor_piercing),     SIZE_OF(General, is_armor_piercing)     },
+    { "is_anti_large",         OFFSET_OF(General, is_anti_large),         SIZE_OF(General, is_anti_large)         },
     { "obj_size", 0, sizeof(General) }
 
 };
@@ -83,7 +83,7 @@ static const ComplexFieldEntry general_complex_field_table[] = {
     { "base_meele_attack",  OFFSET_OF(General, base_meele_attack),  SIZE_OF(General, base_meele_attack),  S_INT,       NULL },
     { "base_meele_defense", OFFSET_OF(General, base_meele_defense), SIZE_OF(General, base_meele_defense), S_INT,       NULL },
     { "armor",              OFFSET_OF(General, armor),              SIZE_OF(General, armor),              S_INT,       NULL },
-    { "strength",           OFFSET_OF(General, strength),           SIZE_OF(General, strength),           FLOAT,       NULL },
+    { "base_strength",           OFFSET_OF(General, base_strength),           SIZE_OF(General, base_strength),           FLOAT,       NULL },
     { "attack_speed",       OFFSET_OF(General, attack_speed),       SIZE_OF(General, attack_speed),       FLOAT,       NULL },
     { "positionX",          OFFSET_OF(General, positionX),          SIZE_OF(General, positionX),          FLOAT,       NULL },
     { "positionY",          OFFSET_OF(General, positionY),          SIZE_OF(General, positionY),          FLOAT,       NULL },
@@ -103,11 +103,11 @@ static const ComplexFieldEntry general_complex_field_table[] = {
     { "units_type",         OFFSET_OF(General, units_type),         SIZE_OF(General, units_type),         S_INT,       NULL },
     { "range",              OFFSET_OF(General, range),              SIZE_OF(General, range),              FLOAT,       NULL },
     { "charge_bonus",       OFFSET_OF(General, charge_bonus),       SIZE_OF(General, charge_bonus),       FLOAT,       NULL },
-    { "shielded",           OFFSET_OF(General, shielded),           SIZE_OF(General, shielded),           BOOL,        NULL },
-    { "ranged",             OFFSET_OF(General, ranged),             SIZE_OF(General, ranged),             BOOL,        NULL },
-    { "large",              OFFSET_OF(General, large),              SIZE_OF(General, large),              BOOL,        NULL },
-    { "armor_piercing",     OFFSET_OF(General, armor_piercing),     SIZE_OF(General, armor_piercing),     BOOL,        NULL },
-    { "anti_large",         OFFSET_OF(General, anti_large),         SIZE_OF(General, anti_large),         BOOL,        NULL },
+    { "is_shielded",           OFFSET_OF(General, is_shielded),           SIZE_OF(General, is_shielded),           BOOL,        NULL },
+    { "is_ranged",             OFFSET_OF(General, is_ranged),             SIZE_OF(General, is_ranged),             BOOL,        NULL },
+    { "is_large",              OFFSET_OF(General, is_large),              SIZE_OF(General, is_large),              BOOL,        NULL },
+    { "is_armor_piercing",     OFFSET_OF(General, is_armor_piercing),     SIZE_OF(General, is_armor_piercing),     BOOL,        NULL },
+    { "is_anti_large",         OFFSET_OF(General, is_anti_large),         SIZE_OF(General, is_anti_large),         BOOL,        NULL },
     { "obj_size", 0, sizeof(General), NOT_DEFINED, NULL }
 
 };

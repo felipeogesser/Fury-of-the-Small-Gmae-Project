@@ -1,17 +1,22 @@
 #include "formation.h"
 #include "direction_types.h"
-#include "table_internal.hs"
+#include "table_internal.h"
 #include <math.h>
 
 #include <stdio.h>
 
 #define PI 3.14159274f
 #define DIR_STEPS 4.0f   /* direction values for a full circle (0..4, 4 wraps to 0) */
+#define DAMPING            0.85f  /* velocity kept per tick; lower = settles faster     */
+#define STOP_SPEED         0.02f  /* slower than this per tick: velocity becomes 0      */
+#define ARRIVE_GAIN        0.15f  /* desired speed per unit of distance to a slot       */
+#define ARRIVE_WEIGHT      0.5f   /* how hard units steer toward slots / targets        */
+#define SEPARATION_WEIGHT  0.6f   /* push strength between units that are too close     */
 
 // private prototypes
 static float wrap_direction(float dir);
 static void direction_to_forward(float direction, float *forward_x, float *forward_y);
-static _Bool direction_from_movement(float move_x, float move_y, float *direction);
+static float direction_from_vec(float vec_x, float vec_y, float fallback);
 static float centered_offset(unsigned int index, unsigned int count, float step);
 static unsigned int ceil_div(unsigned int a, unsigned int b);
 static unsigned int min_uint(unsigned int a, unsigned int b);
@@ -33,63 +38,30 @@ static void steer_separation(const float *unit_x, const float *unit_y,
                       float radius, float *force_x, float *force_y);
 static void integrate_unit(float *x, float *y, float *vx, float *vy,
                     float force_x, float force_y, float max_speed);
+static void clamp_length(float *x, float *y, float max);
 
-/* ---------------------------------------------------------------------- */
-/* Main function                                                          */
-/* ---------------------------------------------------------------------- */
-
-/* Moves every unit of an army toward its slot in its battalion's formation.
-
-   Battalion b follows general b. The formation is centered on the tip of the
-   general's S line (`distance`), facing the way the general walks. Front rank
-   fills first, dead and engaged units are skipped so the others close the
-   gaps, the last rank is centered, and the block re-centers as it shrinks.
-
-   Skipped battalions: headless, engaged, or general not moving.
-   Skipped units: dead or engaged.
-
-   unit_x, unit_y        unit positions, moved in place       [unit_count]
-   unit_vx, unit_vy      unit velocities, updated in place    [unit_count]
-   unit_alive            alive flag per unit                  [unit_count]
-   unit_engaged          engaged flag per unit                [unit_count]
-   unit_count            total units in the army
-   battalion_size        units per battalion
-   general_x, general_y  general positions                    [per battalion]
-   general_move_x/_y     general movement this tick           [per battalion]
-   headless              battalion has no general             [per battalion]
-   battalion_engaged     battalion is in combat               [per battalion]
-   formation_x           ranks (front to back)                [per battalion]
-   formation_y           units per rank (side by side)        [per battalion]
-   unit_w                side-to-side room per unit
-   unit_h                front-to-back room per unit
-   padding_x             gap between ranks
-   padding_y             gap between units in a rank
-   distance              S: how far ahead of the general the block's center sits
-   max_speed             max distance a unit moves per tick */
 void formation_update(Table *tables,
-                unsigned int battalion_count, unsigned int unit_count,
-                unsigned int battalion_size,
-                float unit_w, float unit_h, float padding_x, float padding_y,
-                float distance, float max_speed) {
+                const unsigned int battalion_count, const unsigned int unit_count,
+                const unsigned int battalion_size,
+                const float unit_w, const float unit_h, const float padding_x, const float padding_y,
+                const float distance, const float max_speed) {
 
     float *unit_x = tables->unit_tables.friendly_dynamic.x;
     float *unit_y = tables->unit_tables.friendly_dynamic.y;
     float *unit_vx = tables->unit_tables.friendly_dynamic.vec_x;
     float *unit_vy = tables->unit_tables.friendly_dynamic.vec_y;
-    enum Direction *direction = tables->battalion_tables.friendly_dynamic.direction;
+    enum Direction *general_direction = tables->general_tables.friendly_dynamic.direction;
 
     const _Bool *is_unit_present = tables->unit_tables.friendly_dynamic.is_present;
     const _Bool *is_unit_engaged = tables->unit_tables.friendly_dynamic.is_engaged;
     const _Bool *is_battalion_engaged = tables->battalion_tables.friendly_dynamic.is_engaged;
     const _Bool *is_headless = tables->battalion_tables.friendly_dynamic.is_headless;
-    const unsigned char *formation_x = tables->battalion_tables.friendly_dynamic.formation_x;
-    const unsigned char *formation_y = tables->battalion_tables.friendly_dynamic.formation_y;
-    const float *battalion_target_x = tables->battalion_tables.friendly_dynamic.battalion_target_x;
-    const float *battalion_target_y = tables->battalion_tables.friendly_dynamic.battalion_target_y;
+    const unsigned char *formation_x = tables->battalion_tables.friendly_static.formation_x;
+    const unsigned char *formation_y = tables->battalion_tables.friendly_static.formation_y;
     const float *general_x = tables->general_tables.friendly_dynamic.x;
-    const float *general_y = tables->general_tables.friednly_dynamic.y;
-    const float *general_vec_x = tables->general_tables.friednly_dynamic.vec_x;
-    const float *general_vec_y = tables->general_tables.friednly_dynamic.vec_y;
+    const float *general_y = tables->general_tables.friendly_dynamic.y;
+    const float *general_vec_x = tables->general_tables.friendly_dynamic.vec_x;
+    const float *general_vec_y = tables->general_tables.friendly_dynamic.vec_y;
 
     float step_depth = unit_h + padding_x;   /* between ranks */
     float step_side  = unit_w + padding_y;   /* between units in a rank */
@@ -107,16 +79,15 @@ void formation_update(Table *tables,
             printf("err\n");
             continue;
         }
-        if (!direction_from_movement(general_vec_x[b], general_vec_y[b], &direction[b]))
-            continue;
-
+        float direction = direction_from_vec(general_vec_x[b], general_vec_y[b],
+                                     general_direction[b] == LEFT ? 2.0f : 0.0f);
         unsigned int to_place = min_uint(count_in_formation(is_unit_present, is_unit_engaged,
                                                             b, battalion_size, unit_count),
-                                         ranks * files);
+                                                            ranks * files);
         if (to_place == 0) continue;
 
         float forward_x = 0.0f, forward_y = 0.0f;
-        direction_to_forward(direction[b], &forward_x, &forward_y);
+        direction_to_forward(direction, &forward_x, &forward_y);
 
         /* center of the block: tip of the general's S line */
         float center_x = general_x[b] + distance * forward_x;
@@ -127,7 +98,7 @@ void formation_update(Table *tables,
         for (unsigned int idx = b * battalion_size, k = 0; k < battalion_size && iter < to_place; k++) {
             idx += k;
             if (idx >= unit_count) break;
-            if (!is_unit_present[idx] || unit_engaged[idx]) continue;
+            if (!is_unit_present[idx] || is_unit_engaged[idx]) continue;
 
             float slot_x = 0.0f, slot_y = 0.0f;
             formation_slot(iter, to_place, files, center_x, center_y,
@@ -169,12 +140,11 @@ static void direction_to_forward(float direction, float *forward_x, float *forwa
 /* Converts a movement vector (how far the general walks on each axis this
    tick) into a direction (0..4). Returns 0 and leaves *direction untouched
    if the general isn't moving, since a zero vector has no angle. */
-static _Bool direction_from_movement(float move_x, float move_y, float *direction) {
-    if (move_x * move_x + move_y * move_y < 0.0001f) return 0;
+static float direction_from_vec(float vec_x, float vec_y, float fallback) {
+    if (vec_x * vec_x + vec_y * vec_y < 0.0001f) return fallback;
 
-    float angle = atan2f(move_y, move_x);                              /* -PI..PI */
-    *direction = wrap_direction(angle * (DIR_STEPS / (2.0f * PI)));   /* 0..4 */
-    return 1;
+    float angle = atan2f(vec_y, vec_x);                              /* -PI..PI */
+    return wrap_direction(angle * (DIR_STEPS / (2.0f * PI)));       /* 0..4 */
 }
 
 /* Offset of slot `index` in a centered line of `count` slots.
@@ -276,4 +246,14 @@ static void integrate_unit(float *x, float *y, float *vx, float *vy,
     }
     *x += *vx;
     *y += *vy;
+}
+
+/* Shorten (x, y) to at most `max`. */
+static void clamp_length(float *x, float *y, float max) {
+    float len2 = *x * *x + *y * *y;
+    if (len2 > max * max) {
+        float k = max / sqrtf(len2);
+        *x *= k;
+        *y *= k;
+    }
 }

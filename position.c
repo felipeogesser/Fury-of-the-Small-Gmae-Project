@@ -6,7 +6,7 @@
 #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
 #define ELEMENT_SIZE_OF(type, member) (sizeof(*(((type *)0)->member)))
 
-const ComplexFieldEntry position_field_tabe[] = {
+const ComplexFieldEntry position_field_table[] = {
 
     { "x",           OFFSET_OF(Position, x),           SIZE_OF(Position, x),           S_INT, NULL },
     { "y",     OFFSET_OF(Position, y),     SIZE_OF(Position, y),     S_INT, NULL },

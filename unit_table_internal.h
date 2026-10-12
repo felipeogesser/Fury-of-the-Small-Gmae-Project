@@ -16,6 +16,7 @@ typedef struct UnitDynamicTable {
     float *x;
     float *y;
     float *hp;
+    float *attack_timer;
     enum Animation *animation;
     unsigned char *current_frame;
     _Bool *is_target_in_range;
@@ -25,6 +26,7 @@ typedef struct UnitDynamicTable {
 
 } UnitDynamicTable;
 
+/*
 // comparison table
 
 typedef struct UnitComparisonTable {
@@ -53,7 +55,7 @@ typedef struct MockUnitDynamicTable {
     _Bool *is_alive;
 
 } MockUnitDynamicTable;
-
+*/
 typedef struct UnitTable {
     
     UnitDynamicTable friendly_dynamic;

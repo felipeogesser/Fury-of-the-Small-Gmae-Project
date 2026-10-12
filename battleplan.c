@@ -499,7 +499,7 @@ static void enemy_board_init(void) {
         "units_type",
         "animation",
         "sprite",
-        "strength",
+        "base_strength",
         "range",
         "charge_bonus",
         "shielded",

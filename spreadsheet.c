@@ -81,11 +81,11 @@ const Spreadsheet spreadsheet = {
             .formation_x = 5,
             .formation_y = 10,
 
-            .shielded = 1,
-            .ranged = 0,
-            .large = 0,
-            .armor_piercing = 0,
-            .anti_large = 0
+            .is_shielded = 1,
+            .is_ranged = 0,
+            .is_large = 0,
+            .is_armor_piercing = 0,
+            .is_anti_large = 0
         },
         [SPEARMEN] = {
             .battalion_type = SPEARMEN,
@@ -106,13 +106,19 @@ const Spreadsheet spreadsheet = {
             .formation_x = 5,
             .formation_y = 10,
 
-            .shielded = 0,
-            .ranged = 0,
-            .large = 0,
-            .armor_piercing = 1,
-            .anti_large = 1
+            .is_shielded = 0,
+            .is_ranged = 0,
+            .is_large = 0,
+            .is_armor_piercing = 1,
+            .is_anti_large = 1
         }
     }
 };
 
 const Spreadsheet *spreadsheet_ptr = &spreadsheet;
+
+BattalionSpreadsheet get_battalion_spreadsheet(enum BattalionType type) {
+
+    return spreadsheet.battalion_spreadsheet[type];
+
+}

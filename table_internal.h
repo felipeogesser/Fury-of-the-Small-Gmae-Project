@@ -12,7 +12,7 @@ typedef struct Table {
 
     GeneralTable general_tables;
     
-    UnitTable unit_table;
+    UnitTable unit_tables;
 
     BattalionOrderTable battalion_order;
 

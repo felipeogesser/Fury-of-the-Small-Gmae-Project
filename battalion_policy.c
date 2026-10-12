@@ -5,7 +5,6 @@
 #include <stdbool.h>
 
 // private prototypes
-void update_rally(Table *tables, float dt);
 //static void update_lifecycle(Battalion *battalion);
 static Rally evaluate_rally(Rally rally, enum BattalionLifecycle lifecycle, signed int morale_current, float dt);
 //static enum BattalionLifecycle evaluate_lifecycle(BattalionStatistics statistics, _Bool rallying, signed int morale_current);
@@ -22,18 +21,18 @@ static Rally evaluate_rally(Rally rally, enum BattalionLifecycle lifecycle, sign
 
 //void battalion_update_flags(Battalion *battalion, float dt) {}
 
-void update_rally(Table *tables, float dt) {
+void update_rally(Table *tables, unsigned int i, float dt) {
 
     Rally rally = {0};
-    rally.rally_timer = tables->battalion_tables.friendly_dynamic.rally_timer;
-    rally.is_rallying = tables->battalion_tables.friendly_dynamic.is_rallying;
-    enum BattalionLifecycle lifecycle = tables->battalion_tables.friendly_dynamic.lifecycle_state;
-    signed int morale_current = (signed int)tables->battalion_tables.friendly_dynamic.morale_current;
+    rally.timer = tables->battalion_tables.friendly_dynamic.rally_timer[i];
+    rally.rallying = tables->battalion_tables.friendly_dynamic.is_rallying[i];
+    enum BattalionLifecycle lifecycle = tables->battalion_tables.friendly_dynamic.lifecycle_state[i];
+    signed int morale_current = (signed int)tables->battalion_tables.friendly_dynamic.morale[i];
 
     rally = evaluate_rally(rally, lifecycle, morale_current, dt);
 
-    tables->battalion_tables.friendly_dynamic.rally_timer = rally.rally_timer;
-    tables->battalion_tables.friendly_dynamic.is_rallying = rally.is_rallying;
+    tables->battalion_tables.friendly_dynamic.rally_timer[i] = rally.timer;
+    tables->battalion_tables.friendly_dynamic.is_rallying[i] = rally.rallying;
 
 }
 

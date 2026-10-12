@@ -11,29 +11,29 @@
 
 typedef struct BattalionStaticTable {
 
-    const enum BattalionType *const battalion_type;
+    const enum BattalionType *battalion_type;
     
-    const float *const range;
-    const float *const charge_bonus;
-    const float *const armor;
-    const float *const attack_speed;
+    const float *range;
+    const float *charge_bonus;
+    const float *armor;
+    const float *attack_speed;
 
-    const unsigned int *const start_entity_count;
+    const unsigned int *start_entity_count;
 
-    const unsigned char *const formation_x;
-    const unsigned char *const formation_y;
+    const unsigned char *formation_x;
+    const unsigned char *formation_y;
 
-    const _Bool *const shielded;
-    const _Bool *const ranged;
-    const _Bool *const large;
-    const _Bool *const armor_piercing;
-    const _Bool *const anti_large;
+    const _Bool *is_shielded;
+    const _Bool *is_ranged;
+    const _Bool *is_large;
+    const _Bool *is_armor_piercing;
+    const _Bool *is_anti_large;
 
 } BattalionStaticTable;
 
 typedef struct BattalionStaticTableDiff {
 
-    const float *const diff_armor;
+    const float *diff_armor;
 
 } BattalionStaticTableDiff;
 
@@ -42,66 +42,66 @@ typedef struct BattalionStaticTableDiff {
 typedef struct BattalionDynamicTable {
 
     //enum ThreatLevel *threat;
-    enum HeadlessMovementMode *const headless_movement_mode;
-    enum FatigueState *const fatigue_state;
-    enum MoraleState *const morale_state;
-    enum BattalionLifecycle *const lifecycle_state;
-    enum BattalionMovementMode *const movement_state;
-    enum BattalionMovementPace *const movement_pace;
-    unsigned int *const target_battalion_idx;
-    unsigned int *const morale_modifiers;
-    unsigned int *const withdrawed_entity_count;
-    unsigned int *const dead_entity_count;
-    unsigned int *const alive_entity_count;
-    unsigned int *const unit_alive_count;
-    //float *const order_x;
-    //float *const order_y;
-    float *const target_x;
-    float *const target_y;
-    //float *const anchor_x;
-    //float *const anchor_y;
-    float *const x;
-    float *const y;
-    float *const morale;
-    float *const fatigue;
-    float *const hp;
-    float *const speed;
-    float *const meele_attack;
-    float *const meele_defense;
-    float *const strength;
-    float *const rally_timer;
-    float *const charge_timer;
+    enum HeadlessMovementMode *headless_movement_mode;
+    enum FatigueState *fatigue_state;
+    enum MoraleState *morale_state;
+    enum BattalionLifecycle *lifecycle_state;
+    enum BattalionMovementMode *movement_state;
+    enum BattalionMovementPace *movement_pace;
+    unsigned int *target_battalion_idx;
+    unsigned int *morale_modifiers;
+    unsigned int *withdrawed_entity_count;
+    unsigned int *dead_entity_count;
+    unsigned int *alive_entity_count;
+    unsigned int *unit_alive_count;
+    //float *order_x;
+    //float *order_y;
+    float *target_x;
+    float *target_y;
+    //float *anchor_x;
+    //float *anchor_y;
+    float *x;
+    float *y;
+    float *morale;
+    float *fatigue;
+    float *hp;
+    float *speed;
+    float *meele_attack;
+    float *meele_defense;
+    float *strength;
+    float *rally_timer;
+    float *charge_timer;
     
-    _Bool *const is_active;
-    _Bool *const is_rallying;
-    _Bool *const is_charging;
-    _Bool *const is_engaging;
-    _Bool *const is_engaged;
-    //_Bool *const is_routing;
-    _Bool *const is_controllable;
-    _Bool *const is_present;
-    _Bool *const is_headless;
-    _Bool *const is_bracing;
-    //_Bool *const is_attacking;
+    _Bool *is_active;
+    _Bool *is_rallying;
+    _Bool *is_charging;
+    _Bool *is_engaging;
+    _Bool *is_engaged;
+    //_Bool *is_routing;
+    _Bool *is_controllable;
+    _Bool *is_present;
+    _Bool *is_headless;
+    _Bool *is_bracing;
+    //_Bool *is_attacking;
 
 } BattalionDynamicTable;
 
 typedef struct BattalionDynamicTableDiff {
 
-    enum ThreatLevel *const threat;
-    float *const dx;
-    float *const dy;
-    float *const distance;
-    float *const diff_morale;
-    float *const diff_fatigue;
-    float *const diff_hp;
-    float *const diff_speed;
-    float *const diff_meele_attack;
-    float *const diff_meele_defense;
-    float *const diff_strength;
+    enum ThreatLevel *threat;
+    float *dx;
+    float *dy;
+    float *distance;
+    float *diff_morale;
+    float *diff_fatigue;
+    float *diff_hp;
+    float *diff_speed;
+    float *diff_meele_attack;
+    float *diff_meele_defense;
+    float *diff_strength;
 
 } BattalionDynamicTableDiff;
-
+/*
 // comparison table
 
 typedef struct BattalionComparisonTable {
@@ -114,13 +114,14 @@ typedef struct BattalionComparisonTable {
     BattalionDynamicTableDiff friendly_dynamic_diff;
     BattalionDynamicTableDiff enemy_dynamic_diff;
 
-} BattalionComparisonTable;
+} BattalionComparisonTable;*/
 
+/*
 // mock tables
 
 // mock static tables
 
-typedef struct MockBattalionStaticTable {
+typedef struct BattalionStaticTable {
 
     enum BattalionType *battalion_type;
     
@@ -140,20 +141,20 @@ typedef struct MockBattalionStaticTable {
     _Bool *armor_piercing;
     _Bool *anti_large;
 
-} MockBattalionStaticTable;
+} BattalionStaticTable;
 
-typedef struct MockBattalionStaticTableDiff {
+typedef struct BattalionStaticTableDiff {
 
     float *diff_armor;
 
-} MockBattalionStaticTableDiff;
+} BattalionStaticTableDiff;
 
 // mock dynamic tables
 
-typedef struct MockBattalionDynamicTable {
-
+typedef struct BattalionDynamicTable {
 
     //enum ThreatLevel *threat;
+    enum HeadlessMovementMode *headless_movement_mode;
     enum FatigueState *fatigue_state;
     enum MoraleState *morale_state;
     enum BattalionLifecycle *lifecycle_state;
@@ -164,8 +165,13 @@ typedef struct MockBattalionDynamicTable {
     unsigned int *withdrawed_entity_count;
     unsigned int *dead_entity_count;
     unsigned int *alive_entity_count;
+    unsigned int *unit_alive_count;
     float *order_x;
     float *order_y;
+    float *target_x;
+    float *target_y;
+    //float *anchor_x;
+    //float *anchor_y;
     float *x;
     float *y;
     float *morale;
@@ -176,22 +182,23 @@ typedef struct MockBattalionDynamicTable {
     float *meele_defense;
     float *strength;
     float *rally_timer;
+    float *charge_timer;
     
     _Bool *is_active;
     _Bool *is_rallying;
     _Bool *is_charging;
     _Bool *is_engaging;
     _Bool *is_engaged;
-    //_Bool *const is_routing;
+    //_Bool *is_routing;
     _Bool *is_controllable;
     _Bool *is_present;
     _Bool *is_headless;
     _Bool *is_bracing;
-    //_Bool *const is_attacking;
+    //_Bool *is_attacking;
 
-} MockBattalionDynamicTable;
+} BattalionDynamicTable;
 
-typedef struct MockBattalionDynamicTableDiff {
+typedef struct BattalionDynamicTableDiff {
 
     enum ThreatLevel *threat;
     float *dx;
@@ -204,8 +211,9 @@ typedef struct MockBattalionDynamicTableDiff {
     float *diff_meele_attack;
     float *diff_meele_defense;
     float *diff_strength;
-} MockBattalionDynamicTableDiff;
 
+} BattalionDynamicTableDiff;
+*/
 
 typedef struct BattalionTable {
 

@@ -9,10 +9,8 @@ void clear_table_vectors(Table *tables, unsigned int unit_count, unsigned int ba
     for (unsigned int idx = 0, i = 0; i < unit_count; i++) {
 
         idx = i / battalion_size;
-        tables->battalion_tables.friendly_dynamic.vec_x[i] = 0.0f;
-        tables->battalion_tables.friednly_dynamic.vec_y[i] = 0.0f;
-        tables->general_tables.friendly_dynamic.vec_x[i] = 0.0f;
-        tables->general_tables.friendly_dynamic.vec_y[i] = 0.0f;
+        tables->general_tables.friendly_dynamic.vec_x[idx] = 0.0f;
+        tables->general_tables.friendly_dynamic.vec_y[idx] = 0.0f;
         tables->unit_tables.friendly_dynamic.vec_x[i] = 0.0f;
         tables->unit_tables.friendly_dynamic.vec_y[i] = 0.0f;
 

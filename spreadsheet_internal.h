@@ -28,11 +28,11 @@ typedef struct BattalionSpreadsheet {
     const unsigned char formation_x;
     const unsigned char formation_y;
 
-    const _Bool shielded;
-    const _Bool ranged;
-    const _Bool large;
-    const _Bool armor_piercing;
-    const _Bool anti_large;
+    const _Bool is_shielded;
+    const _Bool is_ranged;
+    const _Bool is_large;
+    const _Bool is_armor_piercing;
+    const _Bool is_anti_large;
 
 } BattalionSpreadsheet;
 
@@ -50,11 +50,11 @@ typedef struct GeneralSpreadSheet {
     const float armor;
     const float attack_speed;
 
-    const _Bool shielded;
-    const _Bool ranged;
-    const _Bool large;
-    const _Bool armor_piercing;
-    const _Bool anti_large;
+    const _Bool is_shielded;
+    const _Bool is_ranged;
+    const _Bool is_large;
+    const _Bool is_armor_piercing;
+    const _Bool is_anti_large;
 
 } GeneralSpreadSheet;
 

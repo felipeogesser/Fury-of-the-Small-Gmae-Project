@@ -92,9 +92,9 @@ void battlefield_init(void) {
     General *enemy_general = armies->army[1].general;
     Unit *player_unit = armies->army[0].battalions->unit;
     Unit *enemy_unit = armies->army[1].battalions->unit;
-    battalion_table_init(&battlefield.player_tables, &battlefield.enemy_tables, player_battalion, enemy_battalion, battalion_field_table, battalion_count);
-    general_table_init(&battlefield.player_tables, &battlefield.enemy_tables, player_general, enemy_general, general_complex_field_table_ptr, battalion_count);
-    unit_table_init(&battlefield.player_tables, &battlefield.enemy_tables, player_unit, enemy_unit, unit_complex_field_table_ptr, battalion_count, battalion_size);
+    battalion_table_init(&battlefield.player_tables, &battlefield.enemy_tables, player_battalion, enemy_battalion, battalion_count);
+    general_table_init(&battlefield.player_tables, &battlefield.enemy_tables, player_general, enemy_general, battalion_count);
+    unit_table_init(&battlefield.player_tables, &battlefield.enemy_tables, player_unit, enemy_unit, battalion_count, battalion_size);
 
 
     mailbag_letters_destroy(&mailbag);
@@ -171,17 +171,17 @@ void battlefield_update(void) {
 
     update_balance_of_power(player_tables, enemy_tables, battalion_count, balance_of_power);
 
-    battalion_table_update(spreadsheet_ptr, player_tables, *balance_of_power, battalion_size, dt);
-    battalion_table_update(spreadsheet_ptr, enemy_tables, *balance_of_power, battalion_size, dt);
+    battalion_table_update(spreadsheet_ptr, player_tables, *balance_of_power, battalion_count, battalion_size, dt);
+    battalion_table_update(spreadsheet_ptr, enemy_tables, *balance_of_power, battalion_count, battalion_size, dt);
 
     //update_generals(engine.armies, engine.game);
-    general_table_update(player_tables, battalion_count, ARMY_SIDE_LEFT, battalion_size, dt);
-    general_table_update(enemy_tables, battalion_count, ARMY_SIDE_RIGHT, battalion_size, dt);
+    general_table_update(player_tables, engine.map, ARMY_SIDE_LEFT, battalion_count, battalion_size, dt);
+    general_table_update(enemy_tables, engine.map, ARMY_SIDE_RIGHT, battalion_count, battalion_size, dt);
 
     //update_units(engine.armies, engine.game);
 
-    unit_table_update(player_tables, battalion_count, battalion_size, dt);
-    unit_table_update(enemy_tables, battalion_count, battalion_size, dt);
+    unit_table_update(player_tables, battalion_count, battalion_size, ARMY_SIDE_LEFT, dt);
+    unit_table_update(enemy_tables, battalion_count, battalion_size, ARMY_SIDE_RIGHT, dt);
 
     clear_table_vectors(player_tables, unit_count, battalion_size);
     clear_table_vectors(enemy_tables, unit_count, battalion_size);

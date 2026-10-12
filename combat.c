@@ -1,5 +1,6 @@
 #include "combat.h"
 #include <math.h>
+#include <stdlib.h>
 
 float apply_armor(float damage, float armor) {
 
@@ -15,11 +16,11 @@ float apply_armor(float damage, float armor) {
 
 float hit_chance(float melee_attack, float melee_defense) {
 
-    #define BASE_HIT = 35.0f
-    #define MIN_HIT = 8.0f
-    #define MAX_HIT = 90.0f
+    #define BASE_HIT 35.0f
+    #define MIN_HIT 8.0f
+    #define MAX_HIT 90.0f
     
-    float chance = BASE_HIT + meele_attack - meele_defense;
+    float chance = BASE_HIT + melee_attack - melee_defense;
     chance = MIN_HIT * (chance < MIN_HIT) + MAX_HIT * (chance > MAX_HIT);
     return chance;
 

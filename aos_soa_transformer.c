@@ -2,6 +2,9 @@
 #include "field_entry.h"
 #include "field_entry_types.h"
 #include <stddef.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
 
 void aos_soa_transform(
     void *aos,
@@ -17,7 +20,7 @@ void aos_soa_transform(
     if (args_count <= 0) {
 
         fprintf(stderr, "at function aos_soa_transform, args_count is either <= 0\n");
-        return NULL;
+        exit(EXIT_FAILURE);
         
     }
 
@@ -35,20 +38,20 @@ void aos_soa_transform(
     va_end(args);
 
     unsigned int mismatch_count = 0;
-    mismatch_count = field_table_check_if_keys_exist(aos_field_table, &keys, keys_count);
+    mismatch_count = field_table_check_if_keys_exist(aos_field_table, (const char **)keys, keys_count);
     if (!mismatch_count) {
 
         exit(EXIT_FAILURE);
 
     }
-    mismatch_count = field_table_check_if_keys_exist(soa_field_table, &keys, keys_count);
+    mismatch_count = field_table_check_if_keys_exist(soa_field_table, (const char **)keys, keys_count);
     if (!mismatch_count) {
 
         exit(EXIT_FAILURE);
 
     }
 
-    field_table_match_keys_order(soa_field_table, &keys, keys_count);
+    field_table_match_keys_order(soa_field_table, keys, keys_count);
 
     copy_aos_key_fields_to_soa(
         soa_field_table,
@@ -56,7 +59,7 @@ void aos_soa_transform(
         soa,
         aos,
         obj_count,
-        &keys,
+        keys,
         keys_count
     );
 

@@ -9,7 +9,7 @@
 #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
 #define ELEMENT_SIZE_OF(type, member) (sizeof(*(((type *)0)->member)))
 
-const ComplexFieldEntry morale_field_tabe[] = {
+const ComplexFieldEntry morale_field_table[] = {
 
     { "morale_state",           OFFSET_OF(Morale, state),           SIZE_OF(Morale, state),           S_INT, NULL },
     { "morale",     OFFSET_OF(Morale, current),     SIZE_OF(Morale, current),     S_INT, NULL },
