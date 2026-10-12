@@ -14,10 +14,11 @@ typedef struct General {
     unsigned char drawer_slot_index;
     _Bool render;
     signed int hp;
-    signed int vigour;
-    signed int attack;
-    signed int defense;
-    signed int evasion;
+    signed int vigour;//
+    signed int base_meele_attack;
+    signed int base_meele_defense;
+    signed int armor;
+    float base_strength;
     float attack_speed;
     float positionX, positionY;
     float dimensionX, dimensionY;
@@ -26,10 +27,20 @@ typedef struct General {
     unsigned char R_color, G_color, B_color, Alpha;
     char name[32];
     enum GeneralType general_type;
-    enum FatigueLevel fatigue_level;
+    //enum FatigueLevel fatigue_level;
     enum BattalionType battalion_type;
     Battalion *battalions;
     enum Sprites units_type;
+
+    float range;
+    float charge_bonus;
+
+    _Bool is_shielded;
+    _Bool is_ranged;
+    _Bool is_large;
+    _Bool is_armor_piercing;
+    _Bool is_anti_large;
+
 } General;
 
 #endif

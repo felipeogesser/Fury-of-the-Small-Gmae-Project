@@ -2,6 +2,7 @@
 #include "sprites_internal.h"
 #include "animation_types.h"
 #include "engine_internal.h"
+#include "field_entry_internal.h"
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +12,105 @@
 #include <SDL2/SDL.h>
 #include <SDL_image.h>
 
+static const ComplexFieldEntry sprite_complex_field_table[] = {
+
+    #define OFFSET_OF(type, member) offsetof(type, member)
+    #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
+
+    { "texture",       OFFSET_OF(Sprite, texture),       SIZE_OF(Sprite, texture),       NOT_DEFINED, NULL },
+    { "frames_count",  OFFSET_OF(Sprite, frames_count),  SIZE_OF(Sprite, frames_count),  U_CHAR,      NULL },
+    { "width",         OFFSET_OF(Sprite, width),         SIZE_OF(Sprite, width),         S_SHORT,     NULL },
+    { "height",        OFFSET_OF(Sprite, height),        SIZE_OF(Sprite, height),        S_SHORT,     NULL },
+    { "obj_size",      0,                                sizeof(Sprite),                 NOT_DEFINED, NULL },
+
+    #undef OFFSET_OF
+    #undef SIZE_OF
+
+};
+
+const ComplexFieldEntry *const sprite_complex_field_table_ptr = sprite_complex_field_table;
+
+const ComplexFieldEntry sprite_info_complex_field_table[] = {
+
+    #define OFFSET_OF(type, member) offsetof(type, member)
+    #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
+
+    { "type",      OFFSET_OF(SpriteInfo, type),  SIZE_OF(SpriteInfo, type),  S_INT,       NULL },
+    { "w",         OFFSET_OF(SpriteInfo, w),     SIZE_OF(SpriteInfo, w),     U_INT,       NULL },
+    { "h",         OFFSET_OF(SpriteInfo, h),     SIZE_OF(SpriteInfo, h),     U_INT,       NULL },
+    { "obj_size",  0,                            sizeof(SpriteInfo),         NOT_DEFINED, NULL },
+
+    #undef OFFSET_OF
+    #undef SIZE_OF
+
+};
+
+static const ComplexFieldEntry sprite_pack_complex_field_table[] = {
+
+    #define OFFSET_OF(type, member) offsetof(type, member)
+    #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
+
+    { "sprite",        OFFSET_OF(SpritePack, sprite),        SIZE_OF(SpritePack, sprite),        NOT_DEFINED, sprite_complex_field_table },
+    { "sprite_count",  OFFSET_OF(SpritePack, sprite_count),  SIZE_OF(SpritePack, sprite_count),  U_INT,       NULL },
+    { "obj_size",      0,                                    sizeof(SpritePack),                 NOT_DEFINED, NULL },
+
+    #undef OFFSET_OF
+    #undef SIZE_OF
+
+};
+
+const ComplexFieldEntry *const sprite_pack_complex_field_table_ptr = sprite_pack_complex_field_table;
+
+static const FieldEntry sprite_field_table[] = {
+
+    #define OFFSET_OF(type, member) offsetof(type, member)
+    #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
+
+    { "texture",       OFFSET_OF(Sprite, texture),       SIZE_OF(Sprite, texture)       },
+    { "frames_count",  OFFSET_OF(Sprite, frames_count),  SIZE_OF(Sprite, frames_count)  },
+    { "width",         OFFSET_OF(Sprite, width),         SIZE_OF(Sprite, width)         },
+    { "height",        OFFSET_OF(Sprite, height),        SIZE_OF(Sprite, height)        },
+    { "obj_size",      0,                                sizeof(Sprite)                 },
+
+    #undef OFFSET_OF
+    #undef SIZE_OF
+
+};
+
+const FieldEntry *const sprite_field_table_ptr = sprite_field_table;
+
+static const FieldEntry sprite_info_field_table[] = {
+
+    #define OFFSET_OF(type, member) offsetof(type, member)
+    #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
+
+    { "type",      OFFSET_OF(SpriteInfo, type),  SIZE_OF(SpriteInfo, type)  },
+    { "w",         OFFSET_OF(SpriteInfo, w),     SIZE_OF(SpriteInfo, w)     },
+    { "h",         OFFSET_OF(SpriteInfo, h),     SIZE_OF(SpriteInfo, h)     },
+    { "obj_size",  0,                            sizeof(SpriteInfo)         },
+
+    #undef OFFSET_OF
+    #undef SIZE_OF
+
+};
+
+const FieldEntry *const sprite_info_field_table_ptr = sprite_info_field_table;
+
+static const FieldEntry sprite_pack_field_table[] = {
+
+    #define OFFSET_OF(type, member) offsetof(type, member)
+    #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
+
+    { "sprite",        OFFSET_OF(SpritePack, sprite),        SIZE_OF(SpritePack, sprite)        },
+    { "sprite_count",  OFFSET_OF(SpritePack, sprite_count),  SIZE_OF(SpritePack, sprite_count)  },
+    { "obj_size",      0,                                    sizeof(SpritePack)                 },
+
+    #undef OFFSET_OF
+    #undef SIZE_OF
+
+};
+
+const FieldEntry *const sprite_pack_field_table_ptr = sprite_pack_field_table;
 
 typedef struct SpritesPath {
     unsigned int sprite_index;

@@ -24,22 +24,34 @@ CFLAGS_DEBUG = -g3 -O0 \
 SDLFLAGS = $(shell pkg-config --cflags --libs sdl2 SDL2_ttf SDL2_image)
 
 SRC = \
+	ai_order.c \
 	animation.c \
+	aos_soa_transformer.c \
 	baking.c \
 	battalion.c \
+	battalion_policy.c \
+	battalion_table.c \
 	battlefield.c \
 	battlefield_grid.c \
 	battleplan.c \
 	battleplan_grid.c \
 	camera.c \
+	collision.c \
+	combat.c \
 	contract.c \
 	engine.c \
+	fatigue.c \
+	fatigue_policy.c \
 	field_entry.c \
 	file_io.c \
+	formation.c \
+	game_clock.c \
 	game_loop.c \
 	game_shutdown.c \
 	game_state.c \
 	general.c \
+	general_table.c \
+	health_pool.c \
 	ini_parser.c \
 	init.c \
 	inventory.c \
@@ -53,16 +65,24 @@ SRC = \
 	main_menu.c \
 	maps.c \
 	memory_arena.c \
+	morale.c \
+	morale_policy.c \
 	peripherals.c \
 	player.c \
 	player_collision.c \
+	position.c \
 	quadrant.c \
 	scene_handler.c \
 	scene_registry.c \
+	spreadsheet.c \
 	sprites.c \
+	steering.c \
+	table.c \
+	threat_policy.c \
 	type_tables.c \
 	unit.c \
 	unit_collision.c \
+	unit_table.c \
 	window.c \
 
 OBJ = $(SRC:.c=.o)
