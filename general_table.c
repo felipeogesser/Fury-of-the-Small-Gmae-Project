@@ -187,11 +187,12 @@ void general_table_render(Table *tables, unsigned int i) {
     const enum Direction direction = tables->general_tables.friendly_dynamic.direction[i];
     const float x = tables->general_tables.friendly_dynamic.x[i];
     const float y = tables->general_tables.friendly_dynamic.y[i];
-    const enum BattalionType battalion_type = tables->battalion_tables.friendly_static.battalion_type[i];
+    //const enum BattalionType battalion_type = tables->battalion_tables.friendly_static.battalion_type[i];
     //enum BattalionState battalion_state = tables->battalion_tables.friendly_static.state[i];
     const unsigned char current_frame = tables->general_tables.friendly_dynamic.current_frame[i];
     const enum Animation anim_type = tables->general_tables.friendly_dynamic.animation[i];
-    const enum Sprites sprite_type = get_battalion_spreadsheet(battalion_type).sprite_type;
+    //const enum Sprites sprite_type = get_battalion_spreadsheet(battalion_type).sprite_type;
+    const enum Sprites sprite_type = tables->general_tables.friendly_static.sprite_type[i];
     const Sprite *sprite = &engine.sprite_pack->sprite[sprite_type][anim_type];
     signed int png_width = sprite->width;
     signed int png_height = sprite->height;
@@ -628,13 +629,14 @@ static void animation_table_update(Table *tables, unsigned int i) {
     _Bool advance_frame = animation_tick();
     if (!advance_frame) return;
 
-    const enum BattalionType battalion_type = tables->battalion_tables.friendly_static.battalion_type[i];
+    //const enum BattalionType battalion_type = tables->battalion_tables.friendly_static.battalion_type[i];
     const enum BattalionMovementMode movement_state = tables->battalion_tables.friendly_dynamic.movement_state[i];
     const enum BattalionLifecycle lifecycle_state = tables->battalion_tables.friendly_dynamic.lifecycle_state[i];
     const _Bool is_engaged = tables->general_tables.friendly_dynamic.is_engaged[i];
     const _Bool is_target_in_range = tables->general_tables.friendly_dynamic.is_target_in_range[i];
     unsigned char current_frame = tables->general_tables.friendly_dynamic.current_frame[i];
-    const enum Sprites sprite_type = get_battalion_spreadsheet(battalion_type).sprite_type;
+    //const enum Sprites sprite_type = get_battalion_spreadsheet(battalion_type).sprite_type;
+    const enum Sprites sprite_type = tables->general_tables.friendly_static.sprite_type[i];
     enum Animation anim = tables->general_tables.friendly_dynamic.animation[i];
     const Sprite *sprite = &engine.sprite_pack->sprite[sprite_type][anim];
     unsigned int frames_count = sprite->frames_count;
@@ -733,7 +735,7 @@ static void general_static_table_init(
     unsigned int battalion_count) {
 
     aos_soa_transform(general, (void **)mock_static_table, general_complex_field_table, mock_static_field_table, battalion_count, 11,
-    "base_meele_attack", "base_meele_defense", "base_strength", "range", "charge_bonus", "armor", "attack_speed", "is_shielded", "is_ranged", "is_large", "is_armor_piercing", "is_anti_large");
+    "sprite_type", "base_meele_attack", "base_meele_defense", "base_strength", "range", "charge_bonus", "armor", "attack_speed", "is_shielded", "is_ranged", "is_large", "is_armor_piercing", "is_anti_large");
 
 }
 

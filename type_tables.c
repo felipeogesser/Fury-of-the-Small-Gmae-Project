@@ -24,7 +24,7 @@ const size_t rarity_table_count = (sizeof(rarity_table) / sizeof(rarity_table[0]
 
 const GeneralTypeEntry general_type_table[] = {
     { "melee", MELEE },
-    { "ranged", RANGED },
+    { "is_ranged", RANGED },
 };
 const size_t general_type_table_count = (sizeof(general_type_table) / sizeof(general_type_table[0]));
 
@@ -59,6 +59,7 @@ const TableRef all_tables[] = {
     { "battalion_type", battalion_type_table,   battalion_type_table_count,  sizeof(battalion_type_table[0]) },
     { "anim",           animations_table,       animations_table_count,      sizeof(animations_table[0]) },
     { "sprite",         sprites_table,          sprites_table_count,         sizeof(sprites_table[0]) },
+    { "sprite_type",         sprites_table,          sprites_table_count,         sizeof(sprites_table[0]) }
 };
 const size_t all_tables_count = sizeof(all_tables) / sizeof(all_tables[0]);
 

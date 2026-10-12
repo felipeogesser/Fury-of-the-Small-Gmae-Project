@@ -31,6 +31,7 @@ static const FieldEntry field_table[] = {
 
     { "animation",               OFFSET_OF(General, anim),               SIZE_OF(General, anim)               },
     { "sprite",             OFFSET_OF(General, sprite),             SIZE_OF(General, sprite)             },
+    { "sprite_type",             OFFSET_OF(General, sprite_type),             SIZE_OF(General, sprite_type)             },
     { "id",                 OFFSET_OF(General, id),                 SIZE_OF(General, id)                 },
     { "rarity",             OFFSET_OF(General, rarity),             SIZE_OF(General, rarity)             },
     { "drawer_slot_index",  OFFSET_OF(General, drawer_slot_index),  SIZE_OF(General, drawer_slot_index)  },
@@ -74,6 +75,7 @@ static const ComplexFieldEntry general_complex_field_table[] = {
 
     { "animation",               OFFSET_OF(General, anim),               SIZE_OF(General, anim),               STRUCT,      animation_state_complex_field_table },
     { "sprite",             OFFSET_OF(General, sprite),             SIZE_OF(General, sprite),             STRUCT,      sprite_info_complex_field_table },
+    { "sprite_type",             OFFSET_OF(General, sprite_type),             SIZE_OF(General, sprite_type),             S_INT,      NULL },
     { "id",                 OFFSET_OF(General, id),                 SIZE_OF(General, id),                 U_INT,       NULL },
     { "rarity",             OFFSET_OF(General, rarity),             SIZE_OF(General, rarity),             S_INT,       NULL },
     { "drawer_slot_index",  OFFSET_OF(General, drawer_slot_index),  SIZE_OF(General, drawer_slot_index),  U_CHAR,      NULL },

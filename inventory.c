@@ -19,7 +19,7 @@ void *inventory_init(void) {
         "generals",
         sizeof_General,
         general_field_table,
-        21,
+        22,
         "id",
         "rarity",
         "hp",
@@ -32,15 +32,16 @@ void *inventory_init(void) {
         "battalion_type",
         "units_type",
         "animation",
+        "sprite_type",
         "sprite",
         "base_strength",
         "range",
         "charge_bonus",
-        "shielded",
-        "ranged",
-        "large",
-        "armor_piercing",
-        "anti_large"
+        "is_shielded",
+        "is_ranged",
+        "is_large",
+        "is_armor_piercing",
+        "is_anti_large"
     );
 
     inventory.general = general;
