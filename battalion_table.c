@@ -618,7 +618,7 @@ static void battalion_static_table_init(
     unsigned int battalion_count) {
 
     aos_soa_transform(battalion, (void **)mock_static_table, battalion_field_table, mock_static_field_table, battalion_count, 13,
-    "battalion_type", "range", "charge_bonus", "armor", "attack_speed", "start_entity_count", "formation_x", "formation_y", "shielded", "ranged", "large", "armor_piercing", "anti_large");
+    "battalion_type", "range", "charge_bonus", "armor", "attack_speed", "start_entity_count", "formation_x", "formation_y", "is_shielded", "is_ranged", "is_large", "is_armor_piercing", "is_anti_large");
 
 }
 

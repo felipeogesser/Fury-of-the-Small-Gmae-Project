@@ -9,6 +9,7 @@
 typedef struct General {
     AnimationState anim;
     SpriteInfo sprite;
+    enum Sprites sprite_type;
     unsigned int id;
     enum Rarity rarity;
     unsigned char drawer_slot_index;

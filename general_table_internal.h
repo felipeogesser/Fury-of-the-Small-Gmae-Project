@@ -4,6 +4,7 @@
 #include "general_table_types.h"
 #include "animation_types.h"
 #include "direction_types.h"
+#include "sprites_types.h"
 #include "target_types.h"
 
 // static table
@@ -17,6 +18,8 @@ typedef struct GeneralStaticTable {
     float *charge_bonus;
     float *armor;
     float *attack_speed;
+
+    enum Sprites *sprite_type;
 
     _Bool *is_shielded;
     _Bool *is_ranged;
@@ -103,11 +106,11 @@ typedef struct MockGeneralStaticTable {
     float *armor;
     float *attack_speed;
 
-    _Bool *shielded;
-    _Bool *ranged;
-    _Bool *large;
-    _Bool *armor_piercing;
-    _Bool *anti_large;
+    _Bool *is_shielded;
+    _Bool *is_ranged;
+    _Bool *is_large;
+    _Bool *is_armor_piercing;
+    _Bool *is_anti_large;
 
 } MockGeneralStaticTable;
 

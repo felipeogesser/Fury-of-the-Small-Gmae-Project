@@ -24,11 +24,11 @@
     .formation_x = 5,
     .formation_y = 10,
 
-    .shielded = 0,
-    .ranged = 0,
-    .large = 0,
-    .armor_piercing = 1,
-    .anti_large = 1
+    .is_shielded = 0,
+    .is_ranged = 0,
+    .is_large = 0,
+    .is_armor_piercing = 1,
+    .is_anti_large = 1
 
 };
 
@@ -52,11 +52,11 @@ const BattalionSpreadsheet warrior = {
     .formation_x = 5,
     .formation_y = 10,
 
-    .shielded = 1,
-    .ranged = 0,
-    .large = 0,
-    .armor_piercing = 0,
-    .anti_large = 0
+    .is_shielded = 1,
+    .is_ranged = 0,
+    .is_large = 0,
+    .is_armor_piercing = 0,
+    .is_anti_large = 0
 
 };*/
 

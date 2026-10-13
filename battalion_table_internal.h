@@ -135,11 +135,11 @@ typedef struct BattalionStaticTable {
     unsigned char *formation_x;
     unsigned char *formation_y;
 
-    _Bool *shielded;
-    _Bool *ranged;
-    _Bool *large;
-    _Bool *armor_piercing;
-    _Bool *anti_large;
+    _Bool *is_shielded;
+    _Bool *is_ranged;
+    _Bool *is_large;
+    _Bool *is_armor_piercing;
+    _Bool *is_anti_large;
 
 } BattalionStaticTable;
 
