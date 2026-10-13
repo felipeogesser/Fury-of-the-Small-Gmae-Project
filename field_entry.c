@@ -126,7 +126,7 @@ void copy_aos_key_fields_to_soa(const ComplexFieldEntry *soa_field_table, const 
 
                 for (unsigned int k = 0; k < struct_field_count; k++) {
 
-                    if (keys[i] == struct_field_table[k].key) {
+                    if (strcmp(keys[i], struct_field_table[k].key) == 0) {
 
                         size_t offset = aos_field_table[j].offset + struct_field_table[k].offset;
                         aos_field[i].offset = offset;
@@ -140,7 +140,7 @@ void copy_aos_key_fields_to_soa(const ComplexFieldEntry *soa_field_table, const 
 
             }
 
-            if (keys[i] == aos_field_table[j].key) {
+            if (strcmp(keys[i], aos_field_table[j].key) == 0) {
 
                 aos_field[i].offset = aos_field_table[j].offset;
                 aos_field[i].size = aos_field_table[j].size;
@@ -158,7 +158,7 @@ void copy_aos_key_fields_to_soa(const ComplexFieldEntry *soa_field_table, const 
 
         for (unsigned int j = 0; j < field_count; j++) {
         
-            if (keys[i] == soa_field_table[j].key) {
+            if (strcmp(keys[i], soa_field_table[j].key) == 0) {
 
                 soa_field[i].offset = soa_field_table[j].offset;
                 soa_field[i].size = soa_field_table[j].size;
