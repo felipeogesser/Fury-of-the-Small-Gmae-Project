@@ -116,8 +116,8 @@ static const ComplexFieldEntry battalion_field_table[] = {
     { "is_present",                 OFFSET_OF(Battalion, is_present),                 SIZE_OF(Battalion, is_present),                 BOOL,        NULL },
     { "unit_alive_count",        OFFSET_OF(Battalion, unit_alive_count),        SIZE_OF(Battalion, unit_alive_count),        U_INT,       NULL },
     { "start_entity_count",      OFFSET_OF(Battalion, start_entity_count),      SIZE_OF(Battalion, start_entity_count),      U_INT,       NULL },
-    { "formation_x",             OFFSET_OF(Battalion, formation_x),             SIZE_OF(Battalion, formation_x),             U_INT,       NULL },
-    { "formation_y",             OFFSET_OF(Battalion, formation_y),             SIZE_OF(Battalion, formation_y),             U_INT,       NULL },
+    { "formation_x",             OFFSET_OF(Battalion, formation_x),             SIZE_OF(Battalion, formation_x),             U_CHAR,       NULL },
+    { "formation_y",             OFFSET_OF(Battalion, formation_y),             SIZE_OF(Battalion, formation_y),             U_CHAR,       NULL },
     { "obj_size",                0,                                             sizeof(Battalion),                           NOT_DEFINED, NULL }
 
 };
@@ -147,7 +147,7 @@ void init_battalion(Battalion *battalion, unsigned int battalion_size, enum Batt
 
     battalion->unit_alive_count = unit_alive_count;
     battalion->formation_x = battalion_default.formation_x;
-    battalion->formation_y = battalion_default.formation_y;   
+    battalion->formation_y = battalion_default.formation_y;
     battalion->attack_speed = battalion_default.attack_speed;
     battalion->sprite_type = battalion_default.sprite_type;
 

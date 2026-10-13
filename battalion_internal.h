@@ -76,8 +76,8 @@ typedef struct Battalion {
 
     unsigned int unit_alive_count;
     unsigned int start_entity_count;
-    unsigned int formation_x;
-    unsigned int formation_y;
+    unsigned char formation_x;
+    unsigned char formation_y;
 
 } Battalion;
 
