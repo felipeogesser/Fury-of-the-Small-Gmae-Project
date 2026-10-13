@@ -132,8 +132,8 @@ void init_battalion(Battalion *battalion, unsigned int battalion_size, enum Batt
 
     unsigned int unit_alive_count = battalion_size;
 
-    battalion->general = NULL;
-    battalion->unit = NULL;
+    //battalion->general = NULL;
+    //battalion->unit = NULL;
     battalion->state = (BattalionState){.lifecycle = NORMAL, .movement = STATIONARY, .rally = {.timer = 0, .rallying = false}, .headless = false};
     battalion->morale = (Morale){.state = EAGER, .current = 100, .base = 100, .modifiers = 0};
     battalion->fatigue = (Fatigue){.state = FRESH, .base = 100, .current = 100};

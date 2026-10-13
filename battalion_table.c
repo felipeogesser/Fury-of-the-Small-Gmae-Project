@@ -629,7 +629,7 @@ static void battalion_dynamic_table_init(
     const ComplexFieldEntry *mock_dynamic_field_table,
     unsigned int battalion_count) {
 
-    aos_soa_transform(battalion, (void **)mock_dynamic_table, battalion_field_table, mock_dynamic_field_table, battalion_count, 7,
+    aos_soa_transform(battalion, (void **)mock_dynamic_table, battalion_field_table, mock_dynamic_field_table, battalion_count, 8,
     "morale", "fatigue", "unit_alive_count", "hp", "speed", "meele_attack", "meele_defense", "strength");
 
 }

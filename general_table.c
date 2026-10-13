@@ -68,6 +68,7 @@ static const ComplexFieldEntry general_static_table_field_table[] = {
     { "charge_bonus",       OFFSET_OF(GeneralStaticTable, charge_bonus),       ELEMENT_SIZE_OF(GeneralStaticTable, charge_bonus),       FLOAT, NULL },
     { "armor",              OFFSET_OF(GeneralStaticTable, armor),              ELEMENT_SIZE_OF(GeneralStaticTable, armor),              FLOAT, NULL },
     { "attack_speed",       OFFSET_OF(GeneralStaticTable, attack_speed),       ELEMENT_SIZE_OF(GeneralStaticTable, attack_speed),       FLOAT, NULL },
+    { "sprite_type",  OFFSET_OF(GeneralStaticTable, sprite_type),  ELEMENT_SIZE_OF(GeneralStaticTable, sprite_type),  S_INT, NULL },
     { "is_shielded",           OFFSET_OF(GeneralStaticTable, is_shielded),           ELEMENT_SIZE_OF(GeneralStaticTable, is_shielded),           BOOL,  NULL },
     { "is_ranged",             OFFSET_OF(GeneralStaticTable, is_ranged),             ELEMENT_SIZE_OF(GeneralStaticTable, is_ranged),             BOOL,  NULL },
     { "is_large",              OFFSET_OF(GeneralStaticTable, is_large),              ELEMENT_SIZE_OF(GeneralStaticTable, is_large),              BOOL,  NULL },
@@ -734,7 +735,7 @@ static void general_static_table_init(
     const ComplexFieldEntry *mock_static_field_table,
     unsigned int battalion_count) {
 
-    aos_soa_transform(general, (void **)mock_static_table, general_complex_field_table, mock_static_field_table, battalion_count, 11,
+    aos_soa_transform(general, (void **)mock_static_table, general_complex_field_table, mock_static_field_table, battalion_count, 13,
     "sprite_type", "base_meele_attack", "base_meele_defense", "base_strength", "range", "charge_bonus", "armor", "attack_speed", "is_shielded", "is_ranged", "is_large", "is_armor_piercing", "is_anti_large");
 
 }
@@ -746,8 +747,8 @@ static void general_dynamic_table_init(
     const ComplexFieldEntry *mock_dynamic_field_table,
     unsigned int battalion_count) {
 
-    aos_soa_transform(general, (void **)mock_dynamic_table, general_complex_field_table, mock_dynamic_field_table, battalion_count, 5,
-    "direction", "animation", "attack_speed", "hp");
+    aos_soa_transform(general, (void **)mock_dynamic_table, general_complex_field_table, mock_dynamic_field_table, battalion_count, 3,
+    "direction", "animation", "hp");
 
 }
 
