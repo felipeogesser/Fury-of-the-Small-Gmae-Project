@@ -39,13 +39,13 @@ void aos_soa_transform(
 
     unsigned int mismatch_count = 0;
     mismatch_count = field_table_check_if_keys_exist(aos_field_table, (const char **)keys, keys_count);
-    if (!mismatch_count) {
+    if (mismatch_count) {
 
         exit(EXIT_FAILURE);
 
     }
     mismatch_count = field_table_check_if_keys_exist(soa_field_table, (const char **)keys, keys_count);
-    if (!mismatch_count) {
+    if (mismatch_count) {
 
         exit(EXIT_FAILURE);
 
