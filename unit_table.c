@@ -671,8 +671,8 @@ static void unit_dynamic_table_init(
     const ComplexFieldEntry *mock_dynamic_field_table,
     unsigned int unit_count) {
 
-    aos_soa_transform(unit, (void **)mock_dynamic_table, unit_field_table_ptr, mock_dynamic_field_table, unit_count, 9,
-    "type", "range", "charge_bonus", "armor", "is_shielded", "is_ranged", "is_large", "is_armor_piercing", "is_anti_large");
+    aos_soa_transform(unit, (void **)mock_dynamic_table, unit_field_table_ptr, mock_dynamic_field_table, unit_count, 1,
+    "hp");
 
 }
 

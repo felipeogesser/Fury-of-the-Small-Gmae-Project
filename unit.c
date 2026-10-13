@@ -42,7 +42,7 @@ static const FieldEntry field_table[] = {
     { "pathFound",           OFFSET_OF(Unit, pathFound),           SIZE_OF(Unit, pathFound)           },
     { "constMovX",           OFFSET_OF(Unit, constMovX),           SIZE_OF(Unit, constMovX)           },
     { "constMovY",           OFFSET_OF(Unit, constMovY),           SIZE_OF(Unit, constMovY)           },
-    { "health",              OFFSET_OF(Unit, health),              SIZE_OF(Unit, health)              },
+    { "hp",              OFFSET_OF(Unit, hp),              SIZE_OF(Unit, hp)              },
     { "direction",           OFFSET_OF(Unit, direction),           SIZE_OF(Unit, direction)           },
     { "target_idx",          OFFSET_OF(Unit, target_idx),          SIZE_OF(Unit, target_idx)          },
     { "target_type",         OFFSET_OF(Unit, target_type),         SIZE_OF(Unit, target_type)         },
@@ -79,7 +79,7 @@ static const ComplexFieldEntry unit_complex_field_table[] = {
     { "pathFound",           OFFSET_OF(Unit, pathFound),           SIZE_OF(Unit, pathFound),           BOOL,   NULL },
     { "constMovX",           OFFSET_OF(Unit, constMovX),           SIZE_OF(Unit, constMovX),           FLOAT,  NULL },
     { "constMovY",           OFFSET_OF(Unit, constMovY),           SIZE_OF(Unit, constMovY),           FLOAT,  NULL },
-    { "health",              OFFSET_OF(Unit, health),              SIZE_OF(Unit, health),              FLOAT,  NULL },
+    { "hp",              OFFSET_OF(Unit, hp),              SIZE_OF(Unit, hp),              FLOAT,  NULL },
     { "direction",           OFFSET_OF(Unit, direction),           SIZE_OF(Unit, direction),           S_INT,  NULL },
     { "target_idx",          OFFSET_OF(Unit, target_idx),          SIZE_OF(Unit, target_idx),          U_INT,  NULL },
     { "target_type",         OFFSET_OF(Unit, target_type),         SIZE_OF(Unit, target_type),         S_INT,  NULL },
@@ -97,22 +97,24 @@ void update_units_position(Unit *unit, unsigned int unit_count, signed int x, si
 static void set_units_id(Unit *unit, unsigned int battalion_size);
 static void set_units_dimension(Unit *unit, unsigned int battalion_size);
 static void set_units_sprite_and_animation(Unit *unit, General *general, unsigned int battalion_size);
+static void set_units_hp(Unit *unit, unsigned int battalion_size, float hp);
 static void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *battalion, unsigned int x, unsigned int y, _Bool is_enemy_army);
 
 
 void init_units(Battalion *battalion, unsigned int x, unsigned int y, _Bool is_enemy_army) {
-    // this function expects to be called only when generals are already initialized
+    // this function expects to be called only when battalions and generals are already initialized
     General *general = battalion->general;
     Unit *unit = battalion->unit;
     unsigned int battalion_size = battalion->unit_count;
 
     set_units_id(unit, battalion_size);
     set_units_sprite_and_animation(unit, general, battalion_size);
+    set_units_hp(unit, battalion_size, battalion->health_pool.max_hp);
     set_units_dimension(unit, battalion_size);
     set_units_position(unit, battalion_size, battalion, x, y, is_enemy_army);
 
 }
-
+// add hp pra cada unit e dai passar so isso pra unit table
 void update_units(Armies *armies, GameState *game) {
     
     Unit *unit = armies->army->general->battalions->unit;
@@ -157,6 +159,17 @@ static void set_units_sprite_and_animation(Unit *unit, General *general, unsigne
         unit[i].sprite.type = general->units_type;
         unit[i].sprite.w = engine.sprite_pack->sprite[general->units_type][IDLE].width / unit[i].anim.frames_count;
         unit[i].sprite.h = engine.sprite_pack->sprite[general->units_type][IDLE].height;
+
+    }
+
+}
+
+static void set_units_hp(Unit *unit, unsigned int battalion_size, float hp) {
+
+    hp /= battalion_size;
+    for (unsigned int i = 0; i < battalion_size; i++) {
+
+        unit[i].hp = hp;
 
     }
 

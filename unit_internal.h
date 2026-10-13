@@ -28,7 +28,7 @@ typedef struct Unit {
     int enemyUnitId;
     _Bool pathFound;
     float constMovX, constMovY;
-    float health;
+    float hp;
 
     enum Direction direction;
     unsigned int target_idx;
