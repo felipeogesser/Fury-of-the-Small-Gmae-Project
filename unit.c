@@ -188,16 +188,24 @@ static void set_units_dimension(Unit *unit, unsigned int battalion_size) {
 
 static void set_units_position(Unit *unit, unsigned int battalion_size, Battalion *battalion, unsigned int x, unsigned int y, _Bool is_enemy_army) {
 
-    unsigned int formation_height = battalion->unit_formation_height;
-    unsigned int formation_width = ceilf(battalion_size / battalion->unit_formation_height);
+    unsigned int formation_height = battalion->formation_y;
+    unsigned int formation_width = ceilf(battalion_size / battalion->formation_y);
 
-    unsigned int pad_x = battalion->padding_between_units_x;
-    unsigned int pad_y = battalion->padding_between_units_y;
+    //unsigned int pad_x = battalion->padding_between_units_x;
+    //unsigned int pad_y = battalion->padding_between_units_y;
+    #define UNIT_WIDTH 24.0f
+    #define UNIT_HEIGHT 24.0f
+    #define PADDING_X 48.0f
+    #define PADDING_Y 20.0f
+    unsigned int pad_x = PADDING_X;
+    unsigned int pad_y = PADDING_Y;
 
     unsigned int pos_x = x;
     unsigned int pos_y = y;
-    unsigned int dim_x = unit->dimensionX;
-    unsigned int dim_y = unit->dimensionY;
+    //unsigned int dim_x = unit->dimensionX;
+    //unsigned int dim_y = unit->dimensionY;
+    unsigned int dim_x = PADDING_X;
+    unsigned int dim_y = PADDING_Y;
 
     pos_x -= (dim_x + pad_x) * !is_enemy_army;
     pos_x += (dim_x + pad_x) * formation_width * is_enemy_army;

@@ -65,8 +65,10 @@ static const ComplexFieldEntry unit_dynamic_table_field_table[] = {
     { "attack_timer",             OFFSET_OF(UnitDynamicTable, attack_timer),             SIZE_OF(UnitDynamicTable, attack_timer),             FLOAT,       NULL },
     { "animation",      OFFSET_OF(UnitDynamicTable, animation),      SIZE_OF(UnitDynamicTable, animation),      S_INT,       NULL },
     { "current_frame",  OFFSET_OF(UnitDynamicTable, current_frame),  SIZE_OF(UnitDynamicTable, current_frame),  U_CHAR,      NULL },
+    { "is_target_in_range",        OFFSET_OF(UnitDynamicTable, is_target_in_range),        SIZE_OF(UnitDynamicTable, is_target_in_range),        BOOL,        NULL },
     { "is_engaged",        OFFSET_OF(UnitDynamicTable, is_engaged),        SIZE_OF(UnitDynamicTable, is_engaged),        BOOL,        NULL },
     { "is_present",       OFFSET_OF(UnitDynamicTable, is_present),       SIZE_OF(UnitDynamicTable, is_present),       BOOL,        NULL },
+    { "is_attacking",       OFFSET_OF(UnitDynamicTable, is_attacking),       SIZE_OF(UnitDynamicTable, is_attacking),       BOOL,        NULL },
     { "obj_size",       0,                                           sizeof(UnitDynamicTable),                  NOT_DEFINED, NULL },
 
     #undef OFFSET_OF
@@ -393,6 +395,8 @@ static void animation_table_update(Table *tables, unsigned int unit_count, unsig
         const enum BattalionMovementMode movement_state = tables->battalion_tables.friendly_dynamic.movement_state[i / battalion_size];
         const enum BattalionLifecycle lifecycle_state = tables->battalion_tables.friendly_dynamic.lifecycle_state[i / battalion_size];
         const _Bool is_engaged = tables->unit_tables.friendly_dynamic.is_engaged[i];
+        if (tables->unit_tables.friendly_dynamic.is_target_in_range == NULL) printf("i = %u\n",i);
+        printf("val = %u\n",(unsigned int)tables->unit_tables.friendly_dynamic.is_target_in_range[i]);
         const _Bool is_target_in_range = tables->unit_tables.friendly_dynamic.is_target_in_range[i];
         unsigned char current_frame = tables->unit_tables.friendly_dynamic.current_frame[i];
         const enum Sprites sprite_type = get_battalion_spreadsheet(battalion_type).sprite_type;
