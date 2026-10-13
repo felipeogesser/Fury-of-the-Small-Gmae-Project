@@ -6,6 +6,7 @@
 #include <stdbool.h>
 
 // private prototypes
+static _Bool recursive_field_table_key_search(const ComplexFieldEntry *field_table, const char *key);
 static void convert_type(void *dest, const void *src, enum Type dest_type, enum Type src_type);
 static void store_signed(void *dest, enum Type t, long long v);
 static void store_unsigned(void *dest, enum Type t, unsigned long long v);
@@ -114,10 +115,11 @@ void copy_aos_key_fields_to_soa(const ComplexFieldEntry *soa_field_table, const 
         
             if (aos_field_table[j].type == STRUCT) {
                 
-                ComplexFieldEntry *struct_field_table = ((ComplexFieldEntry *)(soa_field_table[j].struct_field_table));
+                ComplexFieldEntry *struct_field_table = ((ComplexFieldEntry *)(aos_field_table[j].struct_field_table));
 
                 if (struct_field_table == NULL) {
-                    fprintf(stderr, "struct_field_table pointer is NULL");
+                    fprintf(stderr, "struct_field_table pointer is NULL\n");
+                    printf("key of AoS NULL struct: %s\n", aos_field_table[j].key);
                 }
 
                 unsigned int struct_field_count = complex_field_table_fields_count(struct_field_table);
@@ -195,10 +197,14 @@ void copy_aos_key_fields_to_soa(const ComplexFieldEntry *soa_field_table, const 
 
 unsigned int complex_field_table_fields_count(const ComplexFieldEntry *field_table) {
 
+    if (field_table == NULL) {
+        fprintf(stderr, "at function complex_field_table_fields_count, field_table is NULL");
+        return 0;
+    }
     _Bool found_sentinel_field = false;
     unsigned int iterations = 0;
     unsigned int idx = 0;
-    signed int field_table_count = 0;
+    unsigned int field_table_count = 0;
     while (!found_sentinel_field && iterations < MAX_ITER) {
 
         found_sentinel_field = (strcmp(field_table[idx].key, "obj_size") == 0); 
@@ -219,17 +225,17 @@ unsigned int complex_field_table_fields_count(const ComplexFieldEntry *field_tab
     if (field_table_count <= 1) {
 
         printf("field_table_count = %d\n", field_table_count);
-        fprintf(stderr, "At file field_entry.c function field_table_fields_count, the field table passed as args had zero fields\n");
+        fprintf(stderr, "At file field_entry.c function field_table_fields_count, the field table passed as args had either one or zero fields\n");
         exit(EXIT_FAILURE);
 
     }
 
-    return --field_table_count;
+    field_table_count = (field_table_count == 0) ? 0 : field_table_count - 1;
+    return field_table_count;
 
 }
 
 size_t complex_field_table_obj_type_size(const ComplexFieldEntry *field_table) {
-
 
     _Bool found_sentinel_field = false;
     unsigned int iterations = 0;
@@ -271,24 +277,62 @@ size_t complex_field_table_obj_type_size(const ComplexFieldEntry *field_table) {
 
 #undef MAX_ITER
 
-unsigned int field_table_check_if_keys_exist(const ComplexFieldEntry *field_table, const char **keys, unsigned int keys_count) {
-
-    unsigned int fields_count = complex_field_table_fields_count(field_table);
-
+unsigned int field_table_check_if_keys_exist(const ComplexFieldEntry *field_table, const char **keys, const unsigned int keys_count) {
+        
     unsigned int match_count = 0;
-    for (unsigned int i = 0; i < fields_count; i++) {
+    for (unsigned int i = 0; i < keys_count; i++) {
 
-        for (unsigned int j = 0; j < keys_count; j++) {
-
-            if (field_table[i].key == keys[j]) match_count++;
-
-        }
+        const _Bool match = recursive_field_table_key_search(field_table, keys[i]);
+        match_count += match;
+        if (!match) printf("this key -> '%s' doesn't exist in the field table\n", keys[i]);
 
     }
 
-    unsigned int mismatch_count = keys_count - match_count;
-    fprintf(stderr, "there are %u key(s) that don't exist in field table", mismatch_count);
+    const unsigned int mismatch_count = keys_count - match_count;
+    if (mismatch_count != 0) fprintf(stderr, "there are %u key(s) that don't exist in field table\n", mismatch_count);
     return mismatch_count;
+
+}
+
+static _Bool recursive_field_table_key_search(const ComplexFieldEntry *field_table, const char *key) {
+
+    static unsigned int recursive_iters = 0;
+    recursive_iters++;
+    #define MAX_RECURSIVE_ITERS 5U
+    if (recursive_iters <= MAX_RECURSIVE_ITERS) {
+        
+        const unsigned int fields_count = complex_field_table_fields_count(field_table);
+        for (unsigned int i = 0; i < fields_count; i++) {
+
+            _Bool match = false;
+            if (field_table[i].type == STRUCT) {
+                if (field_table[i].struct_field_table == NULL) {
+                    fprintf(stderr, "at function recursive_field_table_key_search, struct_field_table is NULL\n");
+                    printf("field table entry is at i = %u, and key is %s\n", i, field_table[i].key);
+                    continue;
+                }
+                match = recursive_field_table_key_search(field_table[i].struct_field_table, key);
+            } else {
+                match = (strcmp(field_table[i].key, key) == 0);
+            }
+
+            if (match) {
+                recursive_iters--;
+                return true;
+            }
+            
+        }
+    
+        recursive_iters--;
+        return false;
+    
+    } else {
+        fprintf(stderr, "function recursive_field_table_key_search reached max recursion limit of %u\n", MAX_RECURSIVE_ITERS);
+    }
+    #undef MAX_RECURSIVE_ITERS
+
+    recursive_iters--;
+    return false;
 
 }
 
