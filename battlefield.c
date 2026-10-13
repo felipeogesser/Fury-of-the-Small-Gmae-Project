@@ -32,7 +32,9 @@
 #include "window_settings.h"
 #include <SDL2/SDL.h>
 #include <stdbool.h>
+#include <stdio.h>
 
+#include "ai_order.h"
 #include "ai_order_internal.h"
 #include "table.h"
 #include "table_internal.h"
@@ -93,6 +95,7 @@ void battlefield_init(void) {
     Unit *player_unit = armies->army[0].battalions->unit;
     Unit *enemy_unit = armies->army[1].battalions->unit;
     battalion_table_init(&battlefield.player_tables, &battlefield.enemy_tables, player_battalion, enemy_battalion, battalion_count);
+    battalion_order_table_init(&battlefield.player_tables, &battlefield.enemy_tables, battalion_count);
     general_table_init(&battlefield.player_tables, &battlefield.enemy_tables, player_general, enemy_general, battalion_count);
     unit_table_init(&battlefield.player_tables, &battlefield.enemy_tables, player_unit, enemy_unit, battalion_count, battalion_size);
 
@@ -103,6 +106,9 @@ void battlefield_init(void) {
     //init_grids();
     //initialCheckUnitQuadrant(engine.armies, engine.game, engine.battlefield_grid);
     //renderQuadrantsSetup(engine.armies, engine.game);
+
+    size_t memory_used = memory_arena_memory_used();
+    printf("memory used: %zu\n", memory_used);
 
 }
 
