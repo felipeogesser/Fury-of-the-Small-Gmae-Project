@@ -1,8 +1,8 @@
 { "generals": [
     {
         "animation": "idle",
-        "sprite": "rafa",
-        "sprite_type": "rafa",
+        "sprite": "warrior",
+        "sprite_type": "warrior",
         "id": 1,
         "rarity": "common",
         "hp": 1000,
@@ -49,8 +49,8 @@
     },
     {
         "animation": "idle",
-        "sprite": "rafa",
-        "sprite_type": "rafa",
+        "sprite": "warrior",
+        "sprite_type": "warrior",
         "id": 3,
         "rarity": "common",
         "hp": 1000,
