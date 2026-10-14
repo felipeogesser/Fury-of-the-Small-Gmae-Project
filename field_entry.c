@@ -139,6 +139,7 @@ void copy_aos_key_fields_to_soa(const ComplexFieldEntry *soa_field_table, const 
                 }
 
             }
+            HERE:
 
             if (strcmp(keys[i], aos_field_table[j].key) == 0) {
 
@@ -152,7 +153,6 @@ void copy_aos_key_fields_to_soa(const ComplexFieldEntry *soa_field_table, const 
 
     }
 
-    HERE:
     field_count = complex_field_table_fields_count(soa_field_table);
     for (unsigned int i = 0; i < keys_count; i++) {
 
@@ -175,7 +175,7 @@ void copy_aos_key_fields_to_soa(const ComplexFieldEntry *soa_field_table, const 
     for (unsigned int i = 0; i < obj_count; i++) {
 
         for (unsigned int j = 0; j < keys_count; j++) {
-
+            printf("objc = %u, keysc = %u\n", obj_count, keys_count);
             size_t aos_offset = aos_field[j].offset;
             //size_t aos_size = aos_field[j].size;
             enum Type src_type = aos_field[j].type;
@@ -373,6 +373,7 @@ void field_table_match_keys_order(const ComplexFieldEntry *field_table, char **k
 
 static void convert_type(void *dest, const void *src, enum Type dest_type, enum Type src_type) {
 
+    if (src_type == BOOL) printf("src = %d, dest_type = %d\n", *(const unsigned char *)src, dest_type);
     switch (src_type) {
         
         case BOOL:    store_unsigned(dest, dest_type, *(const _Bool *)src);          break;
