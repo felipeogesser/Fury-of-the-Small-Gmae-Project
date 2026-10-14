@@ -43,6 +43,7 @@ static void general_dynamic_table_init(
     GeneralDynamicTable *mock_dynamic_table,
     const ComplexFieldEntry *general_complex_field_table,
     const ComplexFieldEntry *mock_dynamic_field_table,
+    enum ArmyBattlefieldSide side,
     unsigned int battalion_count);
 static void update_stats(Table *tables, unsigned int i);
 static void update_status(Table *tables, Map *map, unsigned int i);
@@ -120,8 +121,6 @@ void general_table_init(Table *player_tables, Table *enemy_tables, General *play
     //MockGeneralDynamicTableDiff mock_friendly_dynamic_table_diff = {0};
     //MockGeneralDynamicTableDiff mock_enemy_dynamic_table_diff = {0};
 
-    battalion_count /= 2; // half total battalion count as each side always has the same battalion count
-
     allocate_mock_soa_memory(
         battalion_count,
         &mock_friendly_static_table,
@@ -133,8 +132,8 @@ void general_table_init(Table *player_tables, Table *enemy_tables, General *play
 
     general_static_table_init(player_general, &mock_friendly_static_table, general_complex_field_table_ptr, general_static_table_field_table_ptr, battalion_count);
     general_static_table_init(enemy_general, &mock_enemy_static_table, general_complex_field_table_ptr, general_static_table_field_table_ptr, battalion_count);
-    general_dynamic_table_init(player_general, &mock_friendly_dynamic_table, general_complex_field_table_ptr, general_dynamic_table_field_table_ptr, battalion_count);
-    general_dynamic_table_init(enemy_general, &mock_enemy_dynamic_table, general_complex_field_table_ptr, general_dynamic_table_field_table_ptr, battalion_count);
+    general_dynamic_table_init(player_general, &mock_friendly_dynamic_table, general_complex_field_table_ptr, general_dynamic_table_field_table_ptr, ARMY_SIDE_LEFT, battalion_count);
+    general_dynamic_table_init(enemy_general, &mock_enemy_dynamic_table, general_complex_field_table_ptr, general_dynamic_table_field_table_ptr, ARMY_SIDE_RIGHT, battalion_count);
     //battalion_static_diff_table_init(battalion_count, mock_friendly_static_table_diff, mock_friendly_static_table, mock_enemy_static_table, mock_static_field_table_diff, mock_static_field_table);
     //battalion_dynamic_diff_table_init(battalion_count, mock_friendly_dynamic_table_diff, mock_friendly_dynamic_table, mock_enemy_dynamic_table, mock_dynamic_field_table_diff, mock_dynamic_field_table);
 
@@ -171,12 +170,12 @@ void general_table_update(Table *tables, Map *map, enum ArmyBattlefieldSide side
         _Bool is_present = tables->general_tables.friendly_dynamic.is_present[i];
         if (!is_present) continue;
 
-        update_stats(tables, i);
-        update_status(tables, map, i);
-        try_engage_enemy(tables, battalion_count, battalion_size, i);
-        update_position(tables, side, i);
-        update_direction(tables, i);
-        resolve_attack(tables, i, battalion_size, dt);
+        if(0)update_stats(tables, i);
+        if(0)update_status(tables, map, i);
+        if(0)try_engage_enemy(tables, battalion_count, battalion_size, i);
+        if(0)update_position(tables, side, i);
+        if(0)update_direction(tables, i);
+        if(0)resolve_attack(tables, i, battalion_size, dt);
         animation_table_update(tables, i);
 
     }
@@ -744,6 +743,7 @@ static void general_dynamic_table_init(
     GeneralDynamicTable *mock_dynamic_table,
     const ComplexFieldEntry *general_complex_field_table,
     const ComplexFieldEntry *mock_dynamic_field_table,
+    enum ArmyBattlefieldSide side,
     unsigned int battalion_count) {
 
     aos_soa_transform(general, (void **)mock_dynamic_table, general_complex_field_table, mock_dynamic_field_table, battalion_count, 5,
@@ -752,7 +752,7 @@ static void general_dynamic_table_init(
     for (unsigned int i = 0; i < battalion_count; i++) {
 
         mock_dynamic_table->is_present[i] = true;
-
+        mock_dynamic_table->direction[i] = (side == ARMY_SIDE_LEFT) ? RIGHT : LEFT;
     }
 
 }
