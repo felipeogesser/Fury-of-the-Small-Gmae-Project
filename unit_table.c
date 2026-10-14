@@ -30,6 +30,7 @@ static void unit_dynamic_table_init(
     UnitDynamicTable *mock_dynamic_table,
     const ComplexFieldEntry *unit_field_table_ptr,
     const ComplexFieldEntry *mock_dynamic_field_table,
+    enum Direction dir,
     unsigned int unit_count);
 static void allocate_mock_soa_memory(
     unsigned int obj_count,
@@ -52,27 +53,27 @@ static void *unit_table_start_address_alloc = NULL;
 static const ComplexFieldEntry unit_dynamic_table_field_table[] = {
 
     #define OFFSET_OF(type, member) offsetof(type, member)
-    #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
+    #define ELEMENT_SIZE_OF(type, member) (sizeof(*(((type *)0)->member)))
 
-    { "direction",      OFFSET_OF(UnitDynamicTable, direction),      SIZE_OF(UnitDynamicTable, direction),      S_INT,       NULL },
-    { "target_idx",     OFFSET_OF(UnitDynamicTable, target_idx),     SIZE_OF(UnitDynamicTable, target_idx),     U_INT,       NULL },
-    { "target_type",    OFFSET_OF(UnitDynamicTable, target_type),    SIZE_OF(UnitDynamicTable, target_type),    S_INT,       NULL },
-    { "vec_x",          OFFSET_OF(UnitDynamicTable, vec_x),          SIZE_OF(UnitDynamicTable, vec_x),          FLOAT,       NULL },
-    { "vec_y",          OFFSET_OF(UnitDynamicTable, vec_y),          SIZE_OF(UnitDynamicTable, vec_y),          FLOAT,       NULL },
-    { "x",              OFFSET_OF(UnitDynamicTable, x),              SIZE_OF(UnitDynamicTable, x),              FLOAT,       NULL },
-    { "y",              OFFSET_OF(UnitDynamicTable, y),              SIZE_OF(UnitDynamicTable, y),              FLOAT,       NULL },
-    { "hp",             OFFSET_OF(UnitDynamicTable, hp),             SIZE_OF(UnitDynamicTable, hp),             FLOAT,       NULL },
-    { "attack_timer",             OFFSET_OF(UnitDynamicTable, attack_timer),             SIZE_OF(UnitDynamicTable, attack_timer),             FLOAT,       NULL },
-    { "animation",      OFFSET_OF(UnitDynamicTable, animation),      SIZE_OF(UnitDynamicTable, animation),      S_INT,       NULL },
-    { "current_frame",  OFFSET_OF(UnitDynamicTable, current_frame),  SIZE_OF(UnitDynamicTable, current_frame),  U_CHAR,      NULL },
-    { "is_target_in_range",        OFFSET_OF(UnitDynamicTable, is_target_in_range),        SIZE_OF(UnitDynamicTable, is_target_in_range),        BOOL,        NULL },
-    { "is_engaged",        OFFSET_OF(UnitDynamicTable, is_engaged),        SIZE_OF(UnitDynamicTable, is_engaged),        BOOL,        NULL },
-    { "is_present",       OFFSET_OF(UnitDynamicTable, is_present),       SIZE_OF(UnitDynamicTable, is_present),       BOOL,        NULL },
-    { "is_attacking",       OFFSET_OF(UnitDynamicTable, is_attacking),       SIZE_OF(UnitDynamicTable, is_attacking),       BOOL,        NULL },
+    { "direction",      OFFSET_OF(UnitDynamicTable, direction),      ELEMENT_SIZE_OF(UnitDynamicTable, direction),      S_INT,       NULL },
+    { "target_idx",     OFFSET_OF(UnitDynamicTable, target_idx),     ELEMENT_SIZE_OF(UnitDynamicTable, target_idx),     U_INT,       NULL },
+    { "target_type",    OFFSET_OF(UnitDynamicTable, target_type),    ELEMENT_SIZE_OF(UnitDynamicTable, target_type),    S_INT,       NULL },
+    { "vec_x",          OFFSET_OF(UnitDynamicTable, vec_x),          ELEMENT_SIZE_OF(UnitDynamicTable, vec_x),          FLOAT,       NULL },
+    { "vec_y",          OFFSET_OF(UnitDynamicTable, vec_y),          ELEMENT_SIZE_OF(UnitDynamicTable, vec_y),          FLOAT,       NULL },
+    { "x",              OFFSET_OF(UnitDynamicTable, x),              ELEMENT_SIZE_OF(UnitDynamicTable, x),              FLOAT,       NULL },
+    { "y",              OFFSET_OF(UnitDynamicTable, y),              ELEMENT_SIZE_OF(UnitDynamicTable, y),              FLOAT,       NULL },
+    { "hp",             OFFSET_OF(UnitDynamicTable, hp),             ELEMENT_SIZE_OF(UnitDynamicTable, hp),             FLOAT,       NULL },
+    { "attack_timer",             OFFSET_OF(UnitDynamicTable, attack_timer),             ELEMENT_SIZE_OF(UnitDynamicTable, attack_timer),             FLOAT,       NULL },
+    { "animation",      OFFSET_OF(UnitDynamicTable, animation),      ELEMENT_SIZE_OF(UnitDynamicTable, animation),      S_INT,       NULL },
+    { "current_frame",  OFFSET_OF(UnitDynamicTable, current_frame),  ELEMENT_SIZE_OF(UnitDynamicTable, current_frame),  U_CHAR,      NULL },
+    { "is_target_in_range",        OFFSET_OF(UnitDynamicTable, is_target_in_range),        ELEMENT_SIZE_OF(UnitDynamicTable, is_target_in_range),        BOOL,        NULL },
+    { "is_engaged",        OFFSET_OF(UnitDynamicTable, is_engaged),        ELEMENT_SIZE_OF(UnitDynamicTable, is_engaged),        BOOL,        NULL },
+    { "is_present",       OFFSET_OF(UnitDynamicTable, is_present),       ELEMENT_SIZE_OF(UnitDynamicTable, is_present),       BOOL,        NULL },
+    { "is_attacking",       OFFSET_OF(UnitDynamicTable, is_attacking),       ELEMENT_SIZE_OF(UnitDynamicTable, is_attacking),       BOOL,        NULL },
     { "obj_size",       0,                                           sizeof(UnitDynamicTable),                  NOT_DEFINED, NULL },
 
     #undef OFFSET_OF
-    #undef SIZE_OF
+    #undef ELEMENT_SIZE_OF
 
 };
 const ComplexFieldEntry *const unit_dynamic_table_field_table_ptr = unit_dynamic_table_field_table;
@@ -90,8 +91,8 @@ void unit_table_init(Table *player_tables, Table *enemy_tables, Unit *player_uni
         &mock_enemy_dynamic_table
     );
 
-    unit_dynamic_table_init(player_unit, &mock_friendly_dynamic_table, unit_complex_field_table_ptr, unit_dynamic_table_field_table_ptr, battalion_count * battalion_size);
-    unit_dynamic_table_init(enemy_unit, &mock_enemy_dynamic_table, unit_complex_field_table_ptr, unit_dynamic_table_field_table_ptr, battalion_count * battalion_size);
+    unit_dynamic_table_init(player_unit, &mock_friendly_dynamic_table, unit_complex_field_table_ptr, unit_dynamic_table_field_table_ptr, RIGHT, battalion_count * battalion_size);
+    unit_dynamic_table_init(enemy_unit, &mock_enemy_dynamic_table, unit_complex_field_table_ptr, unit_dynamic_table_field_table_ptr, LEFT, battalion_count * battalion_size);
 
     /*UnitComparisonTable unit_tables = {
         .friendly_dynamic = (UnitDynamicTable)mock_friendly_dynamic_table,
@@ -109,11 +110,11 @@ void unit_table_update(Table *tables, unsigned int total_battalion_count, unsign
 
     unsigned int battalion_count = total_battalion_count / 2; 
     
-    BattalionTable *battalion_tables = &tables->battalion_tables;
-    GeneralTable *general_tables = &tables->general_tables;
+    //BattalionTable *battalion_tables = &tables->battalion_tables;
+    //GeneralTable *general_tables = &tables->general_tables;
     UnitTable *unit_tables = &tables->unit_tables;
     unsigned int unit_count = battalion_size * battalion_count;
-    for (unsigned int i = 0; i < unit_count; i++) {
+    /*for (unsigned int i = 0; i < unit_count; i++) {
         
         unsigned int battalion_idx = i / battalion_size;
         unsigned int friendly_idx = i;
@@ -217,13 +218,34 @@ void unit_table_update(Table *tables, unsigned int total_battalion_count, unsign
 
         }
 
-    }
+    }*/
 
-    update_speed(tables, unit_count, battalion_size);
-    resolve_attack(tables, unit_count, battalion_size, dt);
-    update_position(tables, battalion_count, battalion_size, unit_count, side);
-    update_direction(tables, unit_count);
-    animation_table_update(tables, unit_count, battalion_size);
+    if (0) {
+                        unsigned int engaged_battalion_idx = tables->battalion_tables.friendly_dynamic.target_battalion_idx[0];
+
+                    (void)try_engage_enemy(
+                    unit_tables->friendly_dynamic.x[0],
+                    unit_tables->friendly_dynamic.y[0],
+                    &unit_tables->friendly_dynamic.target_type[0],
+                    &unit_tables->friendly_dynamic.target_idx[0],
+                    tables,
+                    battalion_count,
+                    battalion_size,
+                    engaged_battalion_idx
+                );
+    }
+    if (0)update_speed(tables, unit_count, battalion_size);
+    if(0)resolve_attack(tables, unit_count, battalion_size, dt);
+    if (0) update_position(tables, battalion_count, battalion_size, unit_count, side);
+    /*for (unsigned int a = 0; a < unit_count; a++) {
+
+        if (tables->unit_tables.friendly_dynamic.x[a] <= 0.0f || tables->unit_tables.friendly_dynamic.y[a] <= 0.0f) {
+            printf("a = %u, x = %f, y = %f\n", a, (double)tables->unit_tables.friendly_dynamic.x[a],(double)tables->unit_tables.friendly_dynamic.y[a]);
+        }
+
+    }*/
+    if(0)update_direction(tables, unit_count);
+    if (0)animation_table_update(tables, unit_count, battalion_size);
 
 }
 
@@ -272,11 +294,11 @@ void unit_table_render(Table *tables, unsigned int total_battalion_count, unsign
 
         SDL_Renderer *renderer = engine.renderer;
         SDL_Texture *texture = sprite->texture;
-        if (direction == LEFT) {
+        if (direction == RIGHT) {
         
             SDL_RenderCopy(renderer, texture, rect1, rect2);
 
-        } else if (direction == RIGHT) {
+        } else if (direction == LEFT) {
 
             SDL_RenderCopyEx(renderer, texture, rect1, rect2, 0, NULL, SDL_FLIP_HORIZONTAL);
 
@@ -456,8 +478,8 @@ static void update_position(Table *tables, unsigned int battalion_count, unsigne
     #define DISTANCE 20.0f // DISTANCE_BETWEEN_GENERAL_AND_BATTALION_CENTROID
     #define UNIT_WIDTH 24.0f
     #define UNIT_HEIGHT 24.0f
-    #define PADDING_X 48.0f
-    #define PADDING_Y 20.0f
+    #define PADDING_X 12.0f
+    #define PADDING_Y 8.0f
     #define MAX_SPEED 20.0f
 
     formation_update(tables,
@@ -671,11 +693,20 @@ static void unit_dynamic_table_init(
     UnitDynamicTable *mock_dynamic_table,
     const ComplexFieldEntry *unit_field_table_ptr,
     const ComplexFieldEntry *mock_dynamic_field_table,
+    enum Direction dir,
     unsigned int unit_count) {
 
     aos_soa_transform(unit, (void **)mock_dynamic_table, unit_field_table_ptr, mock_dynamic_field_table, unit_count, 3,
     "hp", "x", "y");
 
+    for (unsigned int i = 0; i < unit_count; i++) {
+
+        mock_dynamic_table->animation[i] = IDLE;
+        mock_dynamic_table->is_present[i] = true;
+        mock_dynamic_table->current_frame[i] = 0;
+        mock_dynamic_table->direction[i] = dir;
+
+    }
 }
 
 static void allocate_mock_soa_memory(
