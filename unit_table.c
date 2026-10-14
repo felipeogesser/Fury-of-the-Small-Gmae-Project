@@ -395,8 +395,6 @@ static void animation_table_update(Table *tables, unsigned int unit_count, unsig
         const enum BattalionMovementMode movement_state = tables->battalion_tables.friendly_dynamic.movement_state[i / battalion_size];
         const enum BattalionLifecycle lifecycle_state = tables->battalion_tables.friendly_dynamic.lifecycle_state[i / battalion_size];
         const _Bool is_engaged = tables->unit_tables.friendly_dynamic.is_engaged[i];
-        if (tables->unit_tables.friendly_dynamic.is_target_in_range == NULL) printf("i = %u\n",i);
-        printf("val = %u\n",(unsigned int)tables->unit_tables.friendly_dynamic.is_target_in_range[i]);
         const _Bool is_target_in_range = tables->unit_tables.friendly_dynamic.is_target_in_range[i];
         unsigned char current_frame = tables->unit_tables.friendly_dynamic.current_frame[i];
         const enum Sprites sprite_type = get_battalion_spreadsheet(battalion_type).sprite_type;

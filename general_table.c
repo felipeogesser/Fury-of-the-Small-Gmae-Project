@@ -747,8 +747,14 @@ static void general_dynamic_table_init(
     const ComplexFieldEntry *mock_dynamic_field_table,
     unsigned int battalion_count) {
 
-    aos_soa_transform(general, (void **)mock_dynamic_table, general_complex_field_table, mock_dynamic_field_table, battalion_count, 3,
-    "direction", "animation", "hp");
+    aos_soa_transform(general, (void **)mock_dynamic_table, general_complex_field_table, mock_dynamic_field_table, battalion_count, 5,
+    "direction", "animation", "hp", "x", "y");
+
+    for (unsigned int i = 0; i < battalion_count; i++) {
+
+        mock_dynamic_table->is_present[i] = true;
+
+    }
 
 }
 
