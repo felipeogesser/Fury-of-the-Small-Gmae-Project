@@ -82,9 +82,9 @@ void battlefield_init(void) {
 
     unsigned int armies_count = 2;
     unsigned int battalion_size = 50;
-    unsigned int battalion_count = battlefield.general_payload[0]->general_count + battlefield.general_payload[1]->general_count;
+    battlefield.battalion_count = battlefield.general_payload[0]->general_count + battlefield.general_payload[1]->general_count;
+    unsigned int battalion_count = battlefield.battalion_count / 2; // battalion_count of each side, since both sides alwasy have same amount of battalions at start of battle
     Armies *armies = load_armies_onto_battlefield(battlefield.general_payload, armies_count, battalion_size);
-    battlefield.battalion_count = battalion_count;
     battlefield.battalion_size = battalion_size;
     battlefield.balance_of_power = 0;
 
@@ -160,7 +160,7 @@ void battlefield_input(SDL_Event *e) {
 void battlefield_update(void) {
 
     float dt = engine.game->delta;
-    unsigned int battalion_count = battlefield.battalion_count;
+    unsigned int battalion_count = battlefield.battalion_count / 2; // battalion_count of each side, since both sides alwasy have same amount of battalions at start of battle
     unsigned int battalion_size = battlefield.battalion_size;
     //unsigned int unit_count = battalion_count * battalion_size;
     Table *player_tables = &battlefield.player_tables;

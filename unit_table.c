@@ -78,12 +78,10 @@ static const ComplexFieldEntry unit_dynamic_table_field_table[] = {
 };
 const ComplexFieldEntry *const unit_dynamic_table_field_table_ptr = unit_dynamic_table_field_table;
 
-void unit_table_init(Table *player_tables, Table *enemy_tables, Unit *player_unit, Unit *enemy_unit, unsigned int total_battalion_count, unsigned int battalion_size) {
+void unit_table_init(Table *player_tables, Table *enemy_tables, Unit *player_unit, Unit *enemy_unit, unsigned int battalion_count, unsigned int battalion_size) {
 
     UnitDynamicTable mock_friendly_dynamic_table = {0};
     UnitDynamicTable mock_enemy_dynamic_table = {0};
-
-    unsigned int battalion_count = total_battalion_count / 2; // half total battalion count as each side always has the same battalion count
 
     allocate_mock_soa_memory(
         battalion_count * battalion_size,
@@ -106,9 +104,7 @@ void unit_table_init(Table *player_tables, Table *enemy_tables, Unit *player_uni
 
 }
 
-void unit_table_update(Table *tables, unsigned int total_battalion_count, unsigned int battalion_size, enum ArmyBattlefieldSide side, float dt) {
-
-    unsigned int battalion_count = total_battalion_count / 2; 
+void unit_table_update(Table *tables, unsigned int battalion_count, unsigned int battalion_size, enum ArmyBattlefieldSide side, float dt) {
     
     //BattalionTable *battalion_tables = &tables->battalion_tables;
     //GeneralTable *general_tables = &tables->general_tables;
@@ -249,9 +245,7 @@ void unit_table_update(Table *tables, unsigned int total_battalion_count, unsign
 
 }
 
-void unit_table_render(Table *tables, unsigned int total_battalion_count, unsigned int battalion_size) {
-
-    unsigned int battalion_count = total_battalion_count / 2; 
+void unit_table_render(Table *tables, unsigned int battalion_count, unsigned int battalion_size) {
 
     unsigned int unit_count = battalion_size * battalion_count;
     for (unsigned int i = 0; i < unit_count; i++) {

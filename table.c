@@ -6,7 +6,6 @@
 
 void clear_table_vectors(Table *tables, unsigned int battalion_count, unsigned int battalion_size) {
 
-    battalion_count /= 2;
     unsigned int unit_count = battalion_count * battalion_size;
     for (unsigned int idx = 0, i = 0; i < unit_count; i++) {
 

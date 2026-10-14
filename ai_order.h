@@ -3,6 +3,6 @@
 
 #include "table_types.h"
 
-void battalion_order_table_init(Table *player_tables, Table *enemy_tables, unsigned int total_battalion_count);
+void battalion_order_table_init(Table *player_tables, Table *enemy_tables, unsigned int battalion_count);
 
 #endif

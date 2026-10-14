@@ -164,9 +164,8 @@ void general_table_init(Table *player_tables, Table *enemy_tables, General *play
 
 }
 
-void general_table_update(Table *tables, Map *map, enum ArmyBattlefieldSide side, unsigned int total_battalion_count, unsigned int battalion_size, float dt) {
+void general_table_update(Table *tables, Map *map, enum ArmyBattlefieldSide side, unsigned int battalion_count, unsigned int battalion_size, float dt) {
 
-    unsigned int battalion_count = total_battalion_count / 2;
     for (unsigned int i = 0; i < battalion_count; i++) {
 
         _Bool is_present = tables->general_tables.friendly_dynamic.is_present[i];
@@ -308,8 +307,7 @@ static void try_engage_enemy(Table *tables, unsigned int battalion_count, unsign
     enum TargetType personal_target_type = UNKNOWN_TARGET;
     #define MEELE_SEARCH_RANGE 300.0f
     float shortest_dist = MEELE_SEARCH_RANGE * MEELE_SEARCH_RANGE;
-    unsigned int enemy_battalion_count = battalion_count / 2;
-    for (unsigned int j = 0; j < enemy_battalion_count; j++) {
+    for (unsigned int j = 0; j < battalion_count; j++) {
 
         if (!tables->battalion_tables.enemy_dynamic.is_present[j]) continue;
 

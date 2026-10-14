@@ -187,7 +187,7 @@ const ComplexFieldEntry *const battalion_comparison_table_field_table_ptr = batt
 #undef SIZE_OF
 #undef ELEMENT_SIZE_OF
 
-void battalion_table_init(Table *player_tables, Table *enemy_tables, Battalion *player_battalion, Battalion *enemy_battalion,/* const ComplexFieldEntry *battalion_field_table,*/ unsigned int total_battalion_count) {
+void battalion_table_init(Table *player_tables, Table *enemy_tables, Battalion *player_battalion, Battalion *enemy_battalion,/* const ComplexFieldEntry *battalion_field_table,*/ unsigned int battalion_count) {
 
     BattalionStaticTable mock_friendly_static_table = {0};
     BattalionStaticTable mock_enemy_static_table = {0};
@@ -197,8 +197,6 @@ void battalion_table_init(Table *player_tables, Table *enemy_tables, Battalion *
     BattalionDynamicTable mock_enemy_dynamic_table = {0};
     BattalionDynamicTableDiff mock_friendly_dynamic_table_diff = {0};
     BattalionDynamicTableDiff mock_enemy_dynamic_table_diff = {0};
-
-    unsigned int battalion_count = total_battalion_count / 2; // half total battalion count as each side always has the same battalion count
 
     allocate_mock_soa_memory(
         battalion_count,
@@ -242,9 +240,8 @@ void battalion_table_init(Table *player_tables, Table *enemy_tables, Battalion *
 
 }
 
-void battalion_table_update(const Spreadsheet *spreadsheet, Table *tables, signed int balance_of_power, unsigned int total_battalion_count, unsigned int battalion_size, float dt) {
+void battalion_table_update(const Spreadsheet *spreadsheet, Table *tables, signed int balance_of_power, unsigned int battalion_count, unsigned int battalion_size, float dt) {
 
-    unsigned int battalion_count = total_battalion_count / 2; 
     for (unsigned int i = 0; i < battalion_count; i++) {
 
         _Bool is_present = check_if_battalion_is_present(tables, i);

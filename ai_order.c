@@ -35,12 +35,10 @@ const ComplexFieldEntry *const battalion_order_table_field_table_ptr = battalion
 #undef SIZE_OF
 #undef ELEMENT_SIZE_OF
 
-void battalion_order_table_init(Table *player_tables, Table *enemy_tables, unsigned int total_battalion_count) {
+void battalion_order_table_init(Table *player_tables, Table *enemy_tables, unsigned int battalion_count) {
 
     BattalionOrderTable player_order_table = {0};
     BattalionOrderTable enemy_order_table = {0};
-
-    unsigned int battalion_count = total_battalion_count / 2;
 
     allocate_soa_memory(
         battalion_count,
