@@ -164,8 +164,9 @@ void general_table_init(Table *player_tables, Table *enemy_tables, General *play
 
 }
 
-void general_table_update(Table *tables, Map *map, enum ArmyBattlefieldSide side, unsigned int battalion_count, unsigned int battalion_size, float dt) {
+void general_table_update(Table *tables, Map *map, enum ArmyBattlefieldSide side, unsigned int total_battalion_count, unsigned int battalion_size, float dt) {
 
+    unsigned int battalion_count = total_battalion_count / 2;
     for (unsigned int i = 0; i < battalion_count; i++) {
 
         _Bool is_present = tables->general_tables.friendly_dynamic.is_present[i];
@@ -222,11 +223,11 @@ void general_table_render(Table *tables, unsigned int i) {
 
     SDL_Renderer *renderer = engine.renderer;
     SDL_Texture *texture = sprite->texture;
-    if (direction == LEFT) {
+    if (direction == RIGHT) {
     
         SDL_RenderCopy(renderer, texture, rect1, rect2);
 
-    } else if (direction == RIGHT) {
+    } else if (direction == LEFT) {
 
         SDL_RenderCopyEx(renderer, texture, rect1, rect2, 0, NULL, SDL_FLIP_HORIZONTAL);
 

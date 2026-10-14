@@ -162,7 +162,7 @@ void battlefield_update(void) {
     float dt = engine.game->delta;
     unsigned int battalion_count = battlefield.battalion_count;
     unsigned int battalion_size = battlefield.battalion_size;
-    unsigned int unit_count = battalion_count * battalion_size;
+    //unsigned int unit_count = battalion_count * battalion_size;
     Table *player_tables = &battlefield.player_tables;
     Table *enemy_tables = &battlefield.enemy_tables;
     signed int *balance_of_power = &battlefield.balance_of_power;
@@ -189,8 +189,8 @@ void battlefield_update(void) {
     unit_table_update(player_tables, battalion_count, battalion_size, ARMY_SIDE_LEFT, dt);
     unit_table_update(enemy_tables, battalion_count, battalion_size, ARMY_SIDE_RIGHT, dt);
 
-    clear_table_vectors(player_tables, unit_count, battalion_size);
-    clear_table_vectors(enemy_tables, unit_count, battalion_size);
+    clear_table_vectors(player_tables, battalion_count, battalion_size);
+    clear_table_vectors(enemy_tables, battalion_count, battalion_size);
 
     camera_update();
 
@@ -245,7 +245,7 @@ void battlefield_render(void) {
     unit_table_render(&battlefield.player_tables, battlefield.battalion_count, battlefield.battalion_size);
     unit_table_render(&battlefield.enemy_tables, battlefield.battalion_count, battlefield.battalion_size);
 
-    for (unsigned int i = 0; i < battlefield.battalion_count; i++) {
+    for (unsigned int i = 0; i < battlefield.battalion_count / 2; i++) {
 
         general_table_render(&battlefield.player_tables, i);
         general_table_render(&battlefield.enemy_tables, i);

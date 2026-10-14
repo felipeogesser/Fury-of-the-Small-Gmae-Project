@@ -195,17 +195,17 @@ static void set_units_position(Unit *unit, unsigned int battalion_size, Battalio
     //unsigned int pad_y = battalion->padding_between_units_y;
     #define UNIT_WIDTH 24.0f
     #define UNIT_HEIGHT 24.0f
-    #define PADDING_X 48.0f
-    #define PADDING_Y 20.0f
-    unsigned int pad_x = PADDING_X;
-    unsigned int pad_y = PADDING_Y;
+    #define PADDING_X 12.0f
+    #define PADDING_Y 8.0f
+    float pad_x = PADDING_X;
+    float pad_y = PADDING_Y;
 
-    unsigned int pos_x = x;
-    unsigned int pos_y = y;
+    float pos_x = x;
+    float pos_y = y;
     //unsigned int dim_x = unit->dimensionX;
     //unsigned int dim_y = unit->dimensionY;
-    unsigned int dim_x = PADDING_X;
-    unsigned int dim_y = PADDING_Y;
+    float dim_x = UNIT_WIDTH;
+    float dim_y = UNIT_HEIGHT;
 
     pos_x -= (dim_x + pad_x) * !is_enemy_army;
     pos_x += (dim_x + pad_x) * formation_width * is_enemy_army;
