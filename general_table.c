@@ -170,9 +170,9 @@ void general_table_update(Table *tables, Map *map, enum ArmyBattlefieldSide side
         _Bool is_present = tables->general_tables.friendly_dynamic.is_present[i];
         if (!is_present) continue;
 
-        if(0)update_stats(tables, i);
-        if(0)update_status(tables, map, i);
-        if(0)try_engage_enemy(tables, battalion_count, battalion_size, i);
+        if(1)update_stats(tables, i);
+        if(1)update_status(tables, map, i);
+        if(1)try_engage_enemy(tables, battalion_count, battalion_size, i);
         if(0)update_position(tables, side, i);
         if(0)update_direction(tables, i);
         if(0)resolve_attack(tables, i, battalion_size, dt);

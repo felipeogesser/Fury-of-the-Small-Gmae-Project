@@ -129,8 +129,8 @@ void steer_headless_units(Table *tables, const unsigned int battalion_count,
 
         unsigned int iter = 0;   /* slot number within this battalion */
 
-        for (unsigned int idx = b * battalion_size, k = 0; k < battalion_size; k++) {
-            idx += k;
+        for (unsigned int i = b * battalion_size, k = 0; k < battalion_size; k++) {
+            unsigned int idx = i + k;
             if (idx >= unit_count) break;
             if (!is_unit_present[idx] || is_unit_engaged[idx]) continue;
 
@@ -351,8 +351,8 @@ static unsigned int count_in_formation(const _Bool *is_unit_present, const _Bool
                                 unsigned int b, unsigned int battalion_size,
                                 unsigned int unit_count) {
     unsigned int n = 0;
-    for (unsigned int idx = b * battalion_size, k = 0; k < battalion_size; k++) {
-        idx += k;
+    for (unsigned int i = b * battalion_size, k = 0; k < battalion_size; k++) {
+        unsigned int idx = i + k;
         if (idx >= unit_count) break;
         if (is_unit_present[idx] && !is_unit_engaged[idx]) n++;
     }

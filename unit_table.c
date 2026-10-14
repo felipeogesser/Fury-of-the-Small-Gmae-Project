@@ -106,11 +106,11 @@ void unit_table_init(Table *player_tables, Table *enemy_tables, Unit *player_uni
 
 void unit_table_update(Table *tables, unsigned int battalion_count, unsigned int battalion_size, enum ArmyBattlefieldSide side, float dt) {
     
-    //BattalionTable *battalion_tables = &tables->battalion_tables;
-    //GeneralTable *general_tables = &tables->general_tables;
+    BattalionTable *battalion_tables = &tables->battalion_tables;
+    GeneralTable *general_tables = &tables->general_tables;
     UnitTable *unit_tables = &tables->unit_tables;
     unsigned int unit_count = battalion_size * battalion_count;
-    /*for (unsigned int i = 0; i < unit_count; i++) {
+    for (unsigned int i = 0; i < unit_count; i++) {
         
         unsigned int battalion_idx = i / battalion_size;
         unsigned int friendly_idx = i;
@@ -214,25 +214,11 @@ void unit_table_update(Table *tables, unsigned int battalion_count, unsigned int
 
         }
 
-    }*/
-
-    if (0) {
-                        unsigned int engaged_battalion_idx = tables->battalion_tables.friendly_dynamic.target_battalion_idx[0];
-
-                    (void)try_engage_enemy(
-                    unit_tables->friendly_dynamic.x[0],
-                    unit_tables->friendly_dynamic.y[0],
-                    &unit_tables->friendly_dynamic.target_type[0],
-                    &unit_tables->friendly_dynamic.target_idx[0],
-                    tables,
-                    battalion_count,
-                    battalion_size,
-                    engaged_battalion_idx
-                );
     }
-    if (0)update_speed(tables, unit_count, battalion_size);
+
+    if(1)update_speed(tables, unit_count, battalion_size);
     if(0)resolve_attack(tables, unit_count, battalion_size, dt);
-    if (0) update_position(tables, battalion_count, battalion_size, unit_count, side);
+    if(1)update_position(tables, battalion_count, battalion_size, unit_count, side);
     /*for (unsigned int a = 0; a < unit_count; a++) {
 
         if (tables->unit_tables.friendly_dynamic.x[a] <= 0.0f || tables->unit_tables.friendly_dynamic.y[a] <= 0.0f) {
@@ -240,8 +226,8 @@ void unit_table_update(Table *tables, unsigned int battalion_count, unsigned int
         }
 
     }*/
-    if(0)update_direction(tables, unit_count);
-    if (0)animation_table_update(tables, unit_count, battalion_size);
+    if(1)update_direction(tables, unit_count);
+    if(1)animation_table_update(tables, unit_count, battalion_size);
 
 }
 
@@ -469,12 +455,12 @@ static void animation_table_update(Table *tables, unsigned int unit_count, unsig
 
 static void update_position(Table *tables, unsigned int battalion_count, unsigned int battalion_size, unsigned int unit_count, enum ArmyBattlefieldSide side) {
 
-    #define DISTANCE 20.0f // DISTANCE_BETWEEN_GENERAL_AND_BATTALION_CENTROID
+    #define DISTANCE 36.0f // DISTANCE_BETWEEN_GENERAL_AND_BATTALION_CENTROID
     #define UNIT_WIDTH 24.0f
     #define UNIT_HEIGHT 24.0f
     #define PADDING_X 12.0f
     #define PADDING_Y 8.0f
-    #define MAX_SPEED 20.0f
+    #define MAX_SPEED 2.0f
 
     formation_update(tables,
                 battalion_count, unit_count, battalion_size,
@@ -491,8 +477,8 @@ static void update_position(Table *tables, unsigned int battalion_count, unsigne
     #undef PADDING_Y
     #undef MAX_SPEED
 
-    #define MIN_DIST 36.0f
-    #define PASSES 4U
+    #define MIN_DIST 8.0f
+    #define PASSES 4
 
     float *x = tables->unit_tables.friendly_dynamic.x;
     float *y = tables->unit_tables.friendly_dynamic.y;

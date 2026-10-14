@@ -89,14 +89,18 @@ void formation_update(Table *tables,
         float forward_x = 0.0f, forward_y = 0.0f;
         direction_to_forward(direction, &forward_x, &forward_y);
 
-        /* center of the block: tip of the general's S line */
-        float center_x = general_x[b] + distance * forward_x;
-        float center_y = general_y[b] + distance * forward_y;
+        /* front rank sits `distance` behind the general; the block's center is
+        half its depth further back */
+        unsigned int ranks_used = ceil_div(to_place, files);
+        float half_depth = ((float)ranks_used - 1.0f) / 2.0f * step_depth;
+
+        float center_x = general_x[b] - (distance + half_depth) * forward_x;
+        float center_y = general_y[b] - (distance + half_depth) * forward_y;
 
         unsigned int iter = 0;   /* slot number within this battalion */
 
-        for (unsigned int idx = b * battalion_size, k = 0; k < battalion_size && iter < to_place; k++) {
-            idx += k;
+        for (unsigned int i = b * battalion_size, k = 0; k < battalion_size && iter < to_place; k++) {
+            unsigned int idx = i + k;
             if (idx >= unit_count) break;
             if (!is_unit_present[idx] || is_unit_engaged[idx]) continue;
 
@@ -187,8 +191,8 @@ static unsigned int count_in_formation(const _Bool *is_unit_present, const _Bool
                                 unsigned int b, unsigned int battalion_size,
                                 unsigned int unit_count) {
     unsigned int n = 0;
-    for (unsigned int idx = b * battalion_size, k = 0; k < battalion_size; k++) {
-        idx += k;
+    for (unsigned int i = b * battalion_size, k = 0; k < battalion_size; k++) {
+        unsigned int idx = i + k;
         if (idx >= unit_count) break;
         if (is_unit_present[idx] && !is_unit_engaged[idx]) n++;
     }

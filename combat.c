@@ -21,7 +21,8 @@ float hit_chance(float melee_attack, float melee_defense) {
     #define MAX_HIT 90.0f
     
     float chance = BASE_HIT + melee_attack - melee_defense;
-    chance = MIN_HIT * (chance < MIN_HIT) + MAX_HIT * (chance > MAX_HIT);
+    if (chance < MIN_HIT) chance = MIN_HIT;
+    if (chance > MAX_HIT) chance = MAX_HIT;
     return chance;
 
     #undef BASE_HIT
