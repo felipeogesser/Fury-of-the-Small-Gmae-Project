@@ -514,11 +514,11 @@ static void routing_units(Table *tables, unsigned int unit_count, unsigned int b
 
             if (side == ARMY_SIDE_LEFT) {
 
-                tables->unit_tables.friendly_dynamic.x[i] = -speed * 0.01f;
+                tables->unit_tables.friendly_dynamic.x[i] -= speed * 0.01f;
 
             } else {
 
-                tables->unit_tables.friendly_dynamic.y[i] = speed * 0.01f;
+                tables->unit_tables.friendly_dynamic.y[i] += speed * 0.01f;
 
             }
 
