@@ -380,11 +380,11 @@ static void update_position(Table *tables, enum ArmyBattlefieldSide side, unsign
 
         if (side == ARMY_SIDE_LEFT) {
 
-            vec_x = -speed * 0.01f;
+            vec_x -= speed * 0.01f;
 
         } else {
 
-            vec_x = speed * 0.01f;
+            vec_x += speed * 0.01f;
 
         }
 
