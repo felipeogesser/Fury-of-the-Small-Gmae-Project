@@ -212,16 +212,36 @@ static void set_units_position(Unit *unit, unsigned int battalion_size, Battalio
     pos_y += (dim_y / 2 - (dim_y + pad_y) * battalion_size / 2) * (battalion_size < formation_height);
     pos_y += (dim_y / 2 - (dim_y + pad_y) * formation_height / 2) * !(battalion_size < formation_height);
 
-    unsigned int idx = 0;
-    for (unsigned int i = 0; i < formation_width; i++) {
+    if (is_enemy_army) {
 
-        for (unsigned int j = 0; j < formation_height; j++) {
+        unsigned int idx = 0;
+        for (signed int i = formation_width - 1; i >= 0; i--) {
 
-            unit[idx].positionX = pos_x - i * (dim_x + pad_x);
-            unit[idx].positionY = pos_y + j * (dim_y + pad_y);
-            idx++;
-            if (idx == battalion_size) return;
-            
+            for (signed int j = formation_height - 1; j >= 0; j--) {
+
+                unit[idx].positionX = pos_x - i * (dim_x + pad_x);
+                unit[idx].positionY = pos_y + j * (dim_y + pad_y);
+                idx++;
+                if (idx == battalion_size) return;
+                
+            }
+
+        }
+
+    } else {
+
+        unsigned int idx = 0;
+        for (unsigned int i = 0; i < formation_width; i++) {
+
+            for (unsigned int j = 0; j < formation_height; j++) {
+
+                unit[idx].positionX = pos_x - i * (dim_x + pad_x);
+                unit[idx].positionY = pos_y + j * (dim_y + pad_y);
+                idx++;
+                if (idx == battalion_size) return;
+                
+            }
+
         }
 
     }
