@@ -2,6 +2,7 @@
 #include "animation_internal.h"
 #include "engine_internal.h"
 #include "field_entry_internal.h"
+#include "game_clock.h"
 #include "game_state_internal.h"
 #include "sprites_internal.h"
 #include <SDL2/SDL.h>
@@ -44,10 +45,8 @@ static const FieldEntry animation_state_field_table[] = {
 
 const FieldEntry *const animation_state_field_table_ptr = animation_state_field_table;
 
-static Uint32 last_frame_time = 0;
-static _Bool change_animation = false; // maybe remove, not used
-static enum Animation new_animation = 0;
-static bool advance_frame = false;
+//static _Bool change_animation = false; // maybe remove, not used
+//static _Bool advance_frame = false;
 
 void animation_init(void) {
 
@@ -58,15 +57,22 @@ void animation_init(void) {
 }
 
 _Bool animation_tick(void) {
-    Uint32 current_time = SDL_GetTicks();
-    if (current_time - last_frame_time >= FRAME_DURATION) {
-        last_frame_time = current_time;
-        advance_frame = true;
-    } else {
-        advance_frame = false;
+
+    static Uint64 frame_cached = (Uint64)-1;
+    static Uint32 last_tick_time = 0;
+    static _Bool should_tick_animation = false;
+
+    Uint64 frame = game_clock_frame_count();
+
+    if (frame != frame_cached) {
+        frame_cached = frame;
+        Uint32 now = SDL_GetTicks();
+        should_tick_animation = (now - last_tick_time >= FRAME_DURATION);
+        if (should_tick_animation) last_tick_time = now;
     }
-    return advance_frame;
-    
+
+    return should_tick_animation;
+
 }
 
 /*static float frame_timer = FRAME_DURATION;
@@ -88,7 +94,10 @@ void animation_update(
     const signed int anim_field,
     const signed int sprite_field) {
 
-    if (!advance_frame) return;
+    static _Bool change_animation = false;
+    static enum Animation new_animation = 0;
+
+    if (!animation_tick()) return;
 
     size_t anim_offset = field_table[anim_field].offset;
     size_t sprite_offset = field_table[sprite_field].offset;

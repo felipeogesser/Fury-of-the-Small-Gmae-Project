@@ -25,6 +25,13 @@ float game_clock_advance(void) {
     float delta_time = (float)(frame_end - clock.frame_start) / (float)frequency;
     clock.frame_start = frame_end;
     clock.frame_end = frame_end;
+    clock.frame_count++;
     return delta_time;
+
+}
+
+Uint64 game_clock_frame_count(void) {
+
+    return clock.frame_count;
 
 }
