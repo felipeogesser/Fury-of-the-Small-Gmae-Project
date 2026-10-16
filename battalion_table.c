@@ -629,6 +629,13 @@ static void battalion_dynamic_table_init(
     aos_soa_transform(battalion, (void **)mock_dynamic_table, battalion_field_table, mock_dynamic_field_table, battalion_count, 8,
     "morale", "fatigue", "unit_alive_count", "hp", "speed", "meele_attack", "meele_defense", "strength");
 
+    for (unsigned int i = 0; i < battalion_count; i++) {
+
+        mock_dynamic_table->lifecycle_state[i] = NORMAL;
+        mock_dynamic_table->start_entity_count[i] = battalion[i].unit_alive_count + 1;
+        mock_dynamic_table->lifecycle_state[i] = NORMAL;
+
+    }
 }
 
 static void battalion_static_diff_table_init(
