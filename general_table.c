@@ -304,7 +304,7 @@ static void try_engage_enemy(Table *tables, unsigned int battalion_count, unsign
     _Bool is_engaged = false;
     unsigned int closest_enemy_idx = -1U;
     enum TargetType personal_target_type = UNKNOWN_TARGET;
-    #define MEELE_SEARCH_RANGE 300.0f
+    #define MEELE_SEARCH_RANGE 2000.0f
     float shortest_dist = MEELE_SEARCH_RANGE * MEELE_SEARCH_RANGE;
     for (unsigned int j = 0; j < battalion_count; j++) {
 
@@ -337,9 +337,9 @@ static void try_engage_enemy(Table *tables, unsigned int battalion_count, unsign
 
         }
 
-        for (unsigned int idx = battalion_size * j, k = 0; k < battalion_size; k++) {
+        for (unsigned int h = battalion_size * j, k = 0; k < battalion_size; k++) {
 
-            idx += k;
+            unsigned int idx = h + k;
             if (!tables->unit_tables.enemy_dynamic.is_present[idx]) continue;
             
             enemy_x = tables->unit_tables.enemy_dynamic.x[idx];
@@ -455,8 +455,6 @@ static void update_position(Table *tables, enum ArmyBattlefieldSide side, unsign
     x += vec_x;
     y += vec_y;
 
-    tables->general_tables.friendly_dynamic.vec_x[i] = 0.0f;
-    tables->general_tables.friendly_dynamic.vec_y[i] = 0.0f;
     tables->general_tables.friendly_dynamic.x[i] = x;
     tables->general_tables.friendly_dynamic.y[i] = y;
 
@@ -640,7 +638,7 @@ static void animation_table_update(Table *tables, unsigned int i) {
     const Sprite *sprite = &engine.sprite_pack->sprite[sprite_type][anim];
     unsigned int frames_count = sprite->frames_count;
 
-    enum Animation new_animation = -1;
+    enum Animation new_animation = anim;
     switch (movement_state) {
 
         case STATIONARY:

@@ -308,7 +308,7 @@ static void update_speed(Table *tables, unsigned int unit_count, unsigned int ba
 
         speed *= 0.01f;
 
-        if (tables->unit_tables.friendly_dynamic.is_engaged) {
+        if (tables->unit_tables.friendly_dynamic.is_engaged[i / battalion_size]) {
 
             tables->unit_tables.friendly_dynamic.vec_x[i] = 0;
             tables->unit_tables.friendly_dynamic.vec_y[i] = 0;
@@ -404,7 +404,7 @@ static void animation_table_update(Table *tables, unsigned int unit_count, unsig
         const Sprite *sprite = &engine.sprite_pack->sprite[sprite_type][anim];
         unsigned int frames_count = sprite->frames_count;
 
-        enum Animation new_animation = -1;
+        enum Animation new_animation = anim;
         switch (movement_state) {
 
             case STATIONARY:

@@ -347,9 +347,9 @@ static void update_counts(Table *tables, unsigned int i, unsigned int battalion_
     unsigned int alive_entity_count = 0;
     unsigned int unit_alive_count = 0;
 
-    for (unsigned int idx = i * battalion_size, j = 0; j < battalion_size; j++) {
+    for (unsigned int k = i * battalion_size, j = 0; j < battalion_size; j++) {
         
-        idx += j;
+        unsigned int idx = k + j;
         _Bool is_present = tables->unit_tables.friendly_dynamic.is_present[idx];
         float hp = tables->unit_tables.friendly_dynamic.hp[idx];
         _Bool is_dead = hp <= 0.0f;
@@ -462,9 +462,9 @@ static void speed_update(float base_speed, float *speed, enum FatigueState state
 static void hp_update(const Table *tables, float *hp, unsigned int i, unsigned int battalion_size) {
 
     float total_hp = 0.0f;
-    for (unsigned int idx = i * battalion_size, j = 0; j < battalion_size; j++) {
+    for (unsigned int k = i * battalion_size, j = 0; j < battalion_size; j++) {
 
-        idx += j;
+        unsigned int idx = k + j;
         float this_hp = tables->unit_tables.friendly_dynamic.hp[idx];
         total_hp += (this_hp <= 0.0f) ? 0.0f : this_hp;
 
@@ -481,9 +481,9 @@ static void position_update(const Table *tables, float *x, float *y, unsigned in
     float average_x = 0.0f;
     float average_y = 0.0f;
     unsigned int not_present_count = 0;
-    for (unsigned int idx = i * battalion_size, j = 0; j < battalion_size; j++) {
+    for (unsigned int k = i * battalion_size, j = 0; j < battalion_size; j++) {
 
-        idx += j;
+        unsigned int idx = k + j;
         if(!tables->unit_tables.friendly_dynamic.is_present[idx]) {   
             not_present_count++;
             continue;
