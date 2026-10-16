@@ -139,7 +139,6 @@ void copy_aos_key_fields_to_soa(const ComplexFieldEntry *soa_field_table, const 
                 }
 
             }
-            HERE:
 
             if (strcmp(keys[i], aos_field_table[j].key) == 0) {
 
@@ -148,6 +147,8 @@ void copy_aos_key_fields_to_soa(const ComplexFieldEntry *soa_field_table, const 
                 aos_field[i].type = aos_field_table[j].type;
 
             }
+
+            HERE: continue;
 
         }
 
