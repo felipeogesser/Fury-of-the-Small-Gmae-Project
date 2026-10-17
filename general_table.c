@@ -546,13 +546,18 @@ static void update_position(Table *tables, Map map, enum ArmyBattlefieldSide sid
 
 static void update_direction(Table *tables, unsigned int i) {
 
-    float vx = tables->general_tables.friendly_dynamic.vec_x[i];
+    /*float vx = tables->general_tables.friendly_dynamic.vec_x[i];
     float vy = tables->general_tables.friendly_dynamic.vec_y[i];
     enum Direction direction = tables->general_tables.friendly_dynamic.direction[i];
     float dir = direction_from_vec(vx, vy, direction == LEFT ? 2.0f : 0.0f);
     direction = (dir < 2.0f) ? RIGHT : LEFT;
-    tables->general_tables.friendly_dynamic.direction[i] = direction;
+    tables->general_tables.friendly_dynamic.direction[i] = direction;*/
 
+
+    float vx = tables->unit_tables.friendly_dynamic.vec_x[i];
+    if (vx > 0.05f) tables->unit_tables.friendly_dynamic.direction[i] = RIGHT;
+    else if (vx < -0.05f) tables->unit_tables.friendly_dynamic.direction[i] = LEFT;
+    
 }
 
 #define PI 3.14159274f

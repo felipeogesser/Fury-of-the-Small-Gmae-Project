@@ -532,13 +532,16 @@ static void update_direction(Table *tables, unsigned int unit_count) {
 
     for(unsigned int i = 0; i < unit_count; i++) {
 
-        float vx = tables->unit_tables.friendly_dynamic.vec_x[i];
+        /*float vx = tables->unit_tables.friendly_dynamic.vec_x[i];
         float vy = tables->unit_tables.friendly_dynamic.vec_y[i];
         enum Direction direction = tables->unit_tables.friendly_dynamic.direction[i];
         float dir = direction_from_vec(vx, vy, direction == LEFT ? 2.0f : 0.0f);
         direction = (dir < 2.0f) ? RIGHT : LEFT;
-        tables->unit_tables.friendly_dynamic.direction[i] = direction;
+        tables->unit_tables.friendly_dynamic.direction[i] = direction;*/
 
+        float vx = tables->unit_tables.friendly_dynamic.vec_x[i];
+        if (vx > 0.05f) tables->unit_tables.friendly_dynamic.direction[i] = RIGHT;
+        else if (vx < -0.05f) tables->unit_tables.friendly_dynamic.direction[i] = LEFT;
     }
 
 }
