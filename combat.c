@@ -34,6 +34,6 @@ float hit_chance(float melee_attack, float melee_defense) {
 _Bool roll_hit(float chance) {
     
     float roll = (float)(rand() % 100 + 1);
-    return roll >= chance;
+    return roll <= chance;
 
 }
