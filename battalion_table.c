@@ -2,6 +2,7 @@
 #include "battalion_table_internal.h"
 #include "battalion_policy.h"
 #include "battalion_types.h"
+#include "battalion_internal.h"
 #include "ai_order.h"
 #include "ai_order_internal.h"
 #include "aos_soa_transformer.h"
@@ -36,6 +37,7 @@ static void position_update(const Table *tables, float *x, float *y, unsigned in
 static void update_stats(const Spreadsheet *spreadsheet, Table *tables, unsigned int i);
 static _Bool check_if_battalion_can_charge(Table *tables, enum BattalionMovementMode movement_state, unsigned int i);
 static _Bool check_if_battalion_is_engaged(enum BattalionMovementMode movement_state);
+static _Bool check_if_battalion_is_engaging(enum BattalionMovementMode movement_state, enum OrderType order_type);
 static void allocate_mock_soa_memory(
     unsigned int obj_count,
     BattalionStaticTable *mock_friendly_static_table,
@@ -276,6 +278,9 @@ void battalion_table_update(const Spreadsheet *spreadsheet, Table *tables, signe
 
         _Bool is_engaged = check_if_battalion_is_engaged(movement_state);
         tables->battalion_tables.friendly_dynamic.is_engaged[i] = is_engaged;
+
+        _Bool is_engaging = check_if_battalion_is_engaging(movement_state, tables->battalion_order.type[i]);
+        tables->battalion_tables.friendly_dynamic.is_engaging[i] = is_engaging;
 
         _Bool is_active = check_if_battalion_is_active(movement_state);
         tables->battalion_tables.friendly_dynamic.is_present[i] = is_active;
@@ -565,6 +570,14 @@ static _Bool check_if_battalion_is_engaged(enum BattalionMovementMode movement_s
 
 }
 
+static _Bool check_if_battalion_is_engaging(enum BattalionMovementMode movement_state, enum OrderType order_type) {
+
+    return ((movement_state != FIGHTING) &
+            (movement_state != STATIONARY) &
+                (order_type != UNKNOWN_ORDER));
+
+}
+
 static void allocate_mock_soa_memory(
     unsigned int obj_count,
     BattalionStaticTable *mock_friendly_static_table,
@@ -617,6 +630,13 @@ static void battalion_static_table_init(
     aos_soa_transform(battalion, (void **)mock_static_table, battalion_field_table, mock_static_field_table, battalion_count, 13,
     "battalion_type", "range", "charge_bonus", "armor", "attack_speed", "start_entity_count", "formation_x", "formation_y", "is_shielded", "is_ranged", "is_large", "is_armor_piercing", "is_anti_large");
 
+    for (unsigned int i = 0; i < battalion_count; i++) {
+
+        unsigned int *aux = (void *)&mock_static_table->start_entity_count[i];
+        *aux = battalion[i].unit_alive_count + 1;
+
+    }
+
 }
 
 static void battalion_dynamic_table_init(
@@ -632,10 +652,9 @@ static void battalion_dynamic_table_init(
     for (unsigned int i = 0; i < battalion_count; i++) {
 
         mock_dynamic_table->lifecycle_state[i] = NORMAL;
-        mock_dynamic_table->start_entity_count[i] = battalion[i].unit_alive_count + 1;
-        mock_dynamic_table->lifecycle_state[i] = NORMAL;
 
     }
+
 }
 
 static void battalion_static_diff_table_init(

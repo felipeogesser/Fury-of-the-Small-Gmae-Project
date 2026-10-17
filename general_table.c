@@ -397,20 +397,29 @@ static void update_position(Table *tables, enum ArmyBattlefieldSide side, unsign
         float target_x = tables->general_tables.friendly_dynamic.order_x[i];
         float target_y = tables->general_tables.friendly_dynamic.order_y[i];
 
+        if (tables->battalion_order.type[i] == ORDER_ATTACK) {
+            unsigned int target_idx = tables->battalion_order.target[i];
+            target_x = tables->battalion_tables.enemy_dynamic.x[target_idx];
+            target_y = tables->battalion_tables.enemy_dynamic.y[target_idx];
+        }
+
         float bdx = target_x - x;
         float bdy = target_y - y;
         float bdist = bdx * bdx + bdy * bdy;
 
         float blen = sqrtf(bdist);
-        float bk = (speed * 0.01f) / blen;
+        float step = speed * 0.01f;
+        //float bk = (speed * 0.01f) / blen;
 
-        vec_x += bdx * bk;
-        vec_y += bdy * bk;
-
+        if (blen > step) {
+            vec_x += bdx * (step / blen);
+            vec_y += bdy * (step / blen);
+        }
         #define ENTITY_CAN_START_ENGAGING_RANGE 200.0f
         if (blen > ENTITY_CAN_START_ENGAGING_RANGE) goto POSITION_UPDATE;
         #undef ENTITY_CAN_START_ENGAGING_RANGE
-        if (!tables->general_tables.friendly_dynamic.is_engaging[i]) {
+        
+        if (tables->general_tables.friendly_dynamic.is_engaging[i]) {
 
             enum TargetType personal_target_type = tables->general_tables.friendly_dynamic.target_type[i];
             unsigned int personal_target_idx = tables->general_tables.friendly_dynamic.personal_target_idx[i];
