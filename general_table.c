@@ -48,7 +48,8 @@ static void general_dynamic_table_init(
 static void update_stats(Table *tables, unsigned int i);
 static void update_status(Table *tables, Map *map, unsigned int i);
 static void try_engage_enemy(Table *tables, unsigned int battalion_count, unsigned int battalion_size, unsigned int i);
-static void update_position(Table *tables, enum ArmyBattlefieldSide side, unsigned int i);
+static void update_position(Table *tables, const Map *map, enum ArmyBattlefieldSide side, unsigned int i);
+static void keep_inside_map(float *x, float *y, const Map *map, float w, float h);
 static void update_direction(Table *tables, unsigned int i);
 static void resolve_attack(Table *tables, unsigned int i, unsigned int battalion_size, float dt);
 static void animation_table_update(Table *tables, unsigned int i);
@@ -174,7 +175,7 @@ void general_table_update(Table *tables, Map *map, enum ArmyBattlefieldSide side
         if(1)update_stats(tables, i);
         if(1)update_status(tables, map, i);
         if(1)try_engage_enemy(tables, battalion_count, battalion_size, i);
-        if(1)update_position(tables, side, i);
+        if(1)update_position(tables, map, side, i);
         if(1)update_direction(tables, i);
         if(1)resolve_attack(tables, i, battalion_size, dt);
         animation_table_update(tables, i);
@@ -279,7 +280,8 @@ static void update_status(Table *tables, Map *map, unsigned int i) {
 
         target_x = tables->unit_tables.enemy_dynamic.x[personal_target_idx];
         target_y = tables->unit_tables.enemy_dynamic.y[personal_target_idx];
-        is_target_alive = tables->unit_tables.enemy_dynamic.hp[personal_target_idx] > 0.0f;
+        is_target_alive = (tables->unit_tables.enemy_dynamic.hp[personal_target_idx] > 0.0f) &
+                          tables->unit_tables.enemy_dynamic.is_present[personal_target_idx];
 
     } else if (personal_target_type == TARGET_GENERAL) {
 
@@ -377,20 +379,22 @@ static void try_engage_enemy(Table *tables, unsigned int battalion_count, unsign
 
 }
 
-static void update_position(Table *tables, enum ArmyBattlefieldSide side, unsigned int i) {
+static void update_position(Table *tables, const Map *map, enum ArmyBattlefieldSide side, unsigned int i) {
+
+    #define GENERAL_WIDTH 24.0f
+    #define GENERAL_HEIGHT 24.0f
 
     float x = tables->general_tables.friendly_dynamic.x[i];
     float y = tables->general_tables.friendly_dynamic.y[i];
     float vec_x = 0.0f;
     float vec_y = 0.0f;
     const float speed = tables->battalion_tables.friendly_dynamic.speed[i];
+    const _Bool is_routing = tables->battalion_tables.friendly_dynamic.lifecycle_state[i] == ROUTING;
+    const _Bool is_engaged = tables->general_tables.friendly_dynamic.is_engaged[i];
 
-    if (tables->battalion_tables.friendly_dynamic.lifecycle_state[i] == ROUTING) {
+    if (is_routing) {
 
         vec_x = (side == ARMY_SIDE_LEFT) ? -speed : speed;
-
-    } else if (tables->general_tables.friendly_dynamic.is_engaged[i]) {
-
 
     } else if (tables->general_tables.friendly_dynamic.is_engaging[i]) {
 
@@ -423,7 +427,7 @@ static void update_position(Table *tables, enum ArmyBattlefieldSide side, unsign
 
         }
 
-    } else if (tables->battalion_tables.friendly_dynamic.is_engaging[i]) {
+    } else if (!is_engaged && tables->battalion_tables.friendly_dynamic.is_engaging[i]) {
 
         float target_x = tables->general_tables.friendly_dynamic.order_x[i];
         float target_y = tables->general_tables.friendly_dynamic.order_y[i];
@@ -455,10 +459,24 @@ static void update_position(Table *tables, enum ArmyBattlefieldSide side, unsign
     x += vec_x;
     y += vec_y;
 
+    if (!is_routing) keep_inside_map(&x, &y, map, GENERAL_WIDTH, GENERAL_HEIGHT);
+
     tables->general_tables.friendly_dynamic.vec_x[i] = vec_x;
     tables->general_tables.friendly_dynamic.vec_y[i] = vec_y;
     tables->general_tables.friendly_dynamic.x[i] = x;
     tables->general_tables.friendly_dynamic.y[i] = y;
+
+    #undef GENERAL_WIDTH
+    #undef GENERAL_HEIGHT
+
+}
+
+static void keep_inside_map(float *x, float *y, const Map *map, float w, float h) {
+
+    if (*x < map->mapLeftLimit) *x = map->mapLeftLimit;
+    if (*x > map->mapRightLimit - w) *x = map->mapRightLimit - w;
+    if (*y < map->mapTopLimit) *y = map->mapTopLimit;
+    if (*y > map->mapBottomLimit - h) *y = map->mapBottomLimit - h;
 
 }
 

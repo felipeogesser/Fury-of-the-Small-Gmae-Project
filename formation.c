@@ -139,8 +139,8 @@ _Bool is_unit_going_for_target(const Table *tables, unsigned int idx, unsigned i
 
     unsigned int target_idx = tables->unit_tables.friendly_dynamic.target_idx[idx];
     enum TargetType target_type = tables->unit_tables.friendly_dynamic.target_type[idx];
-    if (target_type == TARGET_UNIT) return tables->unit_tables.enemy_dynamic.hp[target_idx] > 0.0f;
-    if (target_type == TARGET_GENERAL) return tables->general_tables.enemy_dynamic.hp[target_idx] > 0.0f;
+    if (target_type == TARGET_UNIT) return tables->unit_tables.enemy_dynamic.is_present[target_idx] & (tables->unit_tables.enemy_dynamic.hp[target_idx] > 0.0f);
+    if (target_type == TARGET_GENERAL) return tables->general_tables.enemy_dynamic.is_present[target_idx] & (tables->general_tables.enemy_dynamic.hp[target_idx] > 0.0f);
     return 0;
 }
 

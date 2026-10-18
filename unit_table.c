@@ -12,6 +12,7 @@
 #include "engine_internal.h"
 #include "field_entry.h"
 #include "formation.h"
+#include "maps_internal.h"
 #include "memory_arena.h"
 #include "spreadsheet.h"
 #include "spreadsheet_internal.h"
@@ -38,7 +39,9 @@ static void allocate_mock_soa_memory(
     UnitDynamicTable *mock_enemy_dynamic_table);
 static void allocate_mem_for_mock(unsigned int obj_count, const ComplexFieldEntry *field_table, void *mock);
 static void resolve_attack(Table *tables, unsigned int unit_count, unsigned int battalion_size, float dt);
-static void update_position(Table *tables, unsigned int battalion_count, unsigned int battalion_size, unsigned int unit_count,enum ArmyBattlefieldSide side);
+static void update_position(Table *tables, const Map *map, unsigned int battalion_count, unsigned int battalion_size, unsigned int unit_count, enum ArmyBattlefieldSide side);
+static void apply_map_bounds(Table *tables, const Map *map, unsigned int unit_count, unsigned int battalion_size, float unit_w, float unit_h);
+static void keep_inside_map(float *x, float *y, const Map *map, float w, float h);
 static void update_direction(Table *tables, unsigned int unit_count);
 static void animation_table_update(Table *tables, unsigned int unit_count, unsigned int battalion_size);
 static _Bool try_engage_enemy(float fx, float fy, enum TargetType *target_type, unsigned int *target_idx, Table *tables, unsigned int battalion_count, unsigned int battalion_size, unsigned int engaged_battalion_idx);
@@ -105,7 +108,7 @@ void unit_table_init(Table *player_tables, Table *enemy_tables, Unit *player_uni
 
 }
 
-void unit_table_update(Table *tables, unsigned int battalion_count, unsigned int battalion_size, enum ArmyBattlefieldSide side, float dt) {
+void unit_table_update(Table *tables, const Map *map, unsigned int battalion_count, unsigned int battalion_size, enum ArmyBattlefieldSide side, float dt) {
     
     BattalionTable *battalion_tables = &tables->battalion_tables;
     GeneralTable *general_tables = &tables->general_tables;
@@ -115,7 +118,7 @@ void unit_table_update(Table *tables, unsigned int battalion_count, unsigned int
         
         unsigned int battalion_idx = i / battalion_size;
         unsigned int friendly_idx = i;
-        unit_tables->friendly_dynamic.is_present[friendly_idx] = unit_tables->friendly_dynamic.hp[friendly_idx] > 0;
+        unit_tables->friendly_dynamic.is_present[friendly_idx] = unit_tables->friendly_dynamic.is_present[friendly_idx] & (unit_tables->friendly_dynamic.hp[friendly_idx] > 0);
         _Bool is_present = unit_tables->friendly_dynamic.is_present[friendly_idx];
         if (is_present) {
         
@@ -143,18 +146,18 @@ void unit_table_update(Table *tables, unsigned int battalion_count, unsigned int
 
                 unsigned int target = unit_tables->friendly_dynamic.target_idx[friendly_idx];
                 enum TargetType target_type = unit_tables->friendly_dynamic.target_type[friendly_idx];
-                float target_hp = 0.0f;
+                _Bool is_target_present = false;
                 float tx = 0.0f;
                 float ty = 0.0f;
                 if (target_type == TARGET_GENERAL) {
 
-                    target_hp = general_tables->enemy_dynamic.hp[target];
+                    is_target_present = general_tables->enemy_dynamic.is_present[target] & (general_tables->enemy_dynamic.hp[target] > 0.0f);
                     tx = general_tables->enemy_dynamic.x[target];
                     ty = general_tables->enemy_dynamic.y[target];
 
                 } else if (target_type == TARGET_UNIT) {
 
-                    target_hp = unit_tables->enemy_dynamic.hp[target];
+                    is_target_present = unit_tables->enemy_dynamic.is_present[target] & (unit_tables->enemy_dynamic.hp[target] > 0.0f);
                     tx = unit_tables->enemy_dynamic.x[target];
                     ty = unit_tables->enemy_dynamic.y[target];
 
@@ -165,7 +168,8 @@ void unit_table_update(Table *tables, unsigned int battalion_count, unsigned int
 
                 }
 
-                if (target_hp <= 0.0f) {
+                // target dead or withdrawn: let go of it
+                if (!is_target_present) {
                     unit_tables->friendly_dynamic.is_engaged[friendly_idx] = false;
                     unit_tables->friendly_dynamic.target_type[friendly_idx] = UNKNOWN_TARGET;
                     unit_tables->friendly_dynamic.target_idx[friendly_idx] = -1U;
@@ -185,14 +189,7 @@ void unit_table_update(Table *tables, unsigned int battalion_count, unsigned int
     }
 
     if(1)resolve_attack(tables, unit_count, battalion_size, dt);
-    if(1)update_position(tables, battalion_count, battalion_size, unit_count, side);
-    /*for (unsigned int a = 0; a < unit_count; a++) {
-
-        if (tables->unit_tables.friendly_dynamic.x[a] <= 0.0f || tables->unit_tables.friendly_dynamic.y[a] <= 0.0f) {
-            printf("a = %u, x = %f, y = %f\n", a, (double)tables->unit_tables.friendly_dynamic.x[a],(double)tables->unit_tables.friendly_dynamic.y[a]);
-        }
-
-    }*/
+    if(1)update_position(tables, map, battalion_count, battalion_size, unit_count, side);
     if(1)update_direction(tables, unit_count);
     if(1)animation_table_update(tables, unit_count, battalion_size);
 
@@ -388,14 +385,14 @@ static void animation_table_update(Table *tables, unsigned int unit_count, unsig
 
 }
 
-static void update_position(Table *tables, unsigned int battalion_count, unsigned int battalion_size, unsigned int unit_count, enum ArmyBattlefieldSide side) {
+static void update_position(Table *tables, const Map *map, unsigned int battalion_count, unsigned int battalion_size, unsigned int unit_count, enum ArmyBattlefieldSide side) {
 
     #define DISTANCE 36.0f // DISTANCE_BETWEEN_GENERAL_AND_BATTALION_CENTROID
     #define UNIT_WIDTH 24.0f
     #define UNIT_HEIGHT 24.0f
     #define PADDING_X 12.0f
     #define PADDING_Y 8.0f
-    #define CATCH_UP 1.5f // a unit moves at most battalion speed * 0.01 * CATCH_UP per tick, so it can catch up with its slot
+    #define CATCH_UP 1.5f // a unit moves at most battalion speed * CATCH_UP per tick, so it can catch up with its slot
     #define MIN_DIST 22.0f
     #define PASSES 4
 
@@ -432,6 +429,8 @@ static void update_position(Table *tables, unsigned int battalion_count, unsigne
         enemy_x, enemy_y, enemy_is_present, unit_count,
         MIN_DIST, PASSES);
 
+    if(1)apply_map_bounds(tables, map, unit_count, battalion_size, UNIT_WIDTH, UNIT_HEIGHT);
+
     #undef DISTANCE
     #undef UNIT_WIDTH
     #undef UNIT_HEIGHT
@@ -440,6 +439,40 @@ static void update_position(Table *tables, unsigned int battalion_count, unsigne
     #undef CATCH_UP
     #undef MIN_DIST
     #undef PASSES
+
+}
+
+static void apply_map_bounds(Table *tables, const Map *map, unsigned int unit_count, unsigned int battalion_size, float unit_w, float unit_h) {
+
+    float *x = tables->unit_tables.friendly_dynamic.x;
+    float *y = tables->unit_tables.friendly_dynamic.y;
+    _Bool *is_present = tables->unit_tables.friendly_dynamic.is_present;
+
+    for (unsigned int i = 0; i < unit_count; i++) {
+
+        if (!is_present[i]) continue;
+
+        if (tables->battalion_tables.friendly_dynamic.lifecycle_state[i / battalion_size] == ROUTING) {
+
+            const _Bool is_outside = (x[i] < map->mapLeftLimit) | (x[i] > map->mapRightLimit) | (y[i] < map->mapTopLimit) | (y[i] > map->mapBottomLimit);
+            if (is_outside) is_present[i] = false;
+
+        } else {
+
+            keep_inside_map(&x[i], &y[i], map, unit_w, unit_h);
+
+        }
+
+    }
+
+}
+
+static void keep_inside_map(float *x, float *y, const Map *map, float w, float h) {
+
+    if (*x < map->mapLeftLimit) *x = map->mapLeftLimit;
+    if (*x > map->mapRightLimit - w) *x = map->mapRightLimit - w;
+    if (*y < map->mapTopLimit) *y = map->mapTopLimit;
+    if (*y > map->mapBottomLimit - h) *y = map->mapBottomLimit - h;
 
 }
 
