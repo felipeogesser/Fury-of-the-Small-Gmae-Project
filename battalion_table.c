@@ -89,6 +89,7 @@ static const ComplexFieldEntry battalion_static_table_field_table[] = {
     { "range",              OFFSET_OF(BattalionStaticTable, range),              ELEMENT_SIZE_OF(BattalionStaticTable, range),              FLOAT,  NULL },
     { "charge_bonus",       OFFSET_OF(BattalionStaticTable, charge_bonus),       ELEMENT_SIZE_OF(BattalionStaticTable, charge_bonus),       FLOAT,  NULL },
     { "armor",              OFFSET_OF(BattalionStaticTable, armor),              ELEMENT_SIZE_OF(BattalionStaticTable, armor),              FLOAT,  NULL },
+    { "max_hp",              OFFSET_OF(BattalionStaticTable, max_hp),              ELEMENT_SIZE_OF(BattalionStaticTable, max_hp),              FLOAT,  NULL },
     { "attack_speed",       OFFSET_OF(BattalionStaticTable, attack_speed),       ELEMENT_SIZE_OF(BattalionStaticTable, attack_speed),       FLOAT,  NULL },
     { "start_entity_count", OFFSET_OF(BattalionStaticTable, start_entity_count), ELEMENT_SIZE_OF(BattalionStaticTable, start_entity_count), U_INT,  NULL },
     { "formation_x",        OFFSET_OF(BattalionStaticTable, formation_x),        ELEMENT_SIZE_OF(BattalionStaticTable, formation_x),        U_CHAR, NULL },
@@ -319,7 +320,7 @@ void battalion_table_update(const Spreadsheet *spreadsheet, Table *tables, signe
             .modifiers = tables->battalion_tables.friendly_dynamic.morale_modifiers[i]
         };
         const HealthPool health_pool = {
-            .max_hp = spreadsheet->battalion_spreadsheet[battalion_type].hp,
+            .max_hp = tables->battalion_tables.friendly_static.max_hp[i],
             .current_hp = tables->battalion_tables.friendly_dynamic.hp[i]
         };
         morale_update(&morale, &health_pool, balance_of_power);
@@ -665,8 +666,8 @@ static void battalion_static_table_init(
     const ComplexFieldEntry *mock_static_field_table,
     unsigned int battalion_count) {
 
-    aos_soa_transform(battalion, (void **)mock_static_table, battalion_field_table, mock_static_field_table, battalion_count, 13,
-    "battalion_type", "range", "charge_bonus", "armor", "attack_speed", "start_entity_count", "formation_x", "formation_y", "is_shielded", "is_ranged", "is_large", "is_armor_piercing", "is_anti_large");
+    aos_soa_transform(battalion, (void **)mock_static_table, battalion_field_table, mock_static_field_table, battalion_count, 14,
+    "battalion_type", "range", "charge_bonus", "armor", "attack_speed", "max_hp", "start_entity_count", "formation_x", "formation_y", "is_shielded", "is_ranged", "is_large", "is_armor_piercing", "is_anti_large");
 
     for (unsigned int i = 0; i < battalion_count; i++) {
 
@@ -690,7 +691,8 @@ static void battalion_dynamic_table_init(
     for (unsigned int i = 0; i < battalion_count; i++) {
 
         mock_dynamic_table->lifecycle_state[i] = NORMAL;
-
+        mock_dynamic_table->morale_modifiers[i] = 0;
+    
     }
 
 }

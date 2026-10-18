@@ -4,7 +4,8 @@
 // private prototypes
 static signed int army_losses(signed int balance_of_power);
 static signed int damage_sustained(unsigned int max_hp, unsigned int current_hp);
-
+static _Bool is_army_losing(signed int balance_of_power);
+static _Bool is_damage_sustained(unsigned int max_hp, unsigned int current_hp);
 
 enum MoraleState evaluate_morale_state(unsigned int base, signed int current) {
 
@@ -61,6 +62,39 @@ static signed int army_losses(signed int balance_of_power) {
 
 static signed int damage_sustained(unsigned int max_hp, unsigned int current_hp) {
 
-    return (max_hp / (current_hp + 1)) * VALUE_DAMAGE_SUSTAINED;
+    if (max_hp == 0) return 0;
+    if (current_hp > max_hp) current_hp = max_hp;
+    signed int lost_percent = (signed int)((max_hp - current_hp) * 100 / max_hp);
+    return lost_percent * VALUE_DAMAGE_SUSTAINED;
+
+}
+
+unsigned int evaluate_morale_dynamic_flags(unsigned int modifiers, unsigned int max_hp, unsigned int current_hp, signed int balance_of_power) {
+
+    modifiers &= ~(unsigned int)(FLAG_ARMY_LOSSES | FLAG_DAMAGE_SUSTAINED);
+    if (is_army_losing(balance_of_power)) modifiers |= FLAG_ARMY_LOSSES;
+    if (is_damage_sustained(max_hp, current_hp)) modifiers |= FLAG_DAMAGE_SUSTAINED;
+    return modifiers;
+
+}
+
+static _Bool is_army_losing(signed int balance_of_power) {
+
+    #define ARMY_LOSSES_THRESHOLD 2
+    _Bool is_losing = balance_of_power >= ARMY_LOSSES_THRESHOLD;
+    #undef ARMY_LOSSES_THRESHOLD
+    return is_losing;
+
+}
+
+static _Bool is_damage_sustained(unsigned int max_hp, unsigned int current_hp) {
+
+    #define DAMAGE_SUSTAINED_THRESHOLD 10
+    if (max_hp == 0) return 0;
+    if (current_hp > max_hp) current_hp = max_hp;
+    unsigned int lost_percent = (max_hp - current_hp) * 100 / max_hp;
+    _Bool is_damaged = lost_percent >= DAMAGE_SUSTAINED_THRESHOLD;
+    #undef DAMAGE_SUSTAINED_THRESHOLD
+    return is_damaged;
 
 }

@@ -126,7 +126,7 @@ const ComplexFieldEntry *const battalion_field_table_ptr = battalion_field_table
 #undef OFFSET_OF
 #undef SIZE_OF
 
-void init_battalion(Battalion *battalion, unsigned int battalion_size, enum BattalionType type) {
+void init_battalion(Battalion *battalion, float general_hp, unsigned int battalion_size, enum BattalionType type) {
 
     BattalionSpreadsheet battalion_default = get_battalion_spreadsheet(type);
 
@@ -137,7 +137,7 @@ void init_battalion(Battalion *battalion, unsigned int battalion_size, enum Batt
     battalion->state = (BattalionState){.lifecycle = NORMAL, .movement = STATIONARY, .rally = {.timer = 0, .rallying = false}, .headless = false};
     battalion->morale = (Morale){.state = EAGER, .current = 100, .base = 100, .modifiers = 0};
     battalion->fatigue = (Fatigue){.state = FRESH, .base = 100, .current = 100};
-    battalion->health_pool = (HealthPool){.max_hp = battalion_default.hp, .current_hp = battalion_default.hp / unit_alive_count};
+    battalion->health_pool = (HealthPool){.max_hp = battalion_default.hp + general_hp, .current_hp = (battalion_default.hp / battalion_size) * unit_alive_count + general_hp};
     battalion->statistics = (BattalionStatistics){.unit_base_count = battalion_size};
     battalion->is_active = 0;
     battalion->pos.x = 0;

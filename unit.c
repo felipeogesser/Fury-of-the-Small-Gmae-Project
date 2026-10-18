@@ -109,7 +109,7 @@ void init_units(Battalion *battalion, unsigned int x, unsigned int y, _Bool is_e
 
     set_units_id(unit, battalion_size);
     set_units_sprite_and_animation(unit, general, battalion_size);
-    set_units_hp(unit, battalion_size, battalion->health_pool.max_hp);
+    set_units_hp(unit, battalion_size, battalion->health_pool.max_hp - general->hp);
     set_units_dimension(unit, battalion_size);
     set_units_position(unit, battalion_size, battalion, x, y, is_enemy_army);
 

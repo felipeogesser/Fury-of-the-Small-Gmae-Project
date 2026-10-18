@@ -86,7 +86,7 @@ Armies *load_armies_into_arena(GeneralPayload **general_payload, unsigned int ar
         GeneralAndPosition *general_and_pos = general_payload[i]->general_and_pos;
         for (unsigned int j = 0; j < battalion_count; j++) {
 
-            init_battalion(&battalion[j], battalion_size, general_and_pos[j].general->battalion_type);
+            init_battalion(&battalion[j], general_and_pos[j].general->hp, battalion_size, general_and_pos[j].general->battalion_type);
 
             init_general(&general[j], general_and_pos[j].general, general_and_pos[j].pos.x, general_and_pos[j].pos.y);
 

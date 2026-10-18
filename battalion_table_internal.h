@@ -16,6 +16,7 @@ typedef struct BattalionStaticTable {
     const float *range;
     const float *charge_bonus;
     const float *armor;
+    const float *max_hp;
     const float *attack_speed;
 
     const unsigned int *start_entity_count;

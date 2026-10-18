@@ -111,6 +111,7 @@ void battlefield_init(void) {
     printf("memory used: %zu\n", memory_used);
 
 }
+void debug_print_battalions(const Table *t, unsigned int battalion_count, const char *name);
 
 void battlefield_input(SDL_Event *e) {
 
@@ -121,9 +122,26 @@ void battlefield_input(SDL_Event *e) {
 
     if (e->key.keysym.sym == SDLK_1) {
 
-        battlefield.player_tables.battalion_order.target[0] = 1;
+        battlefield.player_tables.battalion_order.target[0] = 0;
+        battlefield.player_tables.battalion_order.target[1] = 1;
+        battlefield.player_tables.battalion_order.target[2] = 2;
+        battlefield.player_tables.battalion_order.target[3] = 3;
+        battlefield.player_tables.battalion_order.target[4] = 4;
+
+        battlefield.player_tables.battalion_order.pace[0] = PACE_RUN;
+        battlefield.player_tables.battalion_order.pace[1] = PACE_RUN;
+        battlefield.player_tables.battalion_order.pace[2] = PACE_RUN;
+        battlefield.player_tables.battalion_order.pace[3] = PACE_RUN;
+        battlefield.player_tables.battalion_order.pace[4] = PACE_RUN;
+    
+        battlefield.player_tables.battalion_order.type[0] = ORDER_ATTACK;
+        battlefield.player_tables.battalion_order.type[1] = ORDER_ATTACK;
+        battlefield.player_tables.battalion_order.type[2] = ORDER_ATTACK;
+        battlefield.player_tables.battalion_order.type[3] = ORDER_ATTACK;
+        battlefield.player_tables.battalion_order.type[4] = ORDER_ATTACK;
 
     }
+    if(1)debug_print_battalions(&battlefield.player_tables, 5, "playr");
 
     Player *player = engine.player;
         
@@ -157,6 +175,27 @@ void battlefield_input(SDL_Event *e) {
 
 }
 
+
+void debug_print_battalions(const Table *t, unsigned int battalion_count, const char *name) {
+    const BattalionDynamicTable *bd = &t->battalion_tables.friendly_dynamic;
+    const BattalionStaticTable  *bs = &t->battalion_tables.friendly_static;
+    const GeneralDynamicTable   *gd = &t->general_tables.friendly_dynamic;
+    const BattalionOrderTable   *o  = &t->battalion_order;
+
+    for (unsigned int i = 0; i < battalion_count; i++) {
+        printf("%s b%u | life %d move %d ctrl %d pres %d engaging %d"
+               " | hp %.1f fatigue %.1f morale %.1f start %u dead %u wd %u"
+               " | order %d pace %d tgt %u dest %.0f,%.0f"
+               " | gen %.0f,%.0f vec %.2f,%.2f goto %.0f,%.0f\n",
+               name, i,
+               (int)bd->lifecycle_state[i], (int)bd->movement_state[i],
+               bd->is_controllable[i], bd->is_present[i], bd->is_engaging[i],
+               (double)bd->hp[i], (double)bd->fatigue[i], (double)bd->morale[i], bs->start_entity_count[i],
+               bd->dead_entity_count[i], bd->withdrawed_entity_count[i],
+               (int)o->type[i], (int)o->pace[i], o->target[i], (double)o->dest_x[i], (double)o->dest_y[i],
+               (double)gd->x[i], (double)gd->y[i], (double)gd->vec_x[i], (double)gd->vec_y[i], (double)gd->order_x[i], (double)gd->order_y[i]);
+    }
+}
 void battlefield_update(void) {
 
     float dt = engine.game->delta;
@@ -178,7 +217,7 @@ void battlefield_update(void) {
     update_balance_of_power(player_tables, enemy_tables, battalion_count, balance_of_power);
 
     battalion_table_update(spreadsheet_ptr, player_tables, *balance_of_power, battalion_count, battalion_size, dt);
-    battalion_table_update(spreadsheet_ptr, enemy_tables, *balance_of_power, battalion_count, battalion_size, dt);
+    battalion_table_update(spreadsheet_ptr, enemy_tables, -*balance_of_power, battalion_count, battalion_size, dt);
 
     //update_generals(engine.armies, engine.game);
     general_table_update(player_tables, engine.map, ARMY_SIDE_LEFT, battalion_count, battalion_size, dt);
@@ -186,8 +225,8 @@ void battlefield_update(void) {
 
     //update_units(engine.armies, engine.game);
 
-    unit_table_update(player_tables, battalion_count, battalion_size, ARMY_SIDE_LEFT, dt);
-    unit_table_update(enemy_tables, battalion_count, battalion_size, ARMY_SIDE_RIGHT, dt);
+    unit_table_update(player_tables, engine.map, battalion_count, battalion_size, ARMY_SIDE_LEFT, dt);
+    unit_table_update(enemy_tables, engine.map, battalion_count, battalion_size, ARMY_SIDE_RIGHT, dt);
 
     //clear_table_vectors(player_tables, battalion_count, battalion_size);
     //clear_table_vectors(enemy_tables, battalion_count, battalion_size);
