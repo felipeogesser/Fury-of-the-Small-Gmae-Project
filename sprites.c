@@ -198,6 +198,7 @@ static signed int stristr_found(const char *haystack, const char *needle) {
 
 static signed int parse_animation_from_path(const char *path) {
     if (stristr_found(path, "Idle"))   return IDLE;
+    if (stristr_found(path, "Walk"))   return WALK;
     if (stristr_found(path, "Run"))    return RUN;
     if (stristr_found(path, "Attack")) return ATTACK;
     if (stristr_found(path, "Guard"))  return GUARD;
