@@ -6,6 +6,6 @@
 void steer_headless_units(Table *tables, const unsigned int battalion_count,
                         const unsigned int unit_count, const unsigned int battalion_size,
                         const float unit_w, const float unit_h, const float padding_x, const float padding_y,
-                        const float max_speed);
+                        const float catch_up);
 
 #endif

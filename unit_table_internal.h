@@ -22,6 +22,7 @@ typedef struct UnitDynamicTable {
     _Bool *is_target_in_range;
     _Bool *is_engaged;
     _Bool *is_present;
+    _Bool *is_charging;
     _Bool *is_attacking;
 
 } UnitDynamicTable;

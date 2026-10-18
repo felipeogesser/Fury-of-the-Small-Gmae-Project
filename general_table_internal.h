@@ -64,6 +64,7 @@ typedef struct GeneralDynamicTable {
     _Bool *is_present;
     _Bool *is_engaged;
     _Bool *is_engaging;
+    _Bool *is_charging;
 
 } GeneralDynamicTable;
 

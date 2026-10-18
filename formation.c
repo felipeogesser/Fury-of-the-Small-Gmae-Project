@@ -25,37 +25,36 @@ static void formation_slot(unsigned int iter, unsigned int to_place, unsigned in
                     float forward_x, float forward_y,
                     float step_depth, float step_side,
                     float *slot_x, float *slot_y);
-static unsigned int count_in_formation(const _Bool *is_unit_present, const _Bool *is_unit_engaged,
+static unsigned int count_in_formation(const _Bool *is_unit_present,
                                 unsigned int b, unsigned int battalion_size,
                                 unsigned int unit_count);
-static void steer_arrive(float x, float y, float vx, float vy,
-                  float target_x, float target_y, float max_speed,
-                  float *force_x, float *force_y);
+static void steer_arrive(float x, float y,
+                  float target_x, float target_y, float max_step,
+                  float *vec_x, float *vec_y);
 static void steer_separation(const float *unit_x, const float *unit_y,
                       const _Bool *is_unit_present,
                       unsigned int self, unsigned int battalion_size,
                       unsigned int unit_count,
                       float radius, float *force_x, float *force_y);
-static void integrate_unit(float *x, float *y, float *vx, float *vy,
-                    float force_x, float force_y, float max_speed);
+/*static void integrate_unit(float *x, float *y, float *vx, float *vy,
+                    float force_x, float force_y, float max_speed);*/
 static void clamp_length(float *x, float *y, float max);
 
 void formation_update(Table *tables,
                 const unsigned int battalion_count, const unsigned int unit_count,
                 const unsigned int battalion_size,
                 const float unit_w, const float unit_h, const float padding_x, const float padding_y,
-                const float distance, const float max_speed) {
+                const float distance, const float catch_up) {
 
-    float *unit_x = tables->unit_tables.friendly_dynamic.x;
-    float *unit_y = tables->unit_tables.friendly_dynamic.y;
+    const float *unit_x = tables->unit_tables.friendly_dynamic.x;
+    const float *unit_y = tables->unit_tables.friendly_dynamic.y;
     float *unit_vx = tables->unit_tables.friendly_dynamic.vec_x;
     float *unit_vy = tables->unit_tables.friendly_dynamic.vec_y;
     enum Direction *general_direction = tables->general_tables.friendly_dynamic.direction;
 
     const _Bool *is_unit_present = tables->unit_tables.friendly_dynamic.is_present;
-    const _Bool *is_unit_engaged = tables->unit_tables.friendly_dynamic.is_engaged;
-    const _Bool *is_battalion_engaged = tables->battalion_tables.friendly_dynamic.is_engaged;
     const _Bool *is_headless = tables->battalion_tables.friendly_dynamic.is_headless;
+    const float *speed = tables->battalion_tables.friendly_dynamic.speed;
     const unsigned char *formation_x = tables->battalion_tables.friendly_static.formation_x;
     const unsigned char *formation_y = tables->battalion_tables.friendly_static.formation_y;
     const float *general_x = tables->general_tables.friendly_dynamic.x;
@@ -71,7 +70,7 @@ void formation_update(Table *tables,
     float sep_radius = unit_w < unit_h ? unit_w : unit_h;
 
     for (unsigned int b = 0; b < battalion_count; b++) {
-        if (is_headless[b] || is_battalion_engaged[b]) continue;
+        if (is_headless[b]) continue;   /* steer_headless_units handles those */
 
         unsigned int ranks = formation_x[b];
         unsigned int files = formation_y[b];
@@ -81,7 +80,7 @@ void formation_update(Table *tables,
         }
         float direction = direction_from_vec(general_vec_x[b], general_vec_y[b],
                                      general_direction[b] == LEFT ? 2.0f : 0.0f);
-        unsigned int to_place = min_uint(count_in_formation(is_unit_present, is_unit_engaged,
+        unsigned int to_place = min_uint(count_in_formation(is_unit_present,
                                                             b, battalion_size, unit_count),
                                                             ranks * files);
         if (to_place == 0) continue;
@@ -97,31 +96,53 @@ void formation_update(Table *tables,
         float center_x = general_x[b] - (distance + half_depth) * forward_x;
         float center_y = general_y[b] - (distance + half_depth) * forward_y;
 
+        /* the most a unit of this battalion may move in one tick */
+        float max_step = speed[b] * catch_up;
+
         unsigned int iter = 0;   /* slot number within this battalion */
 
         for (unsigned int i = b * battalion_size, k = 0; k < battalion_size && iter < to_place; k++) {
             unsigned int idx = i + k;
             if (idx >= unit_count) break;
-            if (!is_unit_present[idx] || is_unit_engaged[idx]) continue;
+            if (!is_unit_present[idx]) continue;
+
+            /* the unit keeps its slot number even while it is away fighting,
+               so the other units don't reshuffle */
+            unsigned int slot = iter;
+            iter++;
+
+            /* goes for its target instead: get_close_to_engaged_target moves it */
+            if (is_unit_going_for_target(tables, idx, battalion_size)) continue;
 
             float slot_x = 0.0f, slot_y = 0.0f;
-            formation_slot(iter, to_place, files, center_x, center_y,
+            formation_slot(slot, to_place, files, center_x, center_y,
                            forward_x, forward_y, step_depth, step_side,
                            &slot_x, &slot_y);
 
-            float fx = 0.0f, fy = 0.0f;
-            steer_arrive(unit_x[idx], unit_y[idx], unit_vx[idx], unit_vy[idx],
-                         slot_x, slot_y, max_speed, &fx, &fy);
+            steer_arrive(unit_x[idx], unit_y[idx], slot_x, slot_y, max_step,
+                         &unit_vx[idx], &unit_vy[idx]);
             steer_separation(unit_x, unit_y, is_unit_present, idx, battalion_size, unit_count,
-                             sep_radius, &fx, &fy);
-            integrate_unit(&unit_x[idx], &unit_y[idx], &unit_vx[idx], &unit_vy[idx],
-                           fx, fy, max_speed);
-
-            iter++;
+                             sep_radius, &unit_vx[idx], &unit_vy[idx]);
         }
     }
 }
 
+_Bool is_unit_going_for_target(const Table *tables, unsigned int idx, unsigned int battalion_size) {
+    unsigned int b = idx / battalion_size;
+    if (!tables->unit_tables.friendly_dynamic.is_engaged[idx]) return 0;
+
+    enum BattalionMovementMode movement_state = tables->battalion_tables.friendly_dynamic.movement_state[b];
+    _Bool is_headless = tables->battalion_tables.friendly_dynamic.is_headless[b];
+    _Bool is_attacking = tables->battalion_order.type[b] == ORDER_ATTACK;
+    _Bool is_running = (movement_state == RUNNING) | (movement_state == CHARGING) | (movement_state == FIGHTING);
+    if (!is_headless && !(is_attacking && is_running)) return 0;
+
+    unsigned int target_idx = tables->unit_tables.friendly_dynamic.target_idx[idx];
+    enum TargetType target_type = tables->unit_tables.friendly_dynamic.target_type[idx];
+    if (target_type == TARGET_UNIT) return tables->unit_tables.enemy_dynamic.hp[target_idx] > 0.0f;
+    if (target_type == TARGET_GENERAL) return tables->general_tables.enemy_dynamic.hp[target_idx] > 0.0f;
+    return 0;
+}
 
 /* ---------------------------------------------------------------------- */
 /* Helpers                                                                */
@@ -185,29 +206,31 @@ static void formation_slot(unsigned int iter, unsigned int to_place, unsigned in
     *slot_y = center_y + depth * forward_y + t * forward_x;
 }
 
-/* How many units of battalion b take a formation slot (alive, not engaged).
-   Needed before placing, because centering the ranks depends on it. */
-static unsigned int count_in_formation(const _Bool *is_unit_present, const _Bool *is_unit_engaged,
+/* How many units of battalion b take a formation slot (every present unit;
+   engaged ones keep theirs). Needed before placing, because centering the
+   ranks depends on it. */
+static unsigned int count_in_formation(const _Bool *is_unit_present,
                                 unsigned int b, unsigned int battalion_size,
                                 unsigned int unit_count) {
     unsigned int n = 0;
     for (unsigned int i = b * battalion_size, k = 0; k < battalion_size; k++) {
         unsigned int idx = i + k;
         if (idx >= unit_count) break;
-        if (is_unit_present[idx] && !is_unit_engaged[idx]) n++;
+        if (is_unit_present[idx]) n++;
     }
     return n;
 }
 
-/* Steer toward a point, slowing down as it gets close. Used for slots. */
-static void steer_arrive(float x, float y, float vx, float vy,
-                  float target_x, float target_y, float max_speed,
-                  float *force_x, float *force_y) {
+/* Step toward a point, slowing down as it gets close. Used for slots.
+   Adds the step straight into vec (vec is zero at the start of the tick). */
+static void steer_arrive(float x, float y,
+                  float target_x, float target_y, float max_step,
+                  float *vec_x, float *vec_y) {
     float want_x = (target_x - x) * ARRIVE_GAIN;
     float want_y = (target_y - y) * ARRIVE_GAIN;
-    clamp_length(&want_x, &want_y, max_speed);
-    *force_x += (want_x - vx) * ARRIVE_WEIGHT;
-    *force_y += (want_y - vy) * ARRIVE_WEIGHT;
+    clamp_length(&want_x, &want_y, max_step);
+    *vec_x += want_x;
+    *vec_y += want_y;
 }
 
 /* Push unit `self` away from battalion mates closer than `radius`.
@@ -237,8 +260,8 @@ static void steer_separation(const float *unit_x, const float *unit_y,
         *force_y += dy / d * strength;
     }
 }
-
-/* Apply force to velocity, damp it, cap it, stop it if tiny, then move. */
+/*
+//Apply force to velocity, damp it, cap it, stop it if tiny, then move.
 static void integrate_unit(float *x, float *y, float *vx, float *vy,
                     float force_x, float force_y, float max_speed) {
     *vx = (*vx + force_x) * DAMPING;
@@ -250,7 +273,7 @@ static void integrate_unit(float *x, float *y, float *vx, float *vy,
     }
     *x += *vx;
     *y += *vy;
-}
+}*/
 
 /* Shorten (x, y) to at most `max`. */
 static void clamp_length(float *x, float *y, float max) {

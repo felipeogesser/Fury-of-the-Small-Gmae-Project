@@ -21,23 +21,24 @@
 #include <stdbool.h>
 #include <string.h>
 #include <math.h>
-
+#include <stdio.h>
 // private prototypes
 static _Bool check_if_battalion_is_present(const Table *tables, unsigned int i);
 static void update_counts(Table *tables, unsigned int i, unsigned int battalion_size);
 static enum BattalionLifecycle evaluate_battalion_lifecycle(Table *tables, unsigned int i);
-static _Bool check_if_battalion_is_controllable(enum BattalionLifecycle lifecycle_state);
+static _Bool check_if_battalion_is_controllable(enum BattalionLifecycle lifecycle_state, _Bool is_headless);
 static void send_order_to_general(Table *tables, _Bool is_controllable, unsigned int i);
 static enum BattalionMovementMode evaluate_battalion_movement(Table *tables, unsigned int i);
 static _Bool evaluate_charge_timer(float *charge_timer, float dt);
 static _Bool check_if_battalion_is_active(enum BattalionMovementMode movement_state);
-static void speed_update(float base_speed, float *speed, enum FatigueState state, float dt);
+static void speed_update(float base_speed, float *speed, enum FatigueState state, enum BattalionMovementMode movement_state, float dt);
 static void hp_update(const Table *tables, float *hp, unsigned int i, unsigned int battalion_size);
 static void position_update(const Table *tables, float *x, float *y, unsigned int i, unsigned int battalion_size);
 static void update_stats(const Spreadsheet *spreadsheet, Table *tables, unsigned int i);
 static _Bool check_if_battalion_can_charge(Table *tables, enum BattalionMovementMode movement_state, unsigned int i);
 static _Bool check_if_battalion_is_engaged(enum BattalionMovementMode movement_state);
 static _Bool check_if_battalion_is_engaging(enum BattalionMovementMode movement_state, enum OrderType order_type);
+static void set_battalion_charge(Table *tables, unsigned int i, unsigned int battalion_size, _Bool is_charging);
 static void allocate_mock_soa_memory(
     unsigned int obj_count,
     BattalionStaticTable *mock_friendly_static_table,
@@ -255,25 +256,36 @@ void battalion_table_update(const Spreadsheet *spreadsheet, Table *tables, signe
         enum BattalionLifecycle lifecycle_state = evaluate_battalion_lifecycle(tables, i);
         tables->battalion_tables.friendly_dynamic.lifecycle_state[i] = lifecycle_state;
 
-        _Bool is_controllable = check_if_battalion_is_controllable(lifecycle_state);
+        _Bool is_headless = !tables->general_tables.friendly_dynamic.is_present[i];
+        tables->battalion_tables.friendly_dynamic.is_headless[i] = is_headless;
+
+        _Bool is_controllable = check_if_battalion_is_controllable(lifecycle_state, is_headless);
         tables->battalion_tables.friendly_dynamic.is_controllable[i] = is_controllable;
 
         send_order_to_general(tables, is_controllable, i);
 
         update_rally(tables, i, dt);
-
+        
         enum BattalionMovementMode movement_state = tables->battalion_tables.friendly_dynamic.movement_state[i];
-        if (movement_state != CHARGING) {
-            movement_state = evaluate_battalion_movement(tables, i);
-            tables->battalion_tables.friendly_dynamic.movement_state[i] = movement_state;
-        } else {
+        const enum OrderType order_type = tables->battalion_order.type[i];
+        const _Bool keeps_fighting = (movement_state == FIGHTING) & (order_type == ORDER_ATTACK);
+        if (movement_state == CHARGING) {
+
             _Bool is_charging = evaluate_charge_timer(&tables->battalion_tables.friendly_dynamic.charge_timer[i], dt);
             if (!is_charging) {
                 tables->battalion_tables.friendly_dynamic.charge_timer[i] = 0.0f;
                 tables->battalion_tables.friendly_dynamic.is_charging[i] = false;
                 movement_state = FIGHTING;
                 tables->battalion_tables.friendly_dynamic.movement_state[i] = movement_state;
+                set_battalion_charge(tables, i, battalion_size, false);
             }
+
+        } else if (!keeps_fighting) {
+
+            movement_state = evaluate_battalion_movement(tables, i);
+            tables->battalion_tables.friendly_dynamic.movement_state[i] = movement_state;
+            if (movement_state == CHARGING) set_battalion_charge(tables, i, battalion_size, true);
+
         }
 
         _Bool is_engaged = check_if_battalion_is_engaged(movement_state);
@@ -283,7 +295,7 @@ void battalion_table_update(const Spreadsheet *spreadsheet, Table *tables, signe
         tables->battalion_tables.friendly_dynamic.is_engaging[i] = is_engaging;
 
         _Bool is_active = check_if_battalion_is_active(movement_state);
-        tables->battalion_tables.friendly_dynamic.is_present[i] = is_active;
+        tables->battalion_tables.friendly_dynamic.is_active[i] = is_active;
 
         enum BattalionType battalion_type = tables->battalion_tables.friendly_static.battalion_type[i];
         Fatigue fatigue = {
@@ -298,7 +310,7 @@ void battalion_table_update(const Spreadsheet *spreadsheet, Table *tables, signe
 
         float base_speed = spreadsheet->battalion_spreadsheet[battalion_type].speed;
         float *speed = &tables->battalion_tables.friendly_dynamic.speed[i];
-        speed_update(base_speed, speed, fatigue.state, dt);
+        speed_update(base_speed, speed, fatigue.state, movement_state, dt);
 
         Morale morale = {
             .state = tables->battalion_tables.friendly_dynamic.morale_state[i],
@@ -380,7 +392,7 @@ static void update_counts(Table *tables, unsigned int i, unsigned int battalion_
 }
 
 static enum BattalionLifecycle evaluate_battalion_lifecycle(Table *tables, unsigned int i) {
-
+    
     unsigned int dead_entity_count = tables->battalion_tables.friendly_dynamic.dead_entity_count[i];
     unsigned int withdrawed_entity_count = tables->battalion_tables.friendly_dynamic.withdrawed_entity_count[i];
     unsigned int start_entity_count = tables->battalion_tables.friendly_static.start_entity_count[i];
@@ -394,9 +406,9 @@ static enum BattalionLifecycle evaluate_battalion_lifecycle(Table *tables, unsig
 
 }
 
-static _Bool check_if_battalion_is_controllable(enum BattalionLifecycle lifecycle_state) {
+static _Bool check_if_battalion_is_controllable(enum BattalionLifecycle lifecycle_state, _Bool is_headless) {
 
-    if (lifecycle_state == NORMAL) return true;
+    if (lifecycle_state == NORMAL && !is_headless) return true;
     return false;
 
 }
@@ -443,10 +455,9 @@ static enum BattalionMovementMode evaluate_battalion_movement(Table *tables, uns
 
 static _Bool evaluate_charge_timer(float *charge_timer, float dt) {
 
-    #define CHARGE_TIMER 2.0f
+    #define CHARGE_TIMER 10.0f
     *charge_timer += dt;
-    if (*charge_timer > CHARGE_TIMER) return false;
-    return true;
+    return (*charge_timer < CHARGE_TIMER);
 
 }
 
@@ -508,6 +519,7 @@ static void position_update(const Table *tables, float *x, float *y, unsigned in
     average_x += (general_present) ? tables->general_tables.friendly_dynamic.x[i] : 0.0f;
     average_y += (general_present) ? tables->general_tables.friendly_dynamic.y[i] : 0.0f;
     unsigned int entity_count = battalion_size + general_present - not_present_count;
+    if (entity_count == 0) return;
     *x = average_x / entity_count;
     *y = average_y / entity_count;
 
@@ -539,7 +551,7 @@ static _Bool check_if_battalion_can_charge(Table *tables, enum BattalionMovement
 
     _Bool is_engaging = tables->battalion_tables.friendly_dynamic.is_engaging[i];
     _Bool is_engaged = tables->battalion_tables.friendly_dynamic.is_engaged[i];
-    if (!is_engaging || movement_state != RUNNING || movement_state == FIGHTING) return false;
+    if (!is_engaging || movement_state != RUNNING) return false;
     if (tables->battalion_order.type[i] != ORDER_ATTACK) return false;
     if (is_engaged) return false;
 
@@ -548,6 +560,11 @@ static _Bool check_if_battalion_can_charge(Table *tables, enum BattalionMovement
 
     float x = tables->battalion_tables.friendly_dynamic.x[i];
     float y = tables->battalion_tables.friendly_dynamic.y[i];
+    if (tables->general_tables.friendly_dynamic.is_present[i]) {
+        x = tables->general_tables.friendly_dynamic.x[i];
+        y = tables->general_tables.friendly_dynamic.y[i];
+    }
+
     unsigned int target_idx = tables->battalion_tables.friendly_dynamic.target_battalion_idx[i];
     float target_x = tables->battalion_tables.enemy_dynamic.x[target_idx];
     float target_y = tables->battalion_tables.enemy_dynamic.y[target_idx];
@@ -555,11 +572,12 @@ static _Bool check_if_battalion_can_charge(Table *tables, enum BattalionMovement
     float dx = target_x - x;
     float dy = target_y - y;
     float dist = dx * dx + dy * dy;
-    #define CHARGE_RANGE 50
-    if (dist <= CHARGE_RANGE * CHARGE_RANGE) return true;
+    // general to the enemy battalion's center
+    #define CHARGE_RANGE 200.0f 
+    _Bool in_charge_range = dist <= CHARGE_RANGE * CHARGE_RANGE;
     #undef CHARGE_RANGE
-    return false;
-    
+    return in_charge_range;
+
 }
 
 /*static _Bool check_if_battalion_can_fight(Table *tables, unsigned int i) {
@@ -582,6 +600,19 @@ static _Bool check_if_battalion_is_engaging(enum BattalionMovementMode movement_
     return ((movement_state != FIGHTING) &
             (movement_state != STATIONARY) &
                 (order_type != UNKNOWN_ORDER));
+
+}
+
+static void set_battalion_charge(Table *tables, unsigned int i, unsigned int battalion_size, _Bool is_charging) {
+
+    for (unsigned int k = i * battalion_size, j = 0; j < battalion_size; j++) {
+
+        unsigned int idx = k + j;
+        tables->unit_tables.friendly_dynamic.is_charging[idx] = is_charging & tables->unit_tables.friendly_dynamic.is_present[idx];
+
+    }
+
+    tables->general_tables.friendly_dynamic.is_charging[i] = is_charging & tables->general_tables.friendly_dynamic.is_present[i];
 
 }
 

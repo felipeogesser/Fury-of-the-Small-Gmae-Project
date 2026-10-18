@@ -19,12 +19,12 @@
 
 // private prototypes
 static void clamp_length(float *x, float *y, float max);
-static void steer_arrive(float x, float y, float vx, float vy,
-                float target_x, float target_y, float max_speed,
-                float *force_x, float *force_y);
-static void steer_seek(float x, float y, float vx, float vy,
-                float target_x, float target_y, float max_speed,
-                float *force_x, float *force_y);
+static void steer_arrive(float x, float y,
+                float target_x, float target_y, float max_step,
+                float *vec_x, float *vec_y);
+static void steer_seek(float x, float y,
+                float target_x, float target_y, float max_step,
+                float *vec_x, float *vec_y);
 static void steer_separation(const float *unit_x, const float *unit_y,
                     const _Bool *unit_alive,
                     unsigned int self, unsigned int battalion_size,
@@ -32,14 +32,14 @@ static void steer_separation(const float *unit_x, const float *unit_y,
                     float radius, float *force_x, float *force_y);
 static void steer_cohesion(float x, float y, float center_x, float center_y,
                     float loose_radius, float *force_x, float *force_y);
-static void steer_alignment(const float *unit_x, const float *unit_y,
+/*static void steer_alignment(const float *unit_x, const float *unit_y,
                     const float *unit_vx, const float *unit_vy,
                     const _Bool *unit_alive,
                     unsigned int self, unsigned int battalion_size,
                     unsigned int unit_count,
                     float radius, float *force_x, float *force_y);
 static void integrate_unit(float *x, float *y, float *vx, float *vy,
-                    float force_x, float force_y, float max_speed);
+                    float force_x, float force_y, float max_speed);*/
 static float wrap_direction(float dir);
 static void direction_to_forward(float direction, float *forward_x, float *forward_y);
 static float centered_offset(unsigned int index, unsigned int count, float step);
@@ -50,17 +50,16 @@ static void formation_slot(unsigned int iter, unsigned int to_place, unsigned in
                     float forward_x, float forward_y,
                     float step_depth, float step_side,
                     float *slot_x, float *slot_y);
-static unsigned int count_in_formation(const _Bool *is_unit_present, const _Bool *is_unit_engaged,
+static unsigned int count_in_formation(const _Bool *is_unit_present,
                                 unsigned int b, unsigned int battalion_size,
                                 unsigned int unit_count);
 
 /* ---------------------------------------------------------------------- */
 /* Headless battalions                                                    */
 /* ---------------------------------------------------------------------- */
-
-/* Steers every alive, non-engaged unit of every headless battalion.
-   Battalions that aren't headless, or are engaged, are skipped
-   (place_army handles those).
+/* Adds the headless step into vec for every present unit of every headless
+   battalion. Battalions that aren't headless are skipped (formation_update
+   handles those).
 
    Per battalion, headless_mode[b] picks the behavior:
    HEADLESS_HOLD    formation around (anchor_x[b], anchor_y[b]) facing
@@ -70,24 +69,23 @@ static unsigned int count_in_formation(const _Bool *is_unit_present, const _Bool
                     anchor = battalion position at decision time,
                     direction = toward the threat.
    HEADLESS_CHARGE  every unit rushes (target_x[b], target_y[b]).
-   HEADLESS_DRIFT   loose boids group: cohesion + alignment + separation.
+   HEADLESS_DRIFT   loose boids group: cohesion + separation.
 
-   Engaged units are left alone (your combat code moves them) and don't
-   take a formation slot. */
+   Units going for their own target are left alone
+   (get_close_to_engaged_target moves them) but keep their slot. */
 void steer_headless_units(Table *tables, const unsigned int battalion_count,
                         const unsigned int unit_count, const unsigned int battalion_size,
                         const float unit_w, const float unit_h, const float padding_x, const float padding_y,
-                        const float max_speed) {
+                        const float catch_up) {
 
-    float *unit_x = tables->unit_tables.friendly_dynamic.x;
-    float *unit_y = tables->unit_tables.friendly_dynamic.y;
+    const float *unit_x = tables->unit_tables.friendly_dynamic.x;
+    const float *unit_y = tables->unit_tables.friendly_dynamic.y;
     float *unit_vx = tables->unit_tables.friendly_dynamic.vec_x;
     float *unit_vy = tables->unit_tables.friendly_dynamic.vec_y;
     const _Bool *is_headless = tables->battalion_tables.friendly_dynamic.is_headless;
     const enum HeadlessMovementMode *headless_mode = tables->battalion_tables.friendly_dynamic.headless_movement_mode;
     const _Bool *is_unit_present = tables->unit_tables.friendly_dynamic.is_present;
-    const _Bool *is_unit_engaged = tables->unit_tables.friendly_dynamic.is_engaged;
-    const _Bool *is_battalion_engaged = tables->battalion_tables.friendly_dynamic.is_engaged;
+    const float *speed = tables->battalion_tables.friendly_dynamic.speed;
     const unsigned char *formation_x = tables->battalion_tables.friendly_static.formation_x;
     const unsigned char *formation_y = tables->battalion_tables.friendly_static.formation_y;
     const float *target_x = tables->battalion_tables.friendly_dynamic.target_x;
@@ -103,10 +101,9 @@ void steer_headless_units(Table *tables, const unsigned int battalion_count,
     /* Separation only below the smaller unit size: slots are always at least
        that far apart, so units resting in their slots feel no push. */
     float sep_radius = unit_w < unit_h ? unit_w : unit_h;
-    float align_radius = ALIGN_RADIUS * step_side;
 
     for (unsigned int b = 0; b < battalion_count; b++) {
-        if (!is_headless[b] || is_battalion_engaged[b]) continue;
+        if (!is_headless[b]) continue;
 
         unsigned int ranks = formation_x[b];
         unsigned int files = formation_y[b];
@@ -118,11 +115,14 @@ void steer_headless_units(Table *tables, const unsigned int battalion_count,
         float loose_radius = sqrtf((float)alive_n) * step_side * COHESION_SPREAD;
         enum HeadlessMovementMode mode = headless_mode[b];
 
+        /* the most a unit of this battalion may move in one tick */
+        float max_step = speed[b] * catch_up;
+
         float forward_x = 1.0f, forward_y = 0.0f;
         unsigned int to_place = 0;
         if (mode == HEADLESS_HOLD) {
-            direction_to_forward(direction[b], &forward_x, &forward_y);
-            to_place = min_uint(count_in_formation(is_unit_present, is_unit_engaged,
+            direction_to_forward(direction[b] == LEFT ? 2.0f : 0.0f, &forward_x, &forward_y);
+            to_place = min_uint(count_in_formation(is_unit_present,
                                                    b, battalion_size, unit_count),
                                 ranks * files);
         }
@@ -132,40 +132,41 @@ void steer_headless_units(Table *tables, const unsigned int battalion_count,
         for (unsigned int i = b * battalion_size, k = 0; k < battalion_size; k++) {
             unsigned int idx = i + k;
             if (idx >= unit_count) break;
-            if (!is_unit_present[idx] || is_unit_engaged[idx]) continue;
+            if (!is_unit_present[idx]) continue;
 
-            float fx = 0.0f, fy = 0.0f;
+            /* the unit keeps its slot number even while it is away fighting,
+               so the other units don't reshuffle */
+            _Bool has_slot = (mode == HEADLESS_HOLD && iter < to_place);
+            unsigned int slot = iter;
+            if (has_slot) iter++;
+
+            /* goes for its target instead: get_close_to_engaged_target moves it */
+            if (is_unit_going_for_target(tables, idx, battalion_size)) continue;
 
             if (mode == HEADLESS_HOLD) {
-                if (iter < to_place) {
+                if (has_slot) {
                     float sx, sy;
-                    formation_slot(iter, to_place, files, anchor_x[b], anchor_y[b],
+                    formation_slot(slot, to_place, files, anchor_x[b], anchor_y[b],
                                    forward_x, forward_y, step_depth, step_side, &sx, &sy);
-                    steer_arrive(unit_x[idx], unit_y[idx], unit_vx[idx], unit_vy[idx],
-                                 sx, sy, max_speed, &fx, &fy);
-                    iter++;
+                    steer_arrive(unit_x[idx], unit_y[idx], sx, sy, max_step,
+                                 &unit_vx[idx], &unit_vy[idx]);
                 } else {
                     /* more units than slots: stay near the block */
                     steer_cohesion(unit_x[idx], unit_y[idx], anchor_x[b], anchor_y[b],
-                                   loose_radius, &fx, &fy);
+                                   loose_radius, &unit_vx[idx], &unit_vy[idx]);
                 }
             } else if (mode == HEADLESS_CHARGE) {
-                steer_seek(unit_x[idx], unit_y[idx], unit_vx[idx], unit_vy[idx],
-                           target_x[b], target_y[b], max_speed, &fx, &fy);
+                steer_seek(unit_x[idx], unit_y[idx], target_x[b], target_y[b], max_step,
+                           &unit_vx[idx], &unit_vy[idx]);
             } else { /* HEADLESS_DRIFT */
                 float center_x = tables->battalion_tables.friendly_dynamic.x[b];
                 float center_y = tables->battalion_tables.friendly_dynamic.y[b];
                 steer_cohesion(unit_x[idx], unit_y[idx], center_x, center_y,
-                               loose_radius, &fx, &fy);
-                steer_alignment(unit_x, unit_y, unit_vx, unit_vy, is_unit_present,
-                                idx, battalion_size, unit_count, align_radius, &fx, &fy);
+                               loose_radius, &unit_vx[idx], &unit_vy[idx]);
             }
 
             steer_separation(unit_x, unit_y, is_unit_present, idx, battalion_size, unit_count,
-                             sep_radius, &fx, &fy);
-
-            integrate_unit(&unit_x[idx], &unit_y[idx], &unit_vx[idx], &unit_vy[idx],
-                           fx, fy, max_speed);
+                             sep_radius, &unit_vx[idx], &unit_vy[idx]);
         }
     }
 }
@@ -189,28 +190,31 @@ static void clamp_length(float *x, float *y, float max) {
 /* Steering forces (each adds into *force_x, *force_y)                    */
 /* ---------------------------------------------------------------------- */
 
-/* Steer toward a point, slowing down as it gets close. Used for slots. */
-static void steer_arrive(float x, float y, float vx, float vy,
-                  float target_x, float target_y, float max_speed,
-                  float *force_x, float *force_y) {
+/* Step toward a point, slowing down as it gets close. Used for slots.
+   Adds the step straight into vec (vec is zero at the start of the tick). */
+static void steer_arrive(float x, float y,
+                  float target_x, float target_y, float max_step,
+                  float *vec_x, float *vec_y) {
     float want_x = (target_x - x) * ARRIVE_GAIN;
     float want_y = (target_y - y) * ARRIVE_GAIN;
-    clamp_length(&want_x, &want_y, max_speed);
-    *force_x += (want_x - vx) * ARRIVE_WEIGHT;
-    *force_y += (want_y - vy) * ARRIVE_WEIGHT;
+    clamp_length(&want_x, &want_y, max_step);
+    *vec_x += want_x;
+    *vec_y += want_y;
 }
 
-/* Steer toward a point at full speed, no slowing down. Used for charges. */
-static void steer_seek(float x, float y, float vx, float vy,
-                float target_x, float target_y, float max_speed,
-                float *force_x, float *force_y) {
+/* Step toward a point at full speed, no slowing down. Used for charges.
+   Never steps past the point. */
+static void steer_seek(float x, float y,
+                float target_x, float target_y, float max_step,
+                float *vec_x, float *vec_y) {
     float dx = target_x - x;
     float dy = target_y - y;
     float d2 = dx * dx + dy * dy;
     if (d2 < 0.0001f) return;
-    float k = max_speed / sqrtf(d2);
-    *force_x += (dx * k - vx) * ARRIVE_WEIGHT;
-    *force_y += (dy * k - vy) * ARRIVE_WEIGHT;
+    float k = max_step / sqrtf(d2);
+    if (k > 1.0f) k = 1.0f;
+    *vec_x += dx * k;
+    *vec_y += dy * k;
 }
 
 /* Push unit `self` away from battalion mates closer than `radius`.
@@ -254,8 +258,8 @@ static void steer_cohesion(float x, float y, float center_x, float center_y,
     *force_x += dx * k;
     *force_y += dy * k;
 }
-
-/* Match the average velocity of battalion mates within `radius`. */
+/*
+// Match the average velocity of battalion mates within `radius`.
 static void steer_alignment(const float *unit_x, const float *unit_y,
                      const float *unit_vx, const float *unit_vy,
                      const _Bool *unit_alive,
@@ -281,7 +285,7 @@ static void steer_alignment(const float *unit_x, const float *unit_y,
     *force_y += (avy / (float)n - unit_vy[self]) * ALIGN_WEIGHT;
 }
 
-/* Apply force to velocity, damp it, cap it, stop it if tiny, then move. */
+//Apply force to velocity, damp it, cap it, stop it if tiny, then move.
 static void integrate_unit(float *x, float *y, float *vx, float *vy,
                     float force_x, float force_y, float max_speed) {
     *vx = (*vx + force_x) * DAMPING;
@@ -293,7 +297,7 @@ static void integrate_unit(float *x, float *y, float *vx, float *vy,
     }
     *x += *vx;
     *y += *vy;
-}
+}*/
 
 /* Keep direction inside 0..DIR_STEPS, wrapping negatives and overflow. */
 static float wrap_direction(float dir) {
@@ -345,16 +349,17 @@ static void formation_slot(unsigned int iter, unsigned int to_place, unsigned in
     *slot_y = center_y + depth * forward_y + t * forward_x;
 }
 
-/* How many units of battalion b take a formation slot (alive, not engaged).
-   Needed before placing, because centering the ranks depends on it. */
-static unsigned int count_in_formation(const _Bool *is_unit_present, const _Bool *is_unit_engaged,
+/* How many units of battalion b take a formation slot (every present unit;
+   engaged ones keep theirs). Needed before placing, because centering the
+   ranks depends on it. */
+static unsigned int count_in_formation(const _Bool *is_unit_present,
                                 unsigned int b, unsigned int battalion_size,
                                 unsigned int unit_count) {
     unsigned int n = 0;
     for (unsigned int i = b * battalion_size, k = 0; k < battalion_size; k++) {
         unsigned int idx = i + k;
         if (idx >= unit_count) break;
-        if (is_unit_present[idx] && !is_unit_engaged[idx]) n++;
+        if (is_unit_present[idx]) n++;
     }
     return n;
 }

@@ -189,8 +189,8 @@ void battlefield_update(void) {
     unit_table_update(player_tables, battalion_count, battalion_size, ARMY_SIDE_LEFT, dt);
     unit_table_update(enemy_tables, battalion_count, battalion_size, ARMY_SIDE_RIGHT, dt);
 
-    clear_table_vectors(player_tables, battalion_count, battalion_size);
-    clear_table_vectors(enemy_tables, battalion_count, battalion_size);
+    //clear_table_vectors(player_tables, battalion_count, battalion_size);
+    //clear_table_vectors(enemy_tables, battalion_count, battalion_size);
 
     camera_update();
 

@@ -52,8 +52,8 @@ static void update_position(Table *tables, enum ArmyBattlefieldSide side, unsign
 static void update_direction(Table *tables, unsigned int i);
 static void resolve_attack(Table *tables, unsigned int i, unsigned int battalion_size, float dt);
 static void animation_table_update(Table *tables, unsigned int i);
-static float direction_from_vec(float vec_x, float vec_y, float fallback);
-static float wrap_direction(float dir);
+//static float direction_from_vec(float vec_x, float vec_y, float fallback);
+//static float wrap_direction(float dir);
 
 static void *general_table_start_address_alloc = NULL;
 
@@ -102,6 +102,7 @@ static const ComplexFieldEntry general_dynamic_table_field_table[] = {
     { "is_present",          OFFSET_OF(GeneralDynamicTable, is_present),          ELEMENT_SIZE_OF(GeneralDynamicTable, is_present),          BOOL,   NULL },
     { "is_engaged",          OFFSET_OF(GeneralDynamicTable, is_engaged),          ELEMENT_SIZE_OF(GeneralDynamicTable, is_engaged),          BOOL,   NULL },
     { "is_engaging",         OFFSET_OF(GeneralDynamicTable, is_engaging),         ELEMENT_SIZE_OF(GeneralDynamicTable, is_engaging),         BOOL,   NULL },
+    { "is_charging",         OFFSET_OF(GeneralDynamicTable, is_charging),         ELEMENT_SIZE_OF(GeneralDynamicTable, is_charging),         BOOL,   NULL },
     { "obj_size", 0, sizeof(GeneralDynamicTable), NOT_DEFINED, NULL }
 
 };
@@ -173,9 +174,9 @@ void general_table_update(Table *tables, Map *map, enum ArmyBattlefieldSide side
         if(1)update_stats(tables, i);
         if(1)update_status(tables, map, i);
         if(1)try_engage_enemy(tables, battalion_count, battalion_size, i);
-        if(0)update_position(tables, side, i);
-        if(0)update_direction(tables, i);
-        if(0)resolve_attack(tables, i, battalion_size, dt);
+        if(1)update_position(tables, side, i);
+        if(1)update_direction(tables, i);
+        if(1)resolve_attack(tables, i, battalion_size, dt);
         animation_table_update(tables, i);
 
     }
@@ -259,96 +260,106 @@ static void update_stats(Table *tables, unsigned int i) {
     tables->general_tables.friendly_dynamic.strength[i] = strength;
 
 }
-
 static void update_status(Table *tables, Map *map, unsigned int i) {
 
-    // is is_present
     const float hp = tables->general_tables.friendly_dynamic.hp[i];
-    unsigned int dead_entity_count = tables->battalion_tables.friendly_dynamic.dead_entity_count[i];
-    unsigned int withdrawed_entity_count = tables->battalion_tables.friendly_dynamic.withdrawed_entity_count[i];
-    const float x = tables->battalion_tables.friendly_dynamic.x[i];
-    const float y = tables->battalion_tables.friendly_dynamic.y[i];
+    const float x = tables->general_tables.friendly_dynamic.x[i];
+    const float y = tables->general_tables.friendly_dynamic.y[i];
     const _Bool is_dead = hp <= 0.0f;
     const _Bool withdrawed = (x < map->mapLeftLimit) | (x > map->mapRightLimit) | (y < map->mapTopLimit) | (y > map->mapBottomLimit);
-    dead_entity_count += is_dead;
-    withdrawed_entity_count += withdrawed;
     const _Bool is_present = !(is_dead | withdrawed);
-
-    tables->battalion_tables.friendly_dynamic.dead_entity_count[i] = dead_entity_count;
-    tables->battalion_tables.friendly_dynamic.withdrawed_entity_count[i] = withdrawed_entity_count;
     tables->general_tables.friendly_dynamic.is_present[i] = is_present;
 
-    // is is_engaged
-    // is is_engaging
-    _Bool is_target_in_range = tables->general_tables.friendly_dynamic.is_target_in_range[i];
     enum TargetType personal_target_type = tables->general_tables.friendly_dynamic.target_type[i];
-    enum OrderType order_type = tables->battalion_order.type[i];
+    const unsigned int personal_target_idx = tables->general_tables.friendly_dynamic.personal_target_idx[i];
+    float target_x = 0.0f;
+    float target_y = 0.0f;
+    _Bool is_target_alive = false;
+    if (personal_target_type == TARGET_UNIT) {
 
-    const _Bool is_engaged = is_target_in_range & (order_type == ORDER_ATTACK) & (personal_target_type != UNKNOWN_TARGET);
-    tables->general_tables.friendly_dynamic.is_engaged[i] = is_engaged;
+        target_x = tables->unit_tables.enemy_dynamic.x[personal_target_idx];
+        target_y = tables->unit_tables.enemy_dynamic.y[personal_target_idx];
+        is_target_alive = tables->unit_tables.enemy_dynamic.hp[personal_target_idx] > 0.0f;
 
-    const _Bool is_engaging = !is_target_in_range & (order_type == ORDER_ATTACK) & (personal_target_type != UNKNOWN_TARGET);
-    tables->general_tables.friendly_dynamic.is_engaging[i] = is_engaging;
+    } else if (personal_target_type == TARGET_GENERAL) {
+
+        target_x = tables->general_tables.enemy_dynamic.x[personal_target_idx];
+        target_y = tables->general_tables.enemy_dynamic.y[personal_target_idx];
+        is_target_alive = (tables->general_tables.enemy_dynamic.hp[personal_target_idx] > 0.0f) &
+                          tables->general_tables.enemy_dynamic.is_present[personal_target_idx];
+
+    }
+
+    if (!is_target_alive || !is_present) {
+
+        personal_target_type = UNKNOWN_TARGET;
+        tables->general_tables.friendly_dynamic.target_type[i] = UNKNOWN_TARGET;
+        tables->general_tables.friendly_dynamic.personal_target_idx[i] = -1U;
+
+    }
+
+    _Bool is_target_in_range = false;
+    if (personal_target_type != UNKNOWN_TARGET) {
+
+        const float dx = target_x - x;
+        const float dy = target_y - y;
+        const float range = tables->general_tables.friendly_static.range[i];
+        is_target_in_range = (dx * dx + dy * dy) <= (range * range);
+
+    }
+    tables->general_tables.friendly_dynamic.is_target_in_range[i] = is_target_in_range;
+
+    const enum OrderType order_type = tables->battalion_order.type[i];
+    const _Bool has_target = (order_type == ORDER_ATTACK) & (personal_target_type != UNKNOWN_TARGET);
+
+    tables->general_tables.friendly_dynamic.is_engaged[i] = has_target & is_target_in_range;
+    tables->general_tables.friendly_dynamic.is_engaging[i] = has_target & !is_target_in_range;
 
 }
 
 static void try_engage_enemy(Table *tables, unsigned int battalion_count, unsigned int battalion_size, unsigned int i) {
 
-    if (!tables->battalion_tables.friendly_dynamic.is_engaging[i] ||
-        !tables->battalion_tables.friendly_dynamic.is_engaged) return;
+    const _Bool is_battalion_engaging = tables->battalion_tables.friendly_dynamic.is_engaging[i];
+    const _Bool is_battalion_engaged = tables->battalion_tables.friendly_dynamic.is_engaged[i];
+    if (!is_battalion_engaging && !is_battalion_engaged) return;
+
     if (tables->general_tables.friendly_dynamic.is_engaged[i]) return;
 
     const float x = tables->general_tables.friendly_dynamic.x[i];
     const float y = tables->general_tables.friendly_dynamic.y[i];
 
-    _Bool is_engaged = false;
+    #define GENERAL_SEARCH_RANGE 200.0f
     unsigned int closest_enemy_idx = -1U;
     enum TargetType personal_target_type = UNKNOWN_TARGET;
-    #define MEELE_SEARCH_RANGE 2000.0f
-    float shortest_dist = MEELE_SEARCH_RANGE * MEELE_SEARCH_RANGE;
-    for (unsigned int j = 0; j < battalion_count; j++) {
+    float shortest_dist = GENERAL_SEARCH_RANGE * GENERAL_SEARCH_RANGE;
+    #undef GENERAL_SEARCH_RANGE
 
-        if (!tables->battalion_tables.enemy_dynamic.is_present[j]) continue;
+    const unsigned int target_battalion_idx = tables->battalion_tables.friendly_dynamic.target_battalion_idx[i];
+    if (target_battalion_idx < battalion_count && tables->battalion_tables.enemy_dynamic.is_present[target_battalion_idx]) {
 
-        float enemy_x = tables->battalion_tables.enemy_dynamic.x[j];
-        float enemy_y = tables->battalion_tables.enemy_dynamic.y[j];
+        if (tables->general_tables.enemy_dynamic.is_present[target_battalion_idx]) {
 
-        float dx = enemy_x - x;
-        float dy = enemy_y - y;
-        float dist = dx * dx + dy * dy;
-        if (dist > MEELE_SEARCH_RANGE * MEELE_SEARCH_RANGE) continue;
-        #undef MEELE_SEARCH_RANGE
-        if (tables->general_tables.enemy_dynamic.is_present[j]) {
-
-            enemy_x = tables->general_tables.enemy_dynamic.x[j];
-            enemy_y = tables->general_tables.enemy_dynamic.y[j];
-            
-            dx = enemy_x - x;
-            dy = enemy_y - y;
-            dist = dx * dx + dy * dy;
-
+            const float dx = tables->general_tables.enemy_dynamic.x[target_battalion_idx] - x;
+            const float dy = tables->general_tables.enemy_dynamic.y[target_battalion_idx] - y;
+            const float dist = dx * dx + dy * dy;
             if (dist < shortest_dist) {
 
-                closest_enemy_idx = j;
+                closest_enemy_idx = target_battalion_idx;
                 shortest_dist = dist;
                 personal_target_type = TARGET_GENERAL;
-                
+
             }
 
         }
 
-        for (unsigned int h = battalion_size * j, k = 0; k < battalion_size; k++) {
+        for (unsigned int h = battalion_size * target_battalion_idx, k = 0; k < battalion_size; k++) {
 
             unsigned int idx = h + k;
             if (!tables->unit_tables.enemy_dynamic.is_present[idx]) continue;
-            
-            enemy_x = tables->unit_tables.enemy_dynamic.x[idx];
-            enemy_y = tables->unit_tables.enemy_dynamic.y[idx];
-            
-            dx = enemy_x - x;
-            dy = enemy_y - y;
-            dist = dx * dx + dy * dy;
 
+            const float dx = tables->unit_tables.enemy_dynamic.x[idx] - x;
+            const float dy = tables->unit_tables.enemy_dynamic.y[idx] - y;
+            const float dist = dx * dx + dy * dy;
             if (dist < shortest_dist) {
 
                 closest_enemy_idx = idx;
@@ -361,8 +372,6 @@ static void try_engage_enemy(Table *tables, unsigned int battalion_count, unsign
 
     }
 
-    is_engaged = (personal_target_type != UNKNOWN_TARGET) & (closest_enemy_idx != -1U);
-    tables->general_tables.friendly_dynamic.is_engaged[i] = is_engaged;
     tables->general_tables.friendly_dynamic.target_type[i] = personal_target_type;
     tables->general_tables.friendly_dynamic.personal_target_idx[i] = closest_enemy_idx;
 
@@ -372,98 +381,82 @@ static void update_position(Table *tables, enum ArmyBattlefieldSide side, unsign
 
     float x = tables->general_tables.friendly_dynamic.x[i];
     float y = tables->general_tables.friendly_dynamic.y[i];
-    float vec_x = tables->general_tables.friendly_dynamic.vec_x[i];
-    float vec_y = tables->general_tables.friendly_dynamic.vec_y[i];
-    float speed = tables->battalion_tables.friendly_dynamic.speed[i];
+    float vec_x = 0.0f;
+    float vec_y = 0.0f;
+    const float speed = tables->battalion_tables.friendly_dynamic.speed[i];
 
     if (tables->battalion_tables.friendly_dynamic.lifecycle_state[i] == ROUTING) {
 
-        if (side == ARMY_SIDE_LEFT) {
+        vec_x = (side == ARMY_SIDE_LEFT) ? -speed : speed;
 
-            vec_x -= speed * 0.01f;
+    } else if (tables->general_tables.friendly_dynamic.is_engaged[i]) {
 
-        } else {
 
-            vec_x += speed * 0.01f;
+    } else if (tables->general_tables.friendly_dynamic.is_engaging[i]) {
+
+        const enum TargetType personal_target_type = tables->general_tables.friendly_dynamic.target_type[i];
+        const unsigned int personal_target_idx = tables->general_tables.friendly_dynamic.personal_target_idx[i];
+        float enemy_x = x;
+        float enemy_y = y;
+        if (personal_target_type == TARGET_UNIT) {
+
+            enemy_x = tables->unit_tables.enemy_dynamic.x[personal_target_idx];
+            enemy_y = tables->unit_tables.enemy_dynamic.y[personal_target_idx];
+
+        } else if (personal_target_type == TARGET_GENERAL) {
+
+            enemy_x = tables->general_tables.enemy_dynamic.x[personal_target_idx];
+            enemy_y = tables->general_tables.enemy_dynamic.y[personal_target_idx];
+
+        }
+
+        const float dx = enemy_x - x;
+        const float dy = enemy_y - y;
+        const float len = sqrtf(dx * dx + dy * dy);
+        const float range = tables->general_tables.friendly_static.range[i];
+        if (len > range) {
+
+            float step = len - range;
+            if (step > speed) step = speed;
+            vec_x = dx / len * step;
+            vec_y = dy / len * step;
 
         }
 
     } else if (tables->battalion_tables.friendly_dynamic.is_engaging[i]) {
 
-        //unsigned int target_battalion_idx = tables->battalion_tables.friendly_dynamic.target_battalion_idx[i];
-        //float target_battalion_x = tables->battalion_tables.enemy_dynamic.x[target_battalion_idx];
-        //float target_battalion_y = tables->battalion_tables.enemy_dynamic.y[target_battalion_idx];
-        
         float target_x = tables->general_tables.friendly_dynamic.order_x[i];
         float target_y = tables->general_tables.friendly_dynamic.order_y[i];
 
         if (tables->battalion_order.type[i] == ORDER_ATTACK) {
-            unsigned int target_idx = tables->battalion_order.target[i];
-            target_x = tables->battalion_tables.enemy_dynamic.x[target_idx];
-            target_y = tables->battalion_tables.enemy_dynamic.y[target_idx];
+
+            const unsigned int target_battalion_idx = tables->battalion_tables.friendly_dynamic.target_battalion_idx[i];
+            target_x = tables->battalion_tables.enemy_dynamic.x[target_battalion_idx];
+            target_y = tables->battalion_tables.enemy_dynamic.y[target_battalion_idx];
+
         }
 
-        float bdx = target_x - x;
-        float bdy = target_y - y;
-        float bdist = bdx * bdx + bdy * bdy;
+        if (!isnan(target_x) && !isnan(target_y)) {
 
-        float blen = sqrtf(bdist);
-        float step = speed * 0.01f;
-        //float bk = (speed * 0.01f) / blen;
+            const float dx = target_x - x;
+            const float dy = target_y - y;
+            const float len = sqrtf(dx * dx + dy * dy);
+            if (len > speed) {
 
-        if (blen > step) {
-            vec_x += bdx * (step / blen);
-            vec_y += bdy * (step / blen);
-        }
-        #define ENTITY_CAN_START_ENGAGING_RANGE 200.0f
-        if (blen > ENTITY_CAN_START_ENGAGING_RANGE) goto POSITION_UPDATE;
-        #undef ENTITY_CAN_START_ENGAGING_RANGE
-        
-        if (tables->general_tables.friendly_dynamic.is_engaging[i]) {
-
-            enum TargetType personal_target_type = tables->general_tables.friendly_dynamic.target_type[i];
-            unsigned int personal_target_idx = tables->general_tables.friendly_dynamic.personal_target_idx[i];
-            float enemy_x = 0;
-            float enemy_y = 0;
-            if (personal_target_type == TARGET_UNIT) {
-
-                enemy_x = tables->unit_tables.enemy_dynamic.x[personal_target_idx];
-                enemy_y = tables->unit_tables.enemy_dynamic.y[personal_target_idx];
-
-            } else if (personal_target_type == TARGET_GENERAL) {
-
-                enemy_x = tables->general_tables.enemy_dynamic.x[personal_target_idx];
-                enemy_y = tables->general_tables.enemy_dynamic.y[personal_target_idx];
-
-            }
-
-            float dx = enemy_x - x;
-            float dy = enemy_y - y;
-            float dist = dx * dx + dy * dy;
-            float range = tables->general_tables.friendly_static.range[i];
-            if (dist > range * range) {
-
-                float len = sqrtf(dist);
-                float k = (speed * 0.01f) / len;
-
-                vec_x += dx * k;
-                vec_y += dy * k;
-
-                float ndx = dx - vec_x;
-                float ndy = dy - vec_y;
-                float new_dist = ndx * ndx + ndy * ndy;
-                tables->general_tables.friendly_dynamic.is_target_in_range[i] = new_dist <= range * range;
+                vec_x = dx * (speed / len);
+                vec_y = dy * (speed / len);
 
             }
 
         }
-    
+
     }
 
-    POSITION_UPDATE:
     x += vec_x;
     y += vec_y;
 
+    tables->general_tables.friendly_dynamic.vec_x[i] = vec_x;
+    tables->general_tables.friendly_dynamic.vec_y[i] = vec_y;
     tables->general_tables.friendly_dynamic.x[i] = x;
     tables->general_tables.friendly_dynamic.y[i] = y;
 
@@ -554,12 +547,12 @@ static void update_direction(Table *tables, unsigned int i) {
     tables->general_tables.friendly_dynamic.direction[i] = direction;*/
 
 
-    float vx = tables->unit_tables.friendly_dynamic.vec_x[i];
-    if (vx > 0.05f) tables->unit_tables.friendly_dynamic.direction[i] = RIGHT;
-    else if (vx < -0.05f) tables->unit_tables.friendly_dynamic.direction[i] = LEFT;
+    float vx = tables->general_tables.friendly_dynamic.vec_x[i];
+    if (vx > 0.05f) tables->general_tables.friendly_dynamic.direction[i] = RIGHT;
+    else if (vx < -0.05f) tables->general_tables.friendly_dynamic.direction[i] = LEFT;
     
 }
-
+/*
 #define PI 3.14159274f
 #define DIR_STEPS 4.0f
 static float direction_from_vec(float vec_x, float vec_y, float fallback) {
@@ -576,16 +569,16 @@ static float wrap_direction(float dir) {
 }
 #undef PI
 #undef DIR_STEPS
+*/
 
 static void resolve_attack(Table *tables, unsigned int i, unsigned int battalion_size, float dt) {
 
     if (!tables->general_tables.friendly_dynamic.is_engaged[i]) return;
-    float attack_timer = tables->general_tables.friendly_dynamic.attack_timer[i];
-    attack_timer -= dt;
-    if (attack_timer > 0.0f) return;
 
-    float attack_speed = tables->general_tables.friendly_static.attack_speed[i];
-    tables->general_tables.friendly_dynamic.attack_timer[i] = attack_speed;
+    float attack_timer = tables->general_tables.friendly_dynamic.attack_timer[i] - dt;
+    if (attack_timer < 0.0f) attack_timer = 0.0f;
+    tables->general_tables.friendly_dynamic.attack_timer[i] = attack_timer;
+    if (attack_timer > 0.0f) return;
 
     float strength = tables->general_tables.friendly_dynamic.strength[i];
     float charge_bonus = tables->general_tables.friendly_static.charge_bonus[i];
@@ -614,16 +607,13 @@ static void resolve_attack(Table *tables, unsigned int i, unsigned int battalion
 
     }
 
-    if (*target_hp <= 0.0f) {
+    if (target_hp == NULL || *target_hp <= 0.0f) return;
 
-        tables->general_tables.friendly_dynamic.is_engaged[i] = false;
-        tables->general_tables.friendly_dynamic.personal_target_idx[i] = -1U;
-        tables->general_tables.friendly_dynamic.target_type[i] = UNKNOWN_TARGET;
-        return;
-        
-    }
+    float attack_speed = tables->general_tables.friendly_static.attack_speed[i];
+    tables->general_tables.friendly_dynamic.attack_timer[i] = attack_speed;
 
-    _Bool is_charging = tables->battalion_tables.friendly_dynamic.is_charging[i];
+    _Bool is_charging = tables->general_tables.friendly_dynamic.is_charging[i];
+    tables->general_tables.friendly_dynamic.is_charging[i] = false;
     float damage = strength + charge_bonus * is_charging;
     damage *= (is_target_large) ? 1.5f : 1.0f;
     target_armor = (is_armor_piercing) ? target_armor / 2 : target_armor;
@@ -640,11 +630,11 @@ static void animation_table_update(Table *tables, unsigned int i) {
     _Bool advance_frame = animation_tick();
     if (!advance_frame) return;
 
-    //const enum BattalionType battalion_type = tables->battalion_tables.friendly_static.battalion_type[i];
+    #define IDLE_FRACTION 0.1f // moving slower than a tenth of walk speed counts as standing still
+
     const enum BattalionMovementMode movement_state = tables->battalion_tables.friendly_dynamic.movement_state[i];
     const enum BattalionLifecycle lifecycle_state = tables->battalion_tables.friendly_dynamic.lifecycle_state[i];
     const _Bool is_engaged = tables->general_tables.friendly_dynamic.is_engaged[i];
-    const _Bool is_target_in_range = tables->general_tables.friendly_dynamic.is_target_in_range[i];
     unsigned char current_frame = tables->general_tables.friendly_dynamic.current_frame[i];
     //const enum Sprites sprite_type = get_battalion_spreadsheet(battalion_type).sprite_type;
     const enum Sprites sprite_type = tables->general_tables.friendly_static.sprite_type[i];
@@ -652,32 +642,25 @@ static void animation_table_update(Table *tables, unsigned int i) {
     const Sprite *sprite = &engine.sprite_pack->sprite[sprite_type][anim];
     unsigned int frames_count = sprite->frames_count;
 
-    enum Animation new_animation = anim;
-    switch (movement_state) {
+    const float vx = tables->general_tables.friendly_dynamic.vec_x[i];
+    const float vy = tables->general_tables.friendly_dynamic.vec_y[i];
+    const float step = sqrtf(vx * vx + vy * vy);
+    const float walk_speed = tables->battalion_tables.friendly_dynamic.speed[i] / 2.0f;
 
-        case STATIONARY:
-            new_animation = IDLE;
-            break;
-        case WALKING:
-            new_animation = RUN;
-            break;
-        case RUNNING:
-            new_animation = RUN;
-            break;
-        case CHARGING:
-            new_animation = RUN;
-            break;
-        case FIGHTING:
-            new_animation = ATTACK;
-            break;
-        default:
-            break;
+    enum Animation new_animation = IDLE;
+    if (movement_state == WALKING) {
+
+        new_animation = WALK;
+
+    } else if (movement_state == RUNNING || movement_state == CHARGING || movement_state == FIGHTING) {
+
+        if (step > walk_speed) new_animation = RUN; 
+        else if (step > walk_speed * IDLE_FRACTION) new_animation = WALK;
 
     }
 
     if (lifecycle_state == ROUTING) new_animation = RUN;
-    if (is_engaged) new_animation = RUN;
-    if (is_target_in_range) new_animation = ATTACK;
+    if (is_engaged) new_animation = ATTACK;
 
     if (frames_count == 0) {
         fprintf(stderr, "Frame count is 0.\n");
@@ -696,6 +679,8 @@ static void animation_table_update(Table *tables, unsigned int i) {
 
     tables->general_tables.friendly_dynamic.animation[i] = anim;
     tables->general_tables.friendly_dynamic.current_frame[i] = current_frame;
+
+    #undef IDLE_FRACTION
 
 }
 
@@ -765,6 +750,9 @@ static void general_dynamic_table_init(
 
         mock_dynamic_table->is_present[i] = true;
         mock_dynamic_table->direction[i] = (side == ARMY_SIDE_LEFT) ? RIGHT : LEFT;
+        mock_dynamic_table->is_charging[i] = false;
+        mock_dynamic_table->attack_timer[i] = 0.0f;
+
     }
 
 }
