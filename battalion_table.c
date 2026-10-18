@@ -31,7 +31,7 @@ static void send_order_to_general(Table *tables, _Bool is_controllable, unsigned
 static enum BattalionMovementMode evaluate_battalion_movement(Table *tables, unsigned int i);
 static _Bool evaluate_charge_timer(float *charge_timer, float dt);
 static _Bool check_if_battalion_is_active(enum BattalionMovementMode movement_state);
-static void speed_update(float base_speed, float *speed, enum FatigueState state);
+static void speed_update(float base_speed, float *speed, enum FatigueState state, float dt);
 static void hp_update(const Table *tables, float *hp, unsigned int i, unsigned int battalion_size);
 static void position_update(const Table *tables, float *x, float *y, unsigned int i, unsigned int battalion_size);
 static void update_stats(const Spreadsheet *spreadsheet, Table *tables, unsigned int i);
@@ -298,7 +298,7 @@ void battalion_table_update(const Spreadsheet *spreadsheet, Table *tables, signe
 
         float base_speed = spreadsheet->battalion_spreadsheet[battalion_type].speed;
         float *speed = &tables->battalion_tables.friendly_dynamic.speed[i];
-        speed_update(base_speed, speed, fatigue.state);
+        speed_update(base_speed, speed, fatigue.state, dt);
 
         Morale morale = {
             .state = tables->battalion_tables.friendly_dynamic.morale_state[i],
@@ -458,9 +458,16 @@ static _Bool check_if_battalion_is_active(enum BattalionMovementMode movement_st
 }
 
 
-static void speed_update(float base_speed, float *speed, enum FatigueState state) {
+static void speed_update(float base_speed, float *speed, enum FatigueState state, enum BattalionMovementMode movement_state, float dt) {
 
-    *speed = base_speed - (base_speed * 0.1f) * state;
+    #define CHARGE_SPEED_MULT 1.3f
+
+    float per_second = base_speed - (base_speed * 0.1f) * state;
+    if (movement_state == CHARGING) per_second *= CHARGE_SPEED_MULT;
+
+    *speed = per_second * dt;
+
+    #undef CHARGE_SPEED_MULT
 
 }
 
