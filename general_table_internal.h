@@ -57,7 +57,8 @@ typedef struct GeneralDynamicTable {
     float *attack_timer;
     //_Bool *const is_routing;
     //_Bool *const controllable;
-
+    float *alpha;
+    _Bool *is_dead;
     _Bool *is_target_in_range;
     //_Bool *collision_with_enemy;
     // status

@@ -53,6 +53,8 @@ static void keep_inside_map(float *x, float *y, const Map *map, float w, float h
 static void update_direction(Table *tables, unsigned int i);
 static void resolve_attack(Table *tables, unsigned int i, unsigned int battalion_size, float dt);
 static void animation_table_update(Table *tables, unsigned int i);
+static void run_off_map(Table *tables, enum ArmyBattlefieldSide side, unsigned int i);
+static void update_alpha(Table *tables, unsigned int i, float dt);
 //static float direction_from_vec(float vec_x, float vec_y, float fallback);
 //static float wrap_direction(float dir);
 
@@ -99,6 +101,8 @@ static const ComplexFieldEntry general_dynamic_table_field_table[] = {
     { "meele_defense",       OFFSET_OF(GeneralDynamicTable, meele_defense),       ELEMENT_SIZE_OF(GeneralDynamicTable, meele_defense),       FLOAT,  NULL },
     { "strength",            OFFSET_OF(GeneralDynamicTable, strength),            ELEMENT_SIZE_OF(GeneralDynamicTable, strength),            FLOAT,  NULL },
     { "attack_timer",        OFFSET_OF(GeneralDynamicTable, attack_timer),        ELEMENT_SIZE_OF(GeneralDynamicTable, attack_timer),        FLOAT,  NULL },
+    { "alpha",   OFFSET_OF(GeneralDynamicTable, alpha),   ELEMENT_SIZE_OF(GeneralDynamicTable, alpha),   FLOAT, NULL },
+    { "is_dead", OFFSET_OF(GeneralDynamicTable, is_dead), ELEMENT_SIZE_OF(GeneralDynamicTable, is_dead), BOOL,  NULL },
     { "is_target_in_range",  OFFSET_OF(GeneralDynamicTable, is_target_in_range),  ELEMENT_SIZE_OF(GeneralDynamicTable, is_target_in_range),  BOOL,   NULL },
     { "is_present",          OFFSET_OF(GeneralDynamicTable, is_present),          ELEMENT_SIZE_OF(GeneralDynamicTable, is_present),          BOOL,   NULL },
     { "is_engaged",          OFFSET_OF(GeneralDynamicTable, is_engaged),          ELEMENT_SIZE_OF(GeneralDynamicTable, is_engaged),          BOOL,   NULL },
@@ -169,16 +173,30 @@ void general_table_update(Table *tables, Map *map, enum ArmyBattlefieldSide side
 
     for (unsigned int i = 0; i < battalion_count; i++) {
 
-        _Bool is_present = tables->general_tables.friendly_dynamic.is_present[i];
-        if (!is_present) continue;
+        if (tables->general_tables.friendly_dynamic.alpha[i] <= 0.0f) continue;
 
-        if(1)update_stats(tables, i);
-        if(1)update_status(tables, map, i);
-        if(1)try_engage_enemy(tables, battalion_count, battalion_size, i);
-        if(1)update_position(tables, map, side, i);
-        if(1)update_direction(tables, i);
-        if(1)resolve_attack(tables, i, battalion_size, dt);
+        if (tables->general_tables.friendly_dynamic.is_present[i]) {
+
+            update_stats(tables, i);
+            update_status(tables, map, i);
+
+        }
+
+        if (tables->general_tables.friendly_dynamic.is_present[i]) {
+
+            try_engage_enemy(tables, battalion_count, battalion_size, i);
+            update_position(tables, map, side, i);
+            update_direction(tables, i);
+            resolve_attack(tables, i, battalion_size, dt);
+
+        } else if (!tables->general_tables.friendly_dynamic.is_dead[i]) {
+
+            run_off_map(tables, side, i);
+
+        }
+
         animation_table_update(tables, i);
+        update_alpha(tables, i, dt);
 
     }
 
@@ -186,14 +204,13 @@ void general_table_update(Table *tables, Map *map, enum ArmyBattlefieldSide side
 
 void general_table_render(Table *tables, unsigned int i) {
 
+    const float alpha = tables->general_tables.friendly_dynamic.alpha[i];
+    if (alpha <= 0.0f) return;
     const enum Direction direction = tables->general_tables.friendly_dynamic.direction[i];
     const float x = tables->general_tables.friendly_dynamic.x[i];
     const float y = tables->general_tables.friendly_dynamic.y[i];
-    //const enum BattalionType battalion_type = tables->battalion_tables.friendly_static.battalion_type[i];
-    //enum BattalionState battalion_state = tables->battalion_tables.friendly_static.state[i];
     const unsigned char current_frame = tables->general_tables.friendly_dynamic.current_frame[i];
     const enum Animation anim_type = tables->general_tables.friendly_dynamic.animation[i];
-    //const enum Sprites sprite_type = get_battalion_spreadsheet(battalion_type).sprite_type;
     const enum Sprites sprite_type = tables->general_tables.friendly_static.sprite_type[i];
     const Sprite *sprite = &engine.sprite_pack->sprite[sprite_type][anim_type];
     signed int png_width = sprite->width;
@@ -223,6 +240,8 @@ void general_table_render(Table *tables, unsigned int i) {
 
     SDL_Renderer *renderer = engine.renderer;
     SDL_Texture *texture = sprite->texture;
+
+    SDL_SetTextureAlphaMod(texture, (Uint8)alpha);
     if (direction == RIGHT) {
     
         SDL_RenderCopy(renderer, texture, rect1, rect2);
@@ -232,6 +251,7 @@ void general_table_render(Table *tables, unsigned int i) {
         SDL_RenderCopyEx(renderer, texture, rect1, rect2, 0, NULL, SDL_FLIP_HORIZONTAL);
 
     }
+    SDL_SetTextureAlphaMod(texture, 255);
 
 }
 
@@ -270,7 +290,8 @@ static void update_status(Table *tables, Map *map, unsigned int i) {
     const _Bool withdrawed = (x < map->mapLeftLimit) | (x > map->mapRightLimit) | (y < map->mapTopLimit) | (y > map->mapBottomLimit);
     const _Bool is_present = !(is_dead | withdrawed);
     tables->general_tables.friendly_dynamic.is_present[i] = is_present;
-
+    tables->general_tables.friendly_dynamic.is_dead[i] = is_dead;
+    
     enum TargetType personal_target_type = tables->general_tables.friendly_dynamic.target_type[i];
     const unsigned int personal_target_idx = tables->general_tables.friendly_dynamic.personal_target_idx[i];
     float target_x = 0.0f;
@@ -653,8 +674,9 @@ static void animation_table_update(Table *tables, unsigned int i) {
     const enum BattalionMovementMode movement_state = tables->battalion_tables.friendly_dynamic.movement_state[i];
     const enum BattalionLifecycle lifecycle_state = tables->battalion_tables.friendly_dynamic.lifecycle_state[i];
     const _Bool is_engaged = tables->general_tables.friendly_dynamic.is_engaged[i];
+    const _Bool is_present = tables->general_tables.friendly_dynamic.is_present[i];
+    const _Bool is_dead = tables->general_tables.friendly_dynamic.is_dead[i];
     unsigned char current_frame = tables->general_tables.friendly_dynamic.current_frame[i];
-    //const enum Sprites sprite_type = get_battalion_spreadsheet(battalion_type).sprite_type;
     const enum Sprites sprite_type = tables->general_tables.friendly_static.sprite_type[i];
     enum Animation anim = tables->general_tables.friendly_dynamic.animation[i];
     const Sprite *sprite = &engine.sprite_pack->sprite[sprite_type][anim];
@@ -679,15 +701,16 @@ static void animation_table_update(Table *tables, unsigned int i) {
 
     if (lifecycle_state == ROUTING) new_animation = RUN;
     if (is_engaged) new_animation = ATTACK_01;
+    if (!is_present) new_animation = anim;
+    if (is_dead) new_animation = DEATH;
 
     if (frames_count == 0) {
         fprintf(stderr, "Frame count is 0.\n");
         exit(EXIT_FAILURE);
     }
 
-    current_frame =
-        (current_frame == frames_count - 1) ?
-        0 : current_frame + 1;
+    if (current_frame < frames_count - 1) current_frame++;
+    else if (anim != DEATH) current_frame = 0;
 
     if (anim != new_animation) {
         anim = new_animation;
@@ -699,6 +722,41 @@ static void animation_table_update(Table *tables, unsigned int i) {
     tables->general_tables.friendly_dynamic.current_frame[i] = current_frame;
 
     #undef IDLE_FRACTION
+
+}
+
+static void run_off_map(Table *tables, enum ArmyBattlefieldSide side, unsigned int i) {
+
+    const float speed = tables->battalion_tables.friendly_dynamic.speed[i];
+    const float vec_x = (side == ARMY_SIDE_LEFT) ? -speed : speed;
+
+    tables->general_tables.friendly_dynamic.vec_x[i] = vec_x;
+    tables->general_tables.friendly_dynamic.vec_y[i] = 0.0f;
+    tables->general_tables.friendly_dynamic.x[i] += vec_x;
+
+}
+
+static void update_alpha(Table *tables, unsigned int i, float dt) {
+
+    #define FADE_SECONDS 2.0f
+
+    const _Bool is_present = tables->general_tables.friendly_dynamic.is_present[i];
+    const _Bool is_dead = tables->general_tables.friendly_dynamic.is_dead[i];
+    const enum Animation anim = tables->general_tables.friendly_dynamic.animation[i];
+    const unsigned char current_frame = tables->general_tables.friendly_dynamic.current_frame[i];
+    const enum Sprites sprite_type = tables->general_tables.friendly_static.sprite_type[i];
+    const unsigned int frames_count = engine.sprite_pack->sprite[sprite_type][anim].frames_count;
+    const _Bool is_on_last_death_frame = (anim == DEATH) & (current_frame + 1u >= frames_count);
+
+    if ((!is_present) & (!is_dead | is_on_last_death_frame)) {
+
+        float alpha = tables->general_tables.friendly_dynamic.alpha[i] - 255.0f / FADE_SECONDS * dt;
+        if (alpha < 0.0f) alpha = 0.0f;
+        tables->general_tables.friendly_dynamic.alpha[i] = alpha;
+
+    }
+
+    #undef FADE_SECONDS
 
 }
 
@@ -766,7 +824,11 @@ static void general_dynamic_table_init(
 
     for (unsigned int i = 0; i < battalion_count; i++) {
 
-        mock_dynamic_table->is_present[i] = true;
+        const _Bool is_dead = mock_dynamic_table->hp[i] <= 0.0f;
+
+        mock_dynamic_table->is_present[i] = !is_dead;
+        mock_dynamic_table->is_dead[i] = is_dead;
+        mock_dynamic_table->alpha[i] = is_dead ? 0.0f : 255.0f;
         mock_dynamic_table->direction[i] = (side == ARMY_SIDE_LEFT) ? RIGHT : LEFT;
         mock_dynamic_table->is_charging[i] = false;
         mock_dynamic_table->attack_timer[i] = 0.0f;
