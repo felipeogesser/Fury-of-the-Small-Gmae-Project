@@ -17,8 +17,10 @@ typedef struct UnitDynamicTable {
     float *y;
     float *hp;
     float *attack_timer;
+    float *alpha;
     enum Animation *animation;
     unsigned char *current_frame;
+    _Bool *is_dead;
     _Bool *is_target_in_range;
     _Bool *is_engaged;
     _Bool *is_present;
