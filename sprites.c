@@ -121,6 +121,7 @@ typedef struct SpritesPath {
 static signed int count_pngs_in_folder(const char *path);
 static signed int fill_pngs_from_folder(const char *folder, SpritesPath *out, signed int start_index, unsigned int sprite_index);
 static unsigned int parse_frame_count_from_path(const char *path);
+static signed int is_word_char(char c);
 static signed int stristr_found(const char *haystack, const char *needle);
 static signed int parse_animation_from_path(const char *path);
 
@@ -181,6 +182,10 @@ static unsigned int parse_frame_count_from_path(const char *path) {
     return (unsigned int)frames;
 }
 
+static signed int is_word_char(char c) {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
+}
+
 static signed int stristr_found(const char *haystack, const char *needle) {
     size_t hlen = strlen(haystack);
     size_t nlen = strlen(needle);
@@ -191,7 +196,11 @@ static signed int stristr_found(const char *haystack, const char *needle) {
         while (j < nlen && tolower((unsigned char)haystack[i + j]) == tolower((unsigned char)needle[j])) {
             j++;
         }
-        if (j == nlen) return 1;
+        if (j < nlen) continue;
+
+        const _Bool starts_word = (i == 0) || !is_word_char(haystack[i - 1]);
+        const _Bool ends_word = !is_word_char(haystack[i + nlen]);
+        if (starts_word && ends_word) return 1;
     }
     return 0;
 }
@@ -259,12 +268,21 @@ void load_sprites_into_memory(void) {
         unsigned int sprite = sprites_string[k].sprite_index;
         unsigned int animation = (unsigned int)anim;
 
+        if (sprite_pack.sprite[sprite][animation].texture != NULL) {
+            fprintf(stderr, "Sprite '%s' is a second file for an animation already loaded.\n", sprites_string[k].file_path);
+            for (signed int j = 0; j < k; j++) {
+                const _Bool same_type = sprites_string[j].sprite_index == sprite;
+                const _Bool same_animation = parse_animation_from_path(sprites_string[j].file_path) == anim;
+                if (same_type && same_animation) fprintf(stderr, "  first loaded from '%s'.\n", sprites_string[j].file_path);
+            }
+            exit(EXIT_FAILURE);
+        }
         sprite_pack.sprite[sprite][animation].texture      = SDL_CreateTextureFromSurface(renderer, surface);
         sprite_pack.sprite[sprite][animation].frames_count = (unsigned char)frames;
         sprite_pack.sprite[sprite][animation].width        = (signed short)surface->w;
         sprite_pack.sprite[sprite][animation].height       = (signed short)surface->h;
         SDL_FreeSurface(surface);
-        
+
     }
 
     memset(sprites_string, 0, sizeof(SpritesPath) * (size_t)idx);
