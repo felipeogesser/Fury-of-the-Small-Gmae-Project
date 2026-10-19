@@ -3,7 +3,9 @@
 
 #include "unit_types.h"
 #include "animation_internal.h"
+#include "direction_types.h"
 #include "sprites_internal.h"
+#include "target_types.h"
 #include <SDL2/SDL.h>
 
 typedef struct Unit {
@@ -26,7 +28,12 @@ typedef struct Unit {
     int enemyUnitId;
     _Bool pathFound;
     float constMovX, constMovY;
-    float health;
+    float hp;
+
+    enum Direction direction;
+    unsigned int target_idx;
+    enum TargetType target_type;
+    
 } Unit;
 
 #endif

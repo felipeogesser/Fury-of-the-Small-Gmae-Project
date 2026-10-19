@@ -69,9 +69,9 @@ static float ease_out_elastic(float x);
 static void place_general_on_grid(General **grid_cell, General **general_to_place);
 static void swap_generals(General **general_in_grid, DragPayload *payload);
 static void insert_general_into_drawer(General **general_to_insert);
-static GeneralPayload *save_battleplan_placement(void);
+static GeneralPayload *save_battleplan_placement(General *(*batt_grid)[GRID_DIMENSION_Y], unsigned int general_count, _Bool is_enemy_army);
 static _Bool grid_is_empty(void);
-static Position battleplan_calculate_general_position(General *general, unsigned int x, unsigned int y);
+static Position battleplan_calculate_general_position(General *general, unsigned int x, unsigned int y, _Bool is_enemy_army);
 static void send_battleplan_placement_to_battlefield(GeneralPayload *general_payload);
 
 
@@ -293,9 +293,10 @@ void battleplan_update(void) {
             unsigned int map_size_y = padding.top + 48 * 10 * dimension_y + padding.bottom;
             engine.map = map_init(map_size_x, map_size_y, &padding);
 
-            GeneralPayload *general_payload = save_battleplan_placement();
-
+            GeneralPayload *general_payload = save_battleplan_placement(grid, battleplan.general_in_grid_count, false);
+            GeneralPayload *enemy_general_payload = save_battleplan_placement(battleplan.enemy_board.grid, battleplan.enemy_board.general_count, true);
             send_battleplan_placement_to_battlefield(general_payload);
+            send_battleplan_placement_to_battlefield(enemy_general_payload);
 
             scene_switch(BATTLEFIELD);
 
@@ -319,7 +320,7 @@ void battleplan_update(void) {
 
     }
 
-    animation_tick();
+    //(void)animation_tick();
     
     void *general = drawer_slot[0].general;
     animation_update(
@@ -484,20 +485,29 @@ static void enemy_board_init(void) {
         "generals",
         sizeof_General,
         general_field_table,
-        13,
+        22,
         "id",
         "rarity",
         "hp",
         "vigour",
-        "attack",
-        "defense",
-        "evasion",
+        "base_meele_attack",
+        "base_meele_defense",
+        "armor",
         "attack_speed",
         "general_type",
         "battalion_type",
         "units_type",
-        "anim",
-        "sprite"
+        "animation",
+        "sprite_type",
+        "sprite",
+        "base_strength",
+        "range",
+        "charge_bonus",
+        "is_shielded",
+        "is_ranged",
+        "is_large",
+        "is_armor_piercing",
+        "is_anti_large"
     );
 
     battleplan.enemy_board.general = general;
@@ -955,10 +965,10 @@ static void render_drawer_generals(SDL_Renderer *renderer) {
             };
 
             SDL_Rect sprite_position = {
-                (signed int) mult * padding_between_generals_x + padding_between_generals_x - pan_offset,
-                (signed int) drawer_padding_y + drawer.y,
-                (signed int) GENERAL_SCREEN_WIDTH,
-                (signed int) GENERAL_SCREEN_HEIGHT
+                (signed int) mult * padding_between_generals_x + padding_between_generals_x - pan_offset - (float)GENERAL_SCREEN_HEIGHT * 1.5f,
+                (signed int) drawer_padding_y + drawer.y - (float)GENERAL_SCREEN_WIDTH * 1.5f,
+                (signed int) GENERAL_SCREEN_WIDTH * 4,
+                (signed int) GENERAL_SCREEN_HEIGHT * 4
             };
 
             const SDL_Rect *rect1 = &sprite_slice;
@@ -994,10 +1004,10 @@ static void render_dragged_general(SDL_Renderer *renderer) {
     };
 
     SDL_Rect sprite_position = {
-        (signed int) mouse_x,
-        (signed int) mouse_y,
-        (signed int) GENERAL_SCREEN_WIDTH,
-        (signed int) GENERAL_SCREEN_HEIGHT
+        (signed int) mouse_x - GENERAL_SCREEN_WIDTH * 1.5f,
+        (signed int) mouse_y - GENERAL_SCREEN_HEIGHT * 1.5f,
+        (signed int) GENERAL_SCREEN_WIDTH * 4,
+        (signed int) GENERAL_SCREEN_HEIGHT * 4
     };
 
     const SDL_Rect *rect1 = &sprite_slice;
@@ -1040,10 +1050,10 @@ static void render_grid_generals(SDL_Renderer *renderer) {
                 };
 
                 SDL_Rect sprite_position = {
-                    (signed int) x + i * offset_x,
-                    (signed int) y + j * offset_y,
-                    (signed int) grid_cell_width_x,
-                    (signed int) grid_cell_width_y
+                    (signed int) x + i * offset_x - (float)grid_cell_width_x * 1.5f,
+                    (signed int) y + j * offset_y - (float)grid_cell_width_y * 1.5f,
+                    (signed int) grid_cell_width_x * 4,
+                    (signed int) grid_cell_width_y * 4
                 };
 
                 const SDL_Rect *rect1 = &sprite_slice;
@@ -1105,10 +1115,10 @@ static void render_enemy_grid_generals(SDL_Renderer *renderer) {
                 };
 
                 SDL_Rect sprite_position = {
-                    (signed int) x + i * offset_x,
-                    (signed int) y + j * offset_y,
-                    (signed int) grid_cell_width_x,
-                    (signed int) grid_cell_width_y
+                    (signed int) x + i * offset_x - (float)grid_cell_width_x * 1.5f,
+                    (signed int) y + j * offset_y - (float)grid_cell_width_y * 1.5f,
+                    (signed int) grid_cell_width_x * 4,
+                    (signed int) grid_cell_width_y * 4
                 };
 
                 const SDL_Rect *rect1 = &sprite_slice;
@@ -1116,7 +1126,7 @@ static void render_enemy_grid_generals(SDL_Renderer *renderer) {
 
                 SDL_Texture *texture = sprite->texture;
 
-                SDL_RenderCopy(renderer, texture, rect1, rect2);
+                SDL_RenderCopyEx(renderer, texture, rect1, rect2, 0, NULL, SDL_FLIP_HORIZONTAL);
 
             }
 
@@ -1278,24 +1288,24 @@ static void clear_payload(DragPayload *payload) {
 
 }
 
-static GeneralPayload *save_battleplan_placement(void) {
+static GeneralPayload *save_battleplan_placement(General *(*batt_grid)[GRID_DIMENSION_Y], unsigned int general_count, _Bool is_enemy_army) {
 
     GeneralPayload *general_payload = calloc(1, sizeof(GeneralPayload));
-    general_payload->general_and_pos = calloc(battleplan.general_in_grid_count, sizeof(GeneralAndPosition));
+    general_payload->general_and_pos = calloc(general_count, sizeof(GeneralAndPosition));
     unsigned int idx = 0;
     for (unsigned int i = 0; i < GRID_DIMENSION_X; i++) {
 
         for (unsigned int j = 0; j < GRID_DIMENSION_Y; j++) {
 
-            if (grid[i][j] != NULL) {
+            if (batt_grid[i][j] != NULL) {
                 
-                general_payload->general_and_pos[idx].general = grid[i][j];
-                general_payload->general_and_pos[idx].pos = battleplan_calculate_general_position(grid[i][j], i, j);
+                general_payload->general_and_pos[idx].general = batt_grid[i][j];
+                general_payload->general_and_pos[idx].pos = battleplan_calculate_general_position(batt_grid[i][j], i, j, is_enemy_army);
                 idx++;
-                if (idx == battleplan.general_in_grid_count) {
+                if (idx == general_count) {
                     
                     general_payload->general_count = idx;
-                    goto return_function;
+                    return general_payload;
 
                 }
 
@@ -1304,8 +1314,8 @@ static GeneralPayload *save_battleplan_placement(void) {
         }
 
     }
-    return_function:
-        return general_payload;
+
+    return NULL;
 
 }
 
@@ -1329,12 +1339,17 @@ static _Bool grid_is_empty(void) {
 
 }
 
-static Position battleplan_calculate_general_position(General *general, unsigned int x, unsigned int y) {
+static Position battleplan_calculate_general_position(General *general, unsigned int x, unsigned int y, _Bool is_enemy_army) {
 
     unsigned int cell_width = (engine.map->mapSizeX / 2 - engine.map->padding.in_between_armies / 2 - engine.map->padding.left) / GRID_DIMENSION_X;
     unsigned int cell_height = (engine.map->mapSizeY - engine.map->padding.bottom - engine.map->padding.top ) / GRID_DIMENSION_Y;
 
-    unsigned int cell_position_x = engine.map->padding.left + x * cell_width;
+    unsigned int cell_position_x = 0;
+    if (is_enemy_army) {
+        cell_position_x = engine.map->mapSizeX / 2 + engine.map->padding.in_between_armies / 2 + x * cell_width;
+    } else {
+        cell_position_x = engine.map->padding.left + x * cell_width;
+    }
     unsigned int cell_position_y = engine.map->padding.top + y * cell_height;
 
     Position pos;

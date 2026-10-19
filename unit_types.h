@@ -12,6 +12,8 @@ enum UnitFields {
     U_ID_FIELD,
 };
 
+//extern const FieldEntry *const unit_field_table;
 extern const FieldEntry *const unit_field_table;
+extern const ComplexFieldEntry *const unit_complex_field_table_ptr;
 
 #endif

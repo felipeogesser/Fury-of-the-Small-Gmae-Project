@@ -22,7 +22,7 @@ static struct Arena arena = {0};
 
 static enum MemoryArenaAllocStatus memory_arena_alloc(void) {
 
-    size_t capacity = (size_t)(2147483648ULL);
+    size_t capacity = (size_t)(104857600ULL);
     arena.capacity = capacity;
     
     void *ptr = mmap(
@@ -85,6 +85,13 @@ void memory_arena_reset(void) {
 
 }
 
+void memory_arena_reset_to_address(void *p) {
+
+    arena.current = (char *)p;
+
+}
+
+
 void memory_arena_free(void) {
 
     memset(arena.base, 0, arena.capacity);
@@ -114,7 +121,7 @@ size_t memory_arena_memory_used(void) {
 
 size_t memory_arena_memory_remainder(void) {
 
-    return arena.capacity - (size_t)(arena.current - arena.base);
+    return arena.capacity - (size_t)(arena.current - arena.base) + 64; // 64 bytes for simulating padding
 
 }
 

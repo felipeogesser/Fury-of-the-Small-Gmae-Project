@@ -11,23 +11,23 @@ enum GeneralType {
     GENERAL_TYPE_COUNT
 };
 
-enum BattalionType {
+/*enum BattalionType {
     BATTALION_TYPE_UNKNOWN = -1,
     INFANTRY,
     CAVALRY,
     SPEARMEN,
     ARCHERS,
     BATTALION_TYPE_COUNT = 32
-};
+};*/
 
-enum FatigueLevel {
+/*enum FatigueLevel {
     FRESH = 0,
     ACTIVE,
     WINDED,
     TIRED,
     VERY_TIRED,
     EXHAUSTED
-};
+};*/
 
 enum Rarity {
     RARITY_UNKNOWN = -1,
@@ -59,6 +59,7 @@ enum GeneralFields {
 typedef struct General General;
 
 extern const FieldEntry *const general_field_table;
+extern const ComplexFieldEntry *const general_complex_field_table_ptr;
 extern const unsigned int *const general_battalion_taxonomy_type_masks;
 extern const size_t sizeof_General;
 

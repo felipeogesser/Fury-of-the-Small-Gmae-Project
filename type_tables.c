@@ -1,5 +1,6 @@
 #include "type_tables.h"
 #include "animation_types.h"
+#include "battalion_types.h"
 #include "general_types.h"
 #include "json_parser_types.h"
 #include "sprites_types.h"
@@ -23,31 +24,36 @@ const size_t rarity_table_count = (sizeof(rarity_table) / sizeof(rarity_table[0]
 
 const GeneralTypeEntry general_type_table[] = {
     { "melee", MELEE },
-    { "ranged", RANGED },
+    { "is_ranged", RANGED },
 };
 const size_t general_type_table_count = (sizeof(general_type_table) / sizeof(general_type_table[0]));
 
 const BattalionTypeEntry battalion_type_table[] = {
-    { "infantry", INFANTRY },
+    { "guardsmen", GUARDSMEN },
     { "cavalry", CAVALRY },
-    { "spearmen", SPEARMEN },
+    { "templar", TEMPLAR },
+    { "swordsmen", SWORDSMEN },
     { "archers", ARCHERS },
 };
 const size_t battalion_type_table_count = (sizeof(battalion_type_table) / sizeof(battalion_type_table[0]));
 
 const AnimationEntry animations_table[] = {
     { "idle", IDLE },
+    { "walk", WALK },
     { "run", RUN },
-    { "attack", ATTACK },
+    { "attack01", ATTACK_01 },
+    { "attack02", ATTACK_02 },
     { "guard", GUARD },
+    { "death", DEATH },
 };
 const size_t animations_table_count = (sizeof(animations_table) / sizeof(animations_table[0]));
 
 const SpritesEntry sprites_table[] = {
-    { "archer", ARCHER },
-    { "lancer", LANCER },
-    { "warrior", WARRIOR },
-    { "rafa", RAFA },
+    { "sprite_guardsmen", SPRITE_GUARDSMEN },
+    { "sprite_cavalry", SPRITE_CAVALRY },
+    { "sprite_templar", SPRITE_TEMPLAR },
+    { "sprite_swordsmen", SPRITE_SWORDSMEN },
+    { "sprite_archers", SPRITE_ARCHERS },
 };
 const size_t sprites_table_count = (sizeof(sprites_table) / sizeof(sprites_table[0]));
 
@@ -58,6 +64,7 @@ const TableRef all_tables[] = {
     { "battalion_type", battalion_type_table,   battalion_type_table_count,  sizeof(battalion_type_table[0]) },
     { "anim",           animations_table,       animations_table_count,      sizeof(animations_table[0]) },
     { "sprite",         sprites_table,          sprites_table_count,         sizeof(sprites_table[0]) },
+    { "sprite_type",         sprites_table,          sprites_table_count,         sizeof(sprites_table[0]) }
 };
 const size_t all_tables_count = sizeof(all_tables) / sizeof(all_tables[0]);
 

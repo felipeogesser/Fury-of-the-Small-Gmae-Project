@@ -1,4 +1,5 @@
 #include "init.h"
+#include "game_clock.h"
 #include "game_state.h"
 #include "mailroom.h"
 #include "memory_arena.h"
@@ -9,6 +10,7 @@
 
 void init(void) {
 
+    game_clock_init();
     srand((unsigned int)time(NULL)); 
     memory_arena_init();
     create_window();
