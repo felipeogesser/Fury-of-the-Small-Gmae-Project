@@ -965,10 +965,10 @@ static void render_drawer_generals(SDL_Renderer *renderer) {
             };
 
             SDL_Rect sprite_position = {
-                (signed int) mult * padding_between_generals_x + padding_between_generals_x - pan_offset,
-                (signed int) drawer_padding_y + drawer.y,
-                (signed int) GENERAL_SCREEN_WIDTH,
-                (signed int) GENERAL_SCREEN_HEIGHT
+                (signed int) mult * padding_between_generals_x + padding_between_generals_x - pan_offset - (float)GENERAL_SCREEN_HEIGHT * 1.5f,
+                (signed int) drawer_padding_y + drawer.y - (float)GENERAL_SCREEN_WIDTH * 1.5f,
+                (signed int) GENERAL_SCREEN_WIDTH * 4,
+                (signed int) GENERAL_SCREEN_HEIGHT * 4
             };
 
             const SDL_Rect *rect1 = &sprite_slice;
@@ -1004,10 +1004,10 @@ static void render_dragged_general(SDL_Renderer *renderer) {
     };
 
     SDL_Rect sprite_position = {
-        (signed int) mouse_x,
-        (signed int) mouse_y,
-        (signed int) GENERAL_SCREEN_WIDTH,
-        (signed int) GENERAL_SCREEN_HEIGHT
+        (signed int) mouse_x - GENERAL_SCREEN_WIDTH * 1.5f,
+        (signed int) mouse_y - GENERAL_SCREEN_HEIGHT * 1.5f,
+        (signed int) GENERAL_SCREEN_WIDTH * 4,
+        (signed int) GENERAL_SCREEN_HEIGHT * 4
     };
 
     const SDL_Rect *rect1 = &sprite_slice;
@@ -1050,10 +1050,10 @@ static void render_grid_generals(SDL_Renderer *renderer) {
                 };
 
                 SDL_Rect sprite_position = {
-                    (signed int) x + i * offset_x,
-                    (signed int) y + j * offset_y,
-                    (signed int) grid_cell_width_x,
-                    (signed int) grid_cell_width_y
+                    (signed int) x + i * offset_x - (float)grid_cell_width_x * 1.5f,
+                    (signed int) y + j * offset_y - (float)grid_cell_width_y * 1.5f,
+                    (signed int) grid_cell_width_x * 4,
+                    (signed int) grid_cell_width_y * 4
                 };
 
                 const SDL_Rect *rect1 = &sprite_slice;
@@ -1115,10 +1115,10 @@ static void render_enemy_grid_generals(SDL_Renderer *renderer) {
                 };
 
                 SDL_Rect sprite_position = {
-                    (signed int) x + i * offset_x,
-                    (signed int) y + j * offset_y,
-                    (signed int) grid_cell_width_x,
-                    (signed int) grid_cell_width_y
+                    (signed int) x + i * offset_x - (float)grid_cell_width_x * 1.5f,
+                    (signed int) y + j * offset_y - (float)grid_cell_width_y * 1.5f,
+                    (signed int) grid_cell_width_x * 4,
+                    (signed int) grid_cell_width_y * 4
                 };
 
                 const SDL_Rect *rect1 = &sprite_slice;
