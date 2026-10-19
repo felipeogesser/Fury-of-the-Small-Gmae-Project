@@ -359,7 +359,7 @@ static void animation_table_update(Table *tables, unsigned int unit_count, unsig
         }
 
         if (lifecycle_state == ROUTING) new_animation = RUN;
-        if (is_target_in_range) new_animation = ATTACK;
+        if (is_target_in_range) new_animation = ATTACK_01;
 
         if (frames_count == 0) {
             fprintf(stderr, "Frame count is 0.\n");

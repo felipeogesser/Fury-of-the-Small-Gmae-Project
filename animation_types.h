@@ -10,8 +10,10 @@ enum Animation {
     IDLE = 0,
     WALK,
     RUN,
-    ATTACK,
+    ATTACK_01,
+    ATTACK_02,
     GUARD,
+    DEATH,
     ANIMATION_COUNT
 };
 

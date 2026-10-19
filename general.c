@@ -8,7 +8,7 @@
 #include "maps_internal.h"
 #include "sprites_internal.h"
 #include <stddef.h>
-
+/*
 #define BATTALION_LIST(X) \
     X(INFANTRY,  MELEE) \
     X(CAVALRY,   MELEE) \
@@ -23,7 +23,7 @@ void init_general_battalion_taxonomy(void) {
     #define X(name, group) internal_taxonomy_masks[group] |= (1U << name);
         BATTALION_LIST(X)
     #undef X
-}
+}*/
 #define OFFSET_OF(type, member) offsetof(type, member)
 #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
 

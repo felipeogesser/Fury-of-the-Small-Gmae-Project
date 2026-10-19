@@ -32,7 +32,7 @@
 
 };
 
-const BattalionSpreadsheet warrior = {
+const BattalionSpreadsheet guardsmen = {
 
     .battalion_type = INFANTRY,
     .sprite_type = WARRIOR,
@@ -62,9 +62,9 @@ const BattalionSpreadsheet warrior = {
 
 const Spreadsheet spreadsheet = {
     .battalion_spreadsheet = {
-        [INFANTRY] = {
-            .battalion_type = INFANTRY,
-            .sprite_type = WARRIOR,
+        [GUARDSMEN] = {
+            .battalion_type = GUARDSMEN,
+            .sprite_type = SPRITE_GUARDSMEN,
 
             .morale = 100,
             .fatigue = 100,
@@ -87,9 +87,9 @@ const Spreadsheet spreadsheet = {
             .is_armor_piercing = 0,
             .is_anti_large = 0
         },
-        [SPEARMEN] = {
-            .battalion_type = SPEARMEN,
-            .sprite_type = LANCER,
+        [SWORDSMEN] = {
+            .battalion_type = SWORDSMEN,
+            .sprite_type = SPRITE_SWORDSMEN,
 
             .morale = 100,
             .fatigue = 100,

@@ -28,9 +28,10 @@ extern const ComplexFieldEntry *const battalion_field_table_ptr;
 enum BattalionType {
 
     BATTALION_TYPE_UNKNOWN = -1,
-    INFANTRY,
+    TEMPLAR,
     CAVALRY,
-    SPEARMEN,
+    GUARDSMEN,
+    SWORDSMEN,
     ARCHERS,
     BATTALION_TYPE_COUNT = 32
 

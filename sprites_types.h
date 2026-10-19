@@ -9,11 +9,12 @@ typedef struct SpriteInfo SpriteInfo;
 
 enum Sprites {
     SPRITE_UNKNOWN = -1,
-    ARCHER,
-    LANCER,
-    WARRIOR,
-    RAFA,
-    GENERAL,
+    SPRITE_ARCHERS,
+    SPRITE_CAVALRY,
+    SPRITE_GUARDSMEN,
+    SPRITE_SWORDSMEN,
+    SPRITE_TEMPLAR,
+    SPRITE_GENERAL,
     SPRITES_COUNT
 };
 

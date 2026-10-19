@@ -197,11 +197,13 @@ static signed int stristr_found(const char *haystack, const char *needle) {
 }
 
 static signed int parse_animation_from_path(const char *path) {
-    if (stristr_found(path, "Idle"))   return IDLE;
-    if (stristr_found(path, "Walk"))   return WALK;
-    if (stristr_found(path, "Run"))    return RUN;
-    if (stristr_found(path, "Attack")) return ATTACK;
-    if (stristr_found(path, "Guard"))  return GUARD;
+    if (stristr_found(path, "Idle"))     return IDLE;
+    if (stristr_found(path, "Walk"))     return WALK;
+    if (stristr_found(path, "Run"))      return RUN;
+    if (stristr_found(path, "Attack01")) return ATTACK_01;
+    if (stristr_found(path, "Attack02")) return ATTACK_02;
+    if (stristr_found(path, "Guard"))    return GUARD;
+    if (stristr_found(path, "Death"))    return DEATH;
     return -1;
 }
 
@@ -211,9 +213,10 @@ void load_sprites_into_memory(void) {
 
     signed int count = 0;
     count += count_pngs_in_folder("assets/sprites/Archer");
-    count += count_pngs_in_folder("assets/sprites/Lancer");
-    count += count_pngs_in_folder("assets/sprites/Warrior");
-    count += count_pngs_in_folder("assets/sprites/rafa");
+    count += count_pngs_in_folder("assets/sprites/Cavalry");
+    count += count_pngs_in_folder("assets/sprites/Guardsmen");
+    count += count_pngs_in_folder("assets/sprites/Swordsmen");
+    count += count_pngs_in_folder("assets/sprites/Templar");
 
     SpritesPath *sprites_string = calloc((size_t)count, sizeof(SpritesPath));
     if (!sprites_string) {
@@ -222,10 +225,11 @@ void load_sprites_into_memory(void) {
     }
 
     signed int idx = 0;
-    idx = fill_pngs_from_folder("assets/sprites/Archer",  sprites_string, idx, ARCHER);
-    idx = fill_pngs_from_folder("assets/sprites/Lancer",  sprites_string, idx, LANCER);
-    idx = fill_pngs_from_folder("assets/sprites/Warrior", sprites_string, idx, WARRIOR);
-    idx = fill_pngs_from_folder("assets/sprites/rafa", sprites_string, idx, RAFA);
+    idx = fill_pngs_from_folder("assets/sprites/Archer",  sprites_string, idx, SPRITE_ARCHERS);
+    idx = fill_pngs_from_folder("assets/sprites/Cavalry",  sprites_string, idx, SPRITE_CAVALRY);
+    idx = fill_pngs_from_folder("assets/sprites/Guardsmen", sprites_string, idx, SPRITE_GUARDSMEN);
+    idx = fill_pngs_from_folder("assets/sprites/Swordsmen", sprites_string, idx, SPRITE_SWORDSMEN);
+    idx = fill_pngs_from_folder("assets/sprites/Templar", sprites_string, idx, SPRITE_TEMPLAR);
 
     sprite_pack.sprite_count = (unsigned int)idx;
 

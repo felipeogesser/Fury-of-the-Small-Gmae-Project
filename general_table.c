@@ -678,7 +678,7 @@ static void animation_table_update(Table *tables, unsigned int i) {
     }
 
     if (lifecycle_state == ROUTING) new_animation = RUN;
-    if (is_engaged) new_animation = ATTACK;
+    if (is_engaged) new_animation = ATTACK_01;
 
     if (frames_count == 0) {
         fprintf(stderr, "Frame count is 0.\n");

@@ -75,7 +75,7 @@ void battlefield_init(void) {
 
     camera_init();
     animation_init();
-    init_general_battalion_taxonomy();
+    //init_general_battalion_taxonomy();
 
     unsigned int player_id = create_player(50 ,1000, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
     engine.player = get_player(player_id);
