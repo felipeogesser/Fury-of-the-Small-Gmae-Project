@@ -27,6 +27,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 enum Origin {
     NO_ORIGIN = -1,
@@ -152,7 +153,7 @@ static signed int pan_offset = 0;
 
 void battleplan_init(void) {
 
-    load_sprites_into_memory();
+    //load_sprites_into_memory();
     booleans_init();
     variables_init();
     animation_init();
@@ -448,6 +449,7 @@ static void booleans_init(void) {
     try_once = true;
     general_placement_valid = false;
     button_main_menu_clicked = false;
+    button_init_battle_clicked = false;
 
 }
 
@@ -458,6 +460,14 @@ static void variables_init(void) {
     mouse_y = 0;
     mouse_dragging_origin_x = 0.0f;
     elapsed = 0.0f;
+    pan_offset = 0;
+
+    DrawerSlot empty_drawer_slot = {
+        NULL, 0, 0, 0, 0
+    };
+    for (unsigned int i = 0; i < 10; i++) {
+        drawer_slot[i] = empty_drawer_slot;
+    }
 
 }
 

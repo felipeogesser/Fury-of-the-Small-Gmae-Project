@@ -261,6 +261,20 @@ void unit_table_render(Table *tables, unsigned int battalion_count, unsigned int
 
 void unit_table_destroy(void) {
 
+    char *start_ptr = (char *)unit_table_start_address_alloc;
+    char *end_ptr = (char *)memory_arena_current_pointer();
+    if (start_ptr == NULL) {
+        fprintf(stderr, "in unit_table_destroy, unit tables were never allocated or were already destroyed.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    ptrdiff_t size = end_ptr - start_ptr;
+    if (size <= 0) {
+        fprintf(stderr, "in unit_table_destroy, pointer difference gave either a zero or negative value.\n");
+        exit(EXIT_FAILURE);
+    }
+    
+    memset(start_ptr, 0, (size_t)size);
     memory_arena_reset_to_address(unit_table_start_address_alloc);
 
 }

@@ -20,6 +20,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include <SDL2/SDL.h>
+#include <stdlib.h>
 
 // private prototypes
 static void allocate_mock_soa_memory(
@@ -257,6 +258,20 @@ void general_table_render(Table *tables, unsigned int i) {
 
 void general_table_destroy(void) {
 
+    char *start_ptr = (char *)general_table_start_address_alloc;
+    char *end_ptr = (char *)memory_arena_current_pointer();
+    if (start_ptr == NULL) {
+        fprintf(stderr, "in general_table_destroy, unit tables were never allocated or were already destroyed.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    ptrdiff_t size = end_ptr - start_ptr;
+    if (size <= 0) {
+        fprintf(stderr, "in general_table_destroy, pointer difference gave either a zero or negative value.\n");
+        exit(EXIT_FAILURE);
+    }
+    
+    memset(start_ptr, 0, (size_t)size);
     memory_arena_reset_to_address(general_table_start_address_alloc);
 
 }

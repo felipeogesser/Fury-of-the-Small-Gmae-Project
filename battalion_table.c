@@ -22,6 +22,8 @@
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+
 // private prototypes
 static _Bool check_if_battalion_is_present(const Table *tables, unsigned int i);
 static void update_counts(Table *tables, unsigned int i, unsigned int battalion_size);
@@ -346,6 +348,20 @@ void battalion_table_update(const Spreadsheet *spreadsheet, Table *tables, signe
 
 void battalion_table_destroy(void) {
 
+    char *start_ptr = (char *)battalion_table_start_address_alloc;
+    char *end_ptr = (char *)memory_arena_current_pointer();
+    if (start_ptr == NULL) {
+        fprintf(stderr, "in battalion_table_destroy, unit tables were never allocated or were already destroyed.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    ptrdiff_t size = end_ptr - start_ptr;
+    if (size <= 0) {
+        fprintf(stderr, "in battalion_table_destroy, pointer difference gave either a zero or negative value.\n");
+        exit(EXIT_FAILURE);
+    }
+    
+    memset(start_ptr, 0, (size_t)size);
     memory_arena_reset_to_address(battalion_table_start_address_alloc);
 
 }

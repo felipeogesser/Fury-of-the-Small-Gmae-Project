@@ -26,6 +26,7 @@
 #include "player_collision.h"
 #include "quadrant.h"
 #include "quadrant_internal.h"
+#include "scene_handler.h"
 #include "unit_collision.h"
 #include "unit.h"
 #include "unit_internal.h"
@@ -47,6 +48,7 @@
 static Armies *load_armies_onto_battlefield(GeneralPayload **general_payload, unsigned int armies_count, unsigned int battalion_size);
 //static void render_generals(void);
 //static void render_units(void);
+static _Bool is_battle_over(Table *player_tables, Table *enemy_tables, unsigned int battalion_count);
 static void update_balance_of_power(Table *player_tables, Table *enemy_tables, unsigned int battalion_count, signed int *balance_of_power);
 
 _Bool show_quads = false;
@@ -141,7 +143,7 @@ void battlefield_input(SDL_Event *e) {
         battlefield.player_tables.battalion_order.type[4] = ORDER_ATTACK;
 
     }
-    if(1)debug_print_battalions(&battlefield.player_tables, 5, "playr");
+    if(0)debug_print_battalions(&battlefield.player_tables, 5, "playr");
 
     Player *player = engine.player;
         
@@ -254,6 +256,12 @@ void battlefield_update(void) {
 
     update_game_state();
 
+        if(is_battle_over(player_tables, enemy_tables, battalion_count)) {
+
+        scene_switch(BATTLEPLAN);
+
+    }
+
 }
 
 void battlefield_render(void) {
@@ -363,8 +371,8 @@ void battlefield_render(void) {
 
 void battlefield_destroy(void) {
 
-    animation_destroy();
-    table_destroy();
+    //animation_destroy();
+    //table_destroy();
     memory_arena_reset();
 
 }
@@ -383,6 +391,21 @@ static Armies *load_armies_onto_battlefield(GeneralPayload **general_payload, un
     }
 
     return armies;
+
+}
+
+static _Bool is_battle_over(Table *player_tables, Table *enemy_tables, unsigned int battalion_count) {
+
+    unsigned int player_battalion_not_present_count = 0;
+    unsigned int enemy_battalion_not_present_count = 0;
+    for (unsigned int i = 0; i < battalion_count; i++) {
+
+        player_battalion_not_present_count += !player_tables->battalion_tables.friendly_dynamic.is_present[i];
+        enemy_battalion_not_present_count += !enemy_tables->battalion_tables.friendly_dynamic.is_present[i];
+
+    }
+
+    return ((player_battalion_not_present_count == battalion_count) || (enemy_battalion_not_present_count == battalion_count));
 
 }
 
