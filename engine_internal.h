@@ -63,6 +63,8 @@ typedef struct Engine {
     // storage
     Inventory *inventory;
 
+    enum EngineSettings render;
+    _Bool is_ai_bypass_disabled;
 
     // debugging/profiling
         //DebugInfo debug;

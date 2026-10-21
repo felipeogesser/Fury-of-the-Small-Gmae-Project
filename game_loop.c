@@ -11,14 +11,20 @@ void game_loop(void) {
 
     GameState *game = engine.game;
     _Bool *window_running = &engine.window_running;
-
-    scene_init(MAIN_MENU);
+    _Bool is_ai_bypass_disabled = engine.is_ai_bypass_disabled;
+    
+    if (is_ai_bypass_disabled) {
+        scene_init(MAIN_MENU);
+    } else {
+        scene_init(BATTLEPLAN);
+    }
 
     game_clock_start();
     
     while (*window_running) {
 
-        game->delta = game_clock_advance();
+        float dt = game_clock_advance();
+        game->delta = (is_ai_bypass_disabled) ? dt : (1.0f / 60.0f);
 
         switch(game->scene_state.scene) {
 
@@ -34,7 +40,7 @@ void game_loop(void) {
 
                 process_peripherals(window_running);
 
-                scene_update();
+                scene_update(dt);
 
                 scene_render();
 
@@ -44,7 +50,7 @@ void game_loop(void) {
                 
                 process_peripherals(window_running);
 
-                scene_update();
+                scene_update(dt);
 
                 scene_render();
 

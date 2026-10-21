@@ -1,4 +1,5 @@
 #include "peripherals.h"
+#include "engine_internal.h"
 #include "scene_handler.h"
 #include <stdbool.h>
 #include <SDL2/SDL.h>
@@ -26,6 +27,12 @@ void process_peripherals(_Bool *window_running) {
             *window_running = false;
             break;
         }
+
+        if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE) {
+            engine.render = (engine.render == ENABLED) ? DISABLED : ENABLED;
+            SDL_RenderSetVSync(engine.renderer, engine.render == ENABLED);
+        }
+
         
         scene_input(&e);
 

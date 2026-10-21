@@ -198,65 +198,42 @@ void debug_print_battalions(const Table *t, unsigned int battalion_count, const 
                (double)gd->x[i], (double)gd->y[i], (double)gd->vec_x[i], (double)gd->vec_y[i], (double)gd->order_x[i], (double)gd->order_y[i]);
     }
 }
-void battlefield_update(void) {
+void battlefield_update(float dt) {
 
-    float dt = engine.game->delta;
+    _Bool is_ai_bypass_disabled = engine.is_ai_bypass_disabled;
     unsigned int battalion_count = battlefield.battalion_count / 2; // battalion_count of each side, since both sides alwasy have same amount of battalions at start of battle
     unsigned int battalion_size = battlefield.battalion_size;
-    //unsigned int unit_count = battalion_count * battalion_size;
     Table *player_tables = &battlefield.player_tables;
     Table *enemy_tables = &battlefield.enemy_tables;
     signed int *balance_of_power = &battlefield.balance_of_power;
 
-    calculate_player_movement(engine.game);
-    
-    player_map_edge_collision(engine.game, engine.map, engine.player);
+    if (is_ai_bypass_disabled) {
 
-    //check_unit_quadrant(engine.armies, engine.game, engine.battlefield_grid);
-
-    update_player(engine.game);
+        calculate_player_movement(engine.game);
+        player_map_edge_collision(engine.game, engine.map, engine.player);
+        update_player(engine.game);
+        
+    }
 
     update_balance_of_power(player_tables, enemy_tables, battalion_count, balance_of_power);
 
     battalion_table_update(spreadsheet_ptr, player_tables, *balance_of_power, battalion_count, battalion_size, dt);
     battalion_table_update(spreadsheet_ptr, enemy_tables, -*balance_of_power, battalion_count, battalion_size, dt);
 
-    //update_generals(engine.armies, engine.game);
     general_table_update(player_tables, engine.map, ARMY_SIDE_LEFT, battalion_count, battalion_size, dt);
     general_table_update(enemy_tables, engine.map, ARMY_SIDE_RIGHT, battalion_count, battalion_size, dt);
-
-    //update_units(engine.armies, engine.game);
 
     unit_table_update(player_tables, engine.map, battalion_count, battalion_size, ARMY_SIDE_LEFT, dt);
     unit_table_update(enemy_tables, engine.map, battalion_count, battalion_size, ARMY_SIDE_RIGHT, dt);
 
-    //clear_table_vectors(player_tables, battalion_count, battalion_size);
-    //clear_table_vectors(enemy_tables, battalion_count, battalion_size);
+    if (is_ai_bypass_disabled) {
 
-    camera_update();
+        camera_update();
+        update_game_state();
 
-    //animation_tick();
-    
-    /*animation_update(
-        engine.armies->army->general->battalions->unit,
-        sizeof(Unit),
-        engine.game->unit_created_count,
-        unit_field_table,
-        U_ANIM_FIELD,
-        U_SPRITE_FIELD
-    );
-    animation_update(
-        engine.armies->army->general,
-        sizeof(General),
-        engine.armies->army->general_count,
-        general_field_table,
-        G_ANIM_FIELD,
-        G_SPRITE_FIELD
-    );*/
+    }
 
-    update_game_state();
-
-        if(is_battle_over(player_tables, enemy_tables, battalion_count)) {
+    if(is_battle_over(player_tables, enemy_tables, battalion_count)) {
 
         scene_switch(BATTLEPLAN);
 

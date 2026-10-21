@@ -9,7 +9,7 @@ typedef void (*function_pointer)(void);
 typedef struct SceneCallbacks {
     void (*init)(void);
     void (*input)(SDL_Event *e);
-    void (*update)(void);
+    void (*update)(float dt);
     void (*render)(void);
     void (*destroy)(void);
 } SceneCallbacks;
