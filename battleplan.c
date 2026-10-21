@@ -268,8 +268,9 @@ void battleplan_input(SDL_Event *e) {
 
 }
 
-void battleplan_update(void) {
+void battleplan_update(float dt) {
 
+    (void)dt;
     if (button_main_menu_clicked) {
         
         scene_switch(MAIN_MENU);
@@ -407,7 +408,7 @@ void battleplan_render(void) {
 
     SDL_RenderCopy(renderer, battleplan_message, NULL, &battleplan_button_init_battle);
 
-    SDL_RenderPresent(renderer);
+    //SDL_RenderPresent(renderer);
 
 }
 
