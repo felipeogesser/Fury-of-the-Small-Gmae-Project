@@ -5,6 +5,7 @@
 #include "animation_internal.h"
 #include "contract.h"
 #include "contract_types.h"
+#include "deployment_loader.h"
 #include "engine_internal.h"
 #include "game_state_internal.h"
 #include "general_internal.h" // very close at remvoing include. only general->render and general.anim/spite depend on it
@@ -49,7 +50,7 @@ DragPayload drag_payload = {0};
 // private prototypes
 static void booleans_init(void);
 static void variables_init(void);
-static void enemy_board_init(void);
+//static void enemy_board_init(void);
 static void set_drawer_slot_generals_index(General *general);
 static void set_minimal_general_sprite_and_animation_data(General *general, unsigned int general_count);
 static void handle_mouse_left_button(void);
@@ -64,14 +65,15 @@ static void render_drawer_generals(SDL_Renderer *renderer);
 static void render_grid_generals(SDL_Renderer *renderer);
 static void render_enemy_grid_generals(SDL_Renderer *renderer);
 static void render_dragged_general(SDL_Renderer *renderer);
-static void open_general_drawer(void);
-static void close_general_drawer(void);
+static void open_general_drawer(float dt);
+static void close_general_drawer(float dt);
 static float ease_out_elastic(float x);
 static void place_general_on_grid(General **grid_cell, General **general_to_place);
 static void swap_generals(General **general_in_grid, DragPayload *payload);
 static void insert_general_into_drawer(General **general_to_insert);
 static GeneralPayload *save_battleplan_placement(General *(*batt_grid)[GRID_DIMENSION_Y], unsigned int general_count, _Bool is_enemy_army);
 static _Bool grid_is_empty(void);
+static _Bool grids_has_same_general_count(void);
 static Position battleplan_calculate_general_position(General *general, unsigned int x, unsigned int y, _Bool is_enemy_army);
 static void send_battleplan_placement_to_battlefield(GeneralPayload *general_payload);
 
@@ -177,7 +179,6 @@ void battleplan_init(void) {
 
     engine.battleplan = &battleplan;
     
-    battleplan.general_in_grid_count = 0;
     battleplan.background.r = 130;
     battleplan.background.g = 43;
     battleplan.background.b = 95;
@@ -230,16 +231,27 @@ void battleplan_init(void) {
         return;
     }
 
-    enemy_board_init();
+    if (engine.is_ai_bypass_disabled) {
+        
+        clear_payload(&drag_payload);
+        //player_board_init();
+        //enemy_board_init();
+        battleplan.player_inventory_general = inventory_init(); // needs manual free();
+        set_drawer_slot_generals_index(battleplan.player_inventory_general);
+        
+        load_generals_from_csv_deployment_layout_to_enemy_board(&battleplan, "tutorial.csv");
 
-    General *general = inventory_init();
-
-    clear_payload(&drag_payload);
-
-    set_drawer_slot_generals_index(general);
-
-    set_minimal_general_sprite_and_animation_data(general, engine.inventory->general_count);
-    set_minimal_general_sprite_and_animation_data(battleplan.enemy_board.general, battleplan.enemy_board.general_count);
+        set_minimal_general_sprite_and_animation_data(battleplan.player_inventory_general, engine.inventory->general_count);
+        set_minimal_general_sprite_and_animation_data(battleplan.stage_enemy_general, battleplan.enemy_board.general_count);
+    
+    } else {
+    
+        load_generals_from_csv_deployment_layout_to_player_board(&battleplan, "tutorial.csv");
+        load_generals_from_csv_deployment_layout_to_enemy_board(&battleplan, "tutorial.csv");
+        set_minimal_general_sprite_and_animation_data(battleplan.player_inventory_general, battleplan.player_board.general_count);
+        set_minimal_general_sprite_and_animation_data(battleplan.stage_enemy_general, battleplan.enemy_board.general_count);
+    
+    }
 
 }
 
@@ -270,7 +282,6 @@ void battleplan_input(SDL_Event *e) {
 
 void battleplan_update(float dt) {
 
-    (void)dt;
     if (button_main_menu_clicked) {
         
         scene_switch(MAIN_MENU);
@@ -280,7 +291,7 @@ void battleplan_update(float dt) {
 
     if (button_init_battle_clicked) {
         
-        if (grid_is_empty() == false) {
+        if (grid_is_empty() == false && grids_has_same_general_count() == true) {
         
             Padding padding = {
                 .left = 100,
@@ -295,7 +306,7 @@ void battleplan_update(float dt) {
             unsigned int map_size_y = padding.top + 48 * 10 * dimension_y + padding.bottom;
             engine.map = map_init(map_size_x, map_size_y, &padding);
 
-            GeneralPayload *general_payload = save_battleplan_placement(grid, battleplan.general_in_grid_count, false);
+            GeneralPayload *general_payload = save_battleplan_placement(battleplan.player_board.grid, battleplan.player_board.general_count, false);
             GeneralPayload *enemy_general_payload = save_battleplan_placement(battleplan.enemy_board.grid, battleplan.enemy_board.general_count, true);
             send_battleplan_placement_to_battlefield(general_payload);
             send_battleplan_placement_to_battlefield(enemy_general_payload);
@@ -312,13 +323,13 @@ void battleplan_update(float dt) {
 
     if (open_drawer) {
 
-        open_general_drawer();
+        open_general_drawer(dt);
 
     }
 
     if (close_drawer) {
 
-        close_general_drawer();
+        close_general_drawer(dt);
 
     }
 
@@ -334,7 +345,7 @@ void battleplan_update(float dt) {
         G_SPRITE_FIELD
     );
 
-    general = battleplan.enemy_board.general;
+    general = battleplan.stage_enemy_general;
         animation_update(
         general,
         sizeof(General),
@@ -414,6 +425,9 @@ void battleplan_render(void) {
 
 void battleplan_destroy(void) {
     
+    //if (battleplan.player_inventory_general != NULL) free(battleplan.player_inventory_general);
+    //if (battleplan.stage_enemy_general != NULL) free(battleplan.stage_enemy_general);
+    
     if (battleplan_message) {
         SDL_DestroyTexture(battleplan_message);
         battleplan_message = NULL;
@@ -425,7 +439,8 @@ void battleplan_destroy(void) {
         
         for (unsigned int j = 0; j < GRID_DIMENSION_Y; j++ ) {
 
-            grid[i][j] = NULL;
+            battleplan.player_board.grid[i][j] = NULL;
+            battleplan.enemy_board.grid[i][j] = NULL;
 
         }
 
@@ -472,7 +487,7 @@ static void variables_init(void) {
 
 }
 
-static void enemy_board_init(void) {
+/*static void enemy_board_init(void) {
 
     #define OBJ_COUNT 5
     // this value will later come from mission or tutorial specifications indicating how many general enemies there are on that particular fight
@@ -538,7 +553,7 @@ static void enemy_board_init(void) {
 
     }
 
-}
+}*/
 
 static void on_mouse_left_click(void) {
     
@@ -677,16 +692,16 @@ static void handle_mouse_left_button(void) {
 
                 if (0 <= column && column < GRID_DIMENSION_X && 0 <= row && row < GRID_DIMENSION_Y) {
 
-                    if (grid[column][row] == NULL) {
+                    if (battleplan.player_board.grid[column][row] == NULL) {
 
-                        General **grid_cell = &grid[column][row];
+                        General **grid_cell = &battleplan.player_board.grid[column][row];
                         General **general_to_place = &drag_payload.general;
                         place_general_on_grid(grid_cell, general_to_place);
-                        if (drag_payload.origin == DRAWER) battleplan.general_in_grid_count++;
+                        if (drag_payload.origin == DRAWER) battleplan.player_board.general_count++;
 
                     } else {
 
-                        General **general_in_grid = &grid[column][row];
+                        General **general_in_grid = &battleplan.player_board.grid[column][row];
                         swap_generals(general_in_grid, &drag_payload);
 
                     }
@@ -707,10 +722,10 @@ static void handle_mouse_left_button(void) {
                     signed int y = drag_payload.grid_cell_y;
                     if (x != -1 && y != -1) {
 
-                        grid[x][y] = NULL;
+                        battleplan.player_board.grid[x][y] = NULL;
                         General **general = &drag_payload.general;
                         insert_general_into_drawer(general);
-                        battleplan.general_in_grid_count--;
+                        battleplan.player_board.general_count--;
 
                     } else {
 
@@ -752,10 +767,10 @@ static signed int check_if_dragging_general_out_of_grid(void) {
 
     if (0 <= column && column < GRID_DIMENSION_X && 0 <= row && row < GRID_DIMENSION_Y) {
 
-        if (grid[column][row] != NULL) {
+        if (battleplan.player_board.grid[column][row] != NULL) {
 
             dragging_general = true;
-            drag_payload.general = grid[column][row];
+            drag_payload.general = battleplan.player_board.grid[column][row];
             drag_payload.general->render = false;
             drag_payload.grid_cell_x = column;
             drag_payload.grid_cell_y = row;
@@ -1042,9 +1057,9 @@ static void render_grid_generals(SDL_Renderer *renderer) {
 
         for (signed int j = 0; j < GRID_DIMENSION_Y; j++) {
 
-            if (grid[i][j] != NULL) {
+            if (battleplan.player_board.grid[i][j] != NULL) {
 
-                General *general = grid[i][j];
+                General *general = battleplan.player_board.grid[i][j];
 
                 Sprite *sprite = &sprites[general->sprite.type][general->anim.animation];
                         
@@ -1110,7 +1125,6 @@ static void render_enemy_grid_generals(SDL_Renderer *renderer) {
             if (battleplan.enemy_board.grid[i][j] != NULL) {
 
                 General *general = battleplan.enemy_board.grid[i][j];
-
                 Sprite *sprite = &sprites[general->sprite.type][general->anim.animation];
                         
                 signed int png_width = sprite->width;
@@ -1147,13 +1161,13 @@ static void render_enemy_grid_generals(SDL_Renderer *renderer) {
 
 }
 
-static void open_general_drawer(void) {
+static void open_general_drawer(float dt) {
 
     float a = WINDOW_SIZE_Y - 200;
     float b = WINDOW_SIZE_Y;
 
     float t = elapsed / duration;
-    elapsed += engine.game->delta;
+    elapsed += dt;
     float y = ease_out_elastic(t);
 
     signed int result = (signed int)(b + (a - b) * y);
@@ -1163,12 +1177,12 @@ static void open_general_drawer(void) {
 
 }
 
-static void close_general_drawer(void) {
+static void close_general_drawer(float dt) {
 
     float a = WINDOW_SIZE_Y - 200;
     float b = WINDOW_SIZE_Y;
     float t = elapsed / duration;
-    elapsed += engine.game->delta;
+    elapsed += dt;
     float y = ease_out_elastic(t);
 
     signed int result = (signed int)(a + (b - a) * y);
@@ -1253,7 +1267,7 @@ static void place_general_on_grid(General **grid_cell, General **general) { // t
         
         signed int x = drag_payload.grid_cell_x;
         signed int y = drag_payload.grid_cell_y;
-        grid[x][y] = NULL;
+        battleplan.player_board.grid[x][y] = NULL;
         
     }
 
@@ -1277,7 +1291,7 @@ static void swap_generals(General **general_in_grid, DragPayload *payload) {
 
         signed int x = payload->grid_cell_x;
         signed int y = payload->grid_cell_y;
-        grid[x][y] = general;
+        battleplan.player_board.grid[x][y] = general;
 
     }
 
@@ -1310,7 +1324,7 @@ static GeneralPayload *save_battleplan_placement(General *(*batt_grid)[GRID_DIME
 
             if (batt_grid[i][j] != NULL) {
                 
-                general_payload->general_and_pos[idx].general = batt_grid[i][j];
+                general_payload->general_and_pos[idx].general = *batt_grid[i][j];
                 general_payload->general_and_pos[idx].pos = battleplan_calculate_general_position(batt_grid[i][j], i, j, is_enemy_army);
                 idx++;
                 if (idx == general_count) {
@@ -1336,7 +1350,7 @@ static _Bool grid_is_empty(void) {
 
         for (signed int j = 0; j < GRID_DIMENSION_Y; j++) {
 
-            if (grid[i][j] != NULL) {
+            if (battleplan.player_board.grid[i][j] != NULL) {
             
                 return false;
             
@@ -1347,6 +1361,12 @@ static _Bool grid_is_empty(void) {
     }
 
     return true;
+
+}
+
+static _Bool grids_has_same_general_count(void) {
+
+    return (battleplan.player_board.general_count == battleplan.enemy_board.general_count);
 
 }
 

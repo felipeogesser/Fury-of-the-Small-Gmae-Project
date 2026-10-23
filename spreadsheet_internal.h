@@ -36,11 +36,13 @@ typedef struct BattalionSpreadsheet {
 
 } BattalionSpreadsheet;
 
-typedef struct GeneralSpreadSheet {
+typedef struct GeneralSpreadsheet {
 
-    const enum GeneralType type;
+    const enum GeneralType general_type;
     const enum Sprites sprite_type;
-    
+    const enum BattalionType battalion_type;
+    const enum Sprites units_type;
+
     const float hp;
     const float meele_attack;
     const float meele_defense;
@@ -56,12 +58,13 @@ typedef struct GeneralSpreadSheet {
     const _Bool is_armor_piercing;
     const _Bool is_anti_large;
 
-} GeneralSpreadSheet;
+} GeneralSpreadsheet;
 
 typedef struct Spreadsheet {
 
     BattalionSpreadsheet battalion_spreadsheet[BATTALION_TYPE_COUNT];
-
+    GeneralSpreadsheet general_spreadsheet[GENERAL_TYPE_COUNT + 1];
+    
 } Spreadsheet;
 
 #endif

@@ -6,9 +6,20 @@
 
 enum GeneralType {
     GENERAL_TYPE_UNKNOWN = -1,
+    GENERAL_PADDING_FOR_ZERO = 0,
+    GENERAL_GUARDSMEN,
+    GENERAL_UNIQUE,
+    GENERAL_TYPE_END,
+    GENERAL_TYPE_COUNT = GENERAL_TYPE_END - 1
+};
+
+enum EntityCombatType {
+
+    ENTITY_COMBAT_TYYPE_UNKNOWN = -1,
     MELEE,
     RANGED,
-    GENERAL_TYPE_COUNT
+    ENTITY_COMBAT_TYYPE_COUNT
+
 };
 
 /*enum BattalionType {

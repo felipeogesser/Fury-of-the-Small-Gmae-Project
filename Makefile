@@ -39,6 +39,7 @@ SRC = \
 	collision.c \
 	combat.c \
 	contract.c \
+	deployment_loader.c \
 	engine.c \
 	fatigue.c \
 	fatigue_policy.c \

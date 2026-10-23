@@ -64,6 +64,8 @@ typedef struct Engine {
     Inventory *inventory;
 
     enum EngineSettings render;
+
+    _Bool has_program_been_initialized_with_ai_bypass;
     _Bool is_ai_bypass_disabled;
 
     // debugging/profiling

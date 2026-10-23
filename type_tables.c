@@ -23,8 +23,7 @@ const RarityEntry rarity_table[] = {
 const size_t rarity_table_count = (sizeof(rarity_table) / sizeof(rarity_table[0]));
 
 const GeneralTypeEntry general_type_table[] = {
-    { "melee", MELEE },
-    { "is_ranged", RANGED },
+    { "general_guardsmen", GENERAL_GUARDSMEN }
 };
 const size_t general_type_table_count = (sizeof(general_type_table) / sizeof(general_type_table[0]));
 

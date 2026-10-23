@@ -4,62 +4,6 @@
 #include "general_types.h"
 #include "sprites_types.h"
 
-/*const BattalionSpreadsheet lancer = {
-
-    .battalion_type = SPEARMEN,
-    .sprite_type = LANCER,
-
-    .morale = 100,
-    .fatigue = 100,
-    .hp = 8000,
-    .speed = 40,
-    .meele_attack = 30,
-    .meele_defense = 40,
-    .strength = 35,
-    .range = 10,
-    .charge_bonus = 10,
-    .armor = 30,
-    .attack_speed 1,
-
-    .formation_x = 5,
-    .formation_y = 10,
-
-    .is_shielded = 0,
-    .is_ranged = 0,
-    .is_large = 0,
-    .is_armor_piercing = 1,
-    .is_anti_large = 1
-
-};
-
-const BattalionSpreadsheet guardsmen = {
-
-    .battalion_type = INFANTRY,
-    .sprite_type = WARRIOR,
-
-    .morale = 100,
-    .fatigue = 100,
-    .hp = 9000,
-    .speed = 40,
-    .meele_attack = 40,
-    .meele_defense = 35,
-    .strength = 35,
-    .range = 10,
-    .charge_bonus = 10,
-    .armor = 35,
-    .attack_speed 1,
-
-    .formation_x = 5,
-    .formation_y = 10,
-
-    .is_shielded = 1,
-    .is_ranged = 0,
-    .is_large = 0,
-    .is_armor_piercing = 0,
-    .is_anti_large = 0
-
-};*/
-
 const Spreadsheet spreadsheet = {
     .battalion_spreadsheet = {
         [GUARDSMEN] = {
@@ -111,6 +55,32 @@ const Spreadsheet spreadsheet = {
             .is_large = 0,
             .is_armor_piercing = 1,
             .is_anti_large = 1
+        }
+    },
+
+    .general_spreadsheet = {
+        [GENERAL_GUARDSMEN] = {
+
+                .general_type = GENERAL_GUARDSMEN,
+                .sprite_type = SPRITE_GUARDSMEN,
+                .battalion_type = GUARDSMEN,
+                .units_type = SPRITE_GUARDSMEN,
+                .hp = 1000,
+                .meele_attack = 15,
+                .meele_defense = 10,
+                .strength = 10,
+                .range = 20,
+                .charge_bonus = 10,
+                .armor = 5,
+                .attack_speed = 1,
+
+                .is_shielded = 1,
+                .is_ranged = 0,
+                .is_large = 0,
+                .is_armor_piercing = 0,
+                .is_anti_large = 0
+
+
         }
     }
 };
