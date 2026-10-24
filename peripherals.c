@@ -30,8 +30,10 @@ void process_peripherals(_Bool *window_running) {
 
         if (engine.has_program_been_initialized_with_ai_bypass &&
             e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE) {
+            engine.is_ai_bypass_disabled = !engine.is_ai_bypass_disabled;
             engine.render = (engine.render == ENABLED) ? DISABLED : ENABLED;
             SDL_RenderSetVSync(engine.renderer, engine.render == ENABLED);
+
         }
 
         

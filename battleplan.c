@@ -179,6 +179,17 @@ void battleplan_init(void) {
 
     engine.battleplan = &battleplan;
     
+    battleplan.player_inventory_general = NULL;
+    battleplan.stage_enemy_general = NULL;
+    for (unsigned int i = 0; i < GRID_DIMENSION_X; i++) {
+        for (unsigned int j = 0; j < GRID_DIMENSION_Y; j++) {
+            battleplan.player_board.grid[i][j] = NULL;
+            battleplan.enemy_board.grid[i][j] = NULL;
+        }
+    }
+    battleplan.player_board.general_count = 0;
+    battleplan.enemy_board.general_count = 0;
+
     battleplan.background.r = 130;
     battleplan.background.g = 43;
     battleplan.background.b = 95;
@@ -251,6 +262,29 @@ void battleplan_init(void) {
         set_minimal_general_sprite_and_animation_data(battleplan.player_inventory_general, battleplan.player_board.general_count);
         set_minimal_general_sprite_and_animation_data(battleplan.stage_enemy_general, battleplan.enemy_board.general_count);
     
+        if (grid_is_empty() == false && grids_has_same_general_count() == true) {
+        
+            Padding padding = {
+                .left = 100,
+                .right = 100,
+                .top = 50,
+                .bottom = 50,
+                .in_between_armies = 1000
+            };
+            unsigned int dimension_x = GRID_DIMENSION_X;
+            unsigned int dimension_y = GRID_DIMENSION_Y;
+            unsigned int map_size_x = padding.left + 48 * 10 * dimension_x * 2 + padding.right;
+            unsigned int map_size_y = padding.top + 48 * 10 * dimension_y + padding.bottom;
+            engine.map = map_init(map_size_x, map_size_y, &padding);
+
+            GeneralPayload *general_payload = save_battleplan_placement(battleplan.player_board.grid, battleplan.player_board.general_count, false);
+            GeneralPayload *enemy_general_payload = save_battleplan_placement(battleplan.enemy_board.grid, battleplan.enemy_board.general_count, true);
+            send_battleplan_placement_to_battlefield(general_payload);
+            send_battleplan_placement_to_battlefield(enemy_general_payload);
+
+            scene_switch(BATTLEFIELD);
+        
+        }
     }
 
 }
@@ -290,7 +324,7 @@ void battleplan_update(float dt) {
     }
 
     if (button_init_battle_clicked) {
-        
+        button_init_battle_clicked = false;
         if (grid_is_empty() == false && grids_has_same_general_count() == true) {
         
             Padding padding = {

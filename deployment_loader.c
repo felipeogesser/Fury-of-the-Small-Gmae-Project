@@ -49,7 +49,7 @@ static void load_deployment_layout_with_csv_data(unsigned int *deployment_layout
 
     unsigned int deployment_idx = 0;
     const char *p = csv_buffer;
-    while (*p != '\0') {
+    while (*p != '\0' && deployment_idx < GRID_DIMENSION_X * GRID_DIMENSION_Y) {
 
         if (*p != ',' && *p != '\n') {
 
@@ -69,8 +69,8 @@ static void load_deployment_layout_with_csv_data(unsigned int *deployment_layout
                 p++;
 
             }
-            deployment_layout[deployment_idx] = number;
-            deployment_idx += (number != 0);
+            deployment_layout[(deployment_idx % GRID_DIMENSION_X) * GRID_DIMENSION_Y + deployment_idx / GRID_DIMENSION_X] = number;
+            deployment_idx++;
 
         }
         
@@ -99,6 +99,7 @@ static void load_generals_from_player_deployment_layout(Battleplan *battleplan, 
                 enum GeneralType general_type = deployment_layout[i][j];
                 battleplan->player_inventory_general[general_idx] = convert_spreadsheet_general_to_general(general_type);
                 battleplan->player_board.grid[i][j] = &battleplan->player_inventory_general[general_idx];
+                general_idx++;
             }
         }
     }
@@ -124,6 +125,7 @@ static void load_generals_from_enemy_deployment_layout(Battleplan *battleplan, u
                 enum GeneralType general_type = deployment_layout[i][j];
                 battleplan->stage_enemy_general[general_idx] = convert_spreadsheet_general_to_general(general_type);
                 battleplan->enemy_board.grid[i][j] = &battleplan->stage_enemy_general[general_idx];
+                general_idx++;
             }
         }
     }
@@ -157,12 +159,12 @@ static General convert_spreadsheet_general_to_general(enum GeneralType general_t
 
 static void flip_deployment_on_x_axis(unsigned int (*deployment_layout)[GRID_DIMENSION_Y]) {
 
-    for (unsigned int row = 0; row < GRID_DIMENSION_X; row++) {
-        for (unsigned int col = 0; col < GRID_DIMENSION_Y / 2; col++) {
+    for (unsigned int x = 0; x < GRID_DIMENSION_X / 2; x++) {
+        for (unsigned int y = 0; y < GRID_DIMENSION_Y; y++) {
 
-            unsigned int tmp = deployment_layout[row][col];
-            deployment_layout[row][col] = deployment_layout[row][GRID_DIMENSION_Y - 1 - col];
-            deployment_layout[row][GRID_DIMENSION_Y - 1 - col] = tmp;
+            unsigned int tmp = deployment_layout[x][y];
+            deployment_layout[x][y] = deployment_layout[GRID_DIMENSION_X - 1 - x][y];
+            deployment_layout[GRID_DIMENSION_X - 1 - x][y] = tmp;
 
         }
     }
