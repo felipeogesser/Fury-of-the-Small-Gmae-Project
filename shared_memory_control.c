@@ -102,6 +102,14 @@ enum SharedMemoryWaitResult shared_memory_control_wait_for_python(const SharedMe
 
 }
 
+void shared_memory_control_begin_episode(SharedMemoryControl *control, uint64_t battalion_count) {
+
+    signal_store(&control->battalion_count, battalion_count);
+    signal_store(&control->episode_result, EPISODE_RUNNING);
+    signal_store(&control->episode_index, signal_load(&control->episode_index) + 1);
+
+}
+
 void shared_memory_control_set_episode_result(SharedMemoryControl *control, enum EpisodeResult result) {
 
     signal_store(&control->episode_result, (uint64_t)result);
