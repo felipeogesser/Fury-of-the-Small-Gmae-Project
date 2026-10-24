@@ -1,9 +1,14 @@
 #include "memory_arena.h"
+#include "engine_internal.h"
 #include <sys/mman.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#define SHARED_NAME "/battle_shared"
 
 struct Arena {
     char *base;
@@ -24,41 +29,67 @@ static enum MemoryArenaAllocStatus memory_arena_alloc(void) {
 
     size_t capacity = (size_t)(104857600ULL);
     arena.capacity = capacity;
-    
-    void *ptr = mmap(
-        NULL,
-        capacity,
-        PROT_READ | PROT_WRITE,
-        MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB,
-        -1,
-        0
-    );
 
-    if (ptr == MAP_FAILED) {
-
-        ptr = mmap(
+    if (!engine.has_program_been_initialized_with_ai_bypass) {
+        
+        void *ptr = mmap(
             NULL,
             capacity,
             PROT_READ | PROT_WRITE,
-            MAP_PRIVATE | MAP_ANONYMOUS,
+            MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB,
             -1,
             0
         );
 
+        if (ptr == MAP_FAILED) {
 
-        if (ptr != MAP_FAILED) {
-            madvise(ptr, capacity, MADV_HUGEPAGE);
+            ptr = mmap(
+                NULL,
+                capacity,
+                PROT_READ | PROT_WRITE,
+                MAP_PRIVATE | MAP_ANONYMOUS,
+                -1,
+                0
+            );
+
+
+            if (ptr != MAP_FAILED) {
+                madvise(ptr, capacity, MADV_HUGEPAGE);
+            }
+
         }
 
-    }
+        if (ptr == MAP_FAILED) {
+            return MEMORY_ARENA_ALLOC_FAILED;
+        }
+        
+        arena.base = ptr;
 
-    if (ptr == MAP_FAILED) {
-        return MEMORY_ARENA_ALLOC_FAILED;
-    }
-    
-    arena.base = ptr;
+        return MEMORY_ARENA_ALLOC_SUCCESS;
 
-    return MEMORY_ARENA_ALLOC_SUCCESS;
+    } else {
+
+        signed int fd = shm_open(SHARED_NAME, O_CREAT | O_RDWR, 0600);
+        if (fd == -1) {
+            perror("shm_open");
+            exit(EXIT_FAILURE);
+        }
+        if (ftruncate(fd, capacity) == -1) {
+            perror("ftruncate");
+            exit(EXIT_FAILURE);
+        }
+
+        void *shared = mmap(NULL, capacity, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+        if (shared == MAP_FAILED) {
+            perror("mmap");
+            return MEMORY_ARENA_ALLOC_FAILED
+        }
+        close(fd);
+
+        arena.base = shared;
+        return MEMORY_ARENA_ALLOC_SUCCESS;
+
+    }
 
 }
 
@@ -87,6 +118,7 @@ void memory_arena_reset(void) {
 
 void memory_arena_reset_to_address(void *p) {
 
+    memset(p, 0, arena.current);
     arena.current = (char *)p;
 
 }
@@ -104,6 +136,12 @@ void memory_arena_free(void) {
         exit(EXIT_FAILURE);
 
     }
+
+}
+
+char *memory_arena_base(void) {
+
+    return arena.base;
 
 }
 

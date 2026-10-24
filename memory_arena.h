@@ -11,6 +11,8 @@ void memory_arena_reset_to_address(void *p);
 
 void memory_arena_free(void);
 
+char *memory_arena_base(void);
+
 char *memory_arena_current_pointer(void);
 
 size_t memory_arena_memory_used(void);
