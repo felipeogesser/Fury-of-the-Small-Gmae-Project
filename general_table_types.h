@@ -6,10 +6,10 @@
 typedef struct GeneralTable GeneralTable;
 
 typedef struct GeneralStaticTable GeneralStaticTable;
-typedef struct GeneralStaticTableDiff GeneralStaticTableDiff;
+//typedef struct GeneralStaticTableDiff GeneralStaticTableDiff;
 
 typedef struct GeneralDynamicTable GeneralDynamicTable;
-typedef struct GeneralDynamicTableDiff GeneralDynamicTableDiff;
+//typedef struct GeneralDynamicTableDiff GeneralDynamicTableDiff;
 
 //extern const ComplexFieldEntry *const general_table_field_table_ptr;
 

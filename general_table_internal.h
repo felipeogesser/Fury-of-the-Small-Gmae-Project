@@ -29,11 +29,11 @@ typedef struct GeneralStaticTable {
 
 } GeneralStaticTable;
 
-typedef struct GeneralStaticTableDiff {
+/*typedef struct GeneralStaticTableDiff {
 
     float *diff_armor;
 
-} GeneralStaticTableDiff;
+} GeneralStaticTableDiff;*/
 
 // dynamic tables
 
@@ -69,7 +69,7 @@ typedef struct GeneralDynamicTable {
 
 } GeneralDynamicTable;
 
-typedef struct GeneralDynamicTableDiff {
+/*typedef struct GeneralDynamicTableDiff {
 
     float *dx;
     float *dy;
@@ -79,7 +79,7 @@ typedef struct GeneralDynamicTableDiff {
     float *diff_meele_defense;
     float *diff_strength;
 
-} GeneralDynamicTableDiff;
+} GeneralDynamicTableDiff;*/
 /*
 // comparison table
 

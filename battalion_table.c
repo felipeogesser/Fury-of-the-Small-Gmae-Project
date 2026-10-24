@@ -45,12 +45,13 @@ static void allocate_mock_soa_memory(
     unsigned int obj_count,
     BattalionStaticTable *mock_friendly_static_table,
     BattalionStaticTable *mock_enemy_static_table,
-    BattalionStaticTableDiff *mock_friendly_static_table_diff,
-    BattalionStaticTableDiff *mock_enemy_static_table_diff,
+    //BattalionStaticTableDiff *mock_friendly_static_table_diff,
+    //BattalionStaticTableDiff *mock_enemy_static_table_diff,
     BattalionDynamicTable *mock_friendly_dynamic_table,
-    BattalionDynamicTable *mock_enemy_dynamic_table,
-    BattalionDynamicTableDiff *mock_friendly_dynamic_table_diff,
-    BattalionDynamicTableDiff *mock_enemy_dynamic_table_diff);
+    BattalionDynamicTable *mock_enemy_dynamic_table
+    //BattalionDynamicTableDiff *mock_friendly_dynamic_table_diff,
+    //BattalionDynamicTableDiff *mock_enemy_dynamic_table_diff
+);
 static void allocate_mem_for_mock(unsigned int obj_count, const ComplexFieldEntry *field_table, void *mock);
 static void battalion_static_table_init(
     Battalion *battalion,
@@ -64,7 +65,7 @@ static void battalion_dynamic_table_init(
     const ComplexFieldEntry *battalion_field_table,
     const ComplexFieldEntry *mock_dynamic_field_table,
     unsigned int battalion_count);
-static void battalion_static_diff_table_init(
+/*static void battalion_static_diff_table_init(
     unsigned int obj_count,
     BattalionStaticTableDiff *mock_static_table_diff,
     BattalionStaticTable *mock_friendly_static_table,
@@ -77,7 +78,7 @@ static void battalion_dynamic_diff_table_init(
     BattalionDynamicTable *mock_friendly_dynamic_table,
     BattalionDynamicTable *mock_enemy_dynamic_table,
     const ComplexFieldEntry *mock_dynamic_field_table_diff,
-    const ComplexFieldEntry *mock_dynamic_field_table);
+    const ComplexFieldEntry *mock_dynamic_field_table);*/
 
 static void *battalion_table_start_address_alloc = NULL;
 
@@ -106,13 +107,13 @@ static const ComplexFieldEntry battalion_static_table_field_table[] = {
 };
 const ComplexFieldEntry *const battalion_static_table_field_table_ptr = battalion_static_table_field_table;
 
-static const ComplexFieldEntry battalion_static_table_diff_field_table[] = {
+/*static const ComplexFieldEntry battalion_static_table_diff_field_table[] = {
 
     { "diff_armor", OFFSET_OF(BattalionStaticTableDiff, diff_armor), ELEMENT_SIZE_OF(BattalionStaticTableDiff, diff_armor), FLOAT, NULL },
     { "obj_size", 0, sizeof(BattalionStaticTableDiff), NOT_DEFINED, NULL }
 
 };
-const ComplexFieldEntry *const battalion_static_table_diff_field_table_ptr = battalion_static_table_diff_field_table;
+const ComplexFieldEntry *const battalion_static_table_diff_field_table_ptr = battalion_static_table_diff_field_table;*/
 
 static const ComplexFieldEntry battalion_dynamic_table_field_table[] = {
 
@@ -156,7 +157,7 @@ static const ComplexFieldEntry battalion_dynamic_table_field_table[] = {
 const ComplexFieldEntry *const battalion_dynamic_table_field_table_ptr = battalion_dynamic_table_field_table;
 
 
-static const ComplexFieldEntry battalion_dynamic_table_diff_field_table[] = {
+/*static const ComplexFieldEntry battalion_dynamic_table_diff_field_table[] = {
 
     { "threat",             OFFSET_OF(BattalionDynamicTableDiff, threat),             ELEMENT_SIZE_OF(BattalionDynamicTableDiff, threat),             S_INT, NULL },
     { "dx",                 OFFSET_OF(BattalionDynamicTableDiff, dx),                 ELEMENT_SIZE_OF(BattalionDynamicTableDiff, dx),                 FLOAT, NULL },
@@ -172,7 +173,7 @@ static const ComplexFieldEntry battalion_dynamic_table_diff_field_table[] = {
     { "obj_size", 0, sizeof(BattalionDynamicTableDiff), NOT_DEFINED, NULL }
 
 };
-const ComplexFieldEntry *const battalion_dynamic_table_diff_field_table_ptr = battalion_dynamic_table_diff_field_table;
+const ComplexFieldEntry *const battalion_dynamic_table_diff_field_table_ptr = battalion_dynamic_table_diff_field_table;*/
 
 /*static const ComplexFieldEntry battalion_comparison_table_field_table[] = {
 
@@ -197,23 +198,23 @@ void battalion_table_init(Table *player_tables, Table *enemy_tables, Battalion *
 
     BattalionStaticTable mock_friendly_static_table = {0};
     BattalionStaticTable mock_enemy_static_table = {0};
-    BattalionStaticTableDiff mock_friendly_static_table_diff = {0};
-    BattalionStaticTableDiff mock_enemy_static_table_diff = {0};
+    //BattalionStaticTableDiff mock_friendly_static_table_diff = {0};
+    //BattalionStaticTableDiff mock_enemy_static_table_diff = {0};
     BattalionDynamicTable mock_friendly_dynamic_table = {0};
     BattalionDynamicTable mock_enemy_dynamic_table = {0};
-    BattalionDynamicTableDiff mock_friendly_dynamic_table_diff = {0};
-    BattalionDynamicTableDiff mock_enemy_dynamic_table_diff = {0};
+    //BattalionDynamicTableDiff mock_friendly_dynamic_table_diff = {0};
+    //BattalionDynamicTableDiff mock_enemy_dynamic_table_diff = {0};
 
     allocate_mock_soa_memory(
         battalion_count,
         &mock_friendly_static_table,
         &mock_enemy_static_table,
-        &mock_friendly_static_table_diff,
-        &mock_enemy_static_table_diff,
+        //&mock_friendly_static_table_diff,
+        //&mock_enemy_static_table_diff,
         &mock_friendly_dynamic_table,
         &mock_enemy_dynamic_table,
-        &mock_friendly_dynamic_table_diff,
-        &mock_enemy_dynamic_table_diff
+        //&mock_friendly_dynamic_table_diff,
+        //&mock_enemy_dynamic_table_diff
     );
 
     battalion_static_table_init(player_battalion, &mock_friendly_static_table, battalion_field_table_ptr, battalion_static_table_field_table_ptr, battalion_count);
@@ -222,11 +223,11 @@ void battalion_table_init(Table *player_tables, Table *enemy_tables, Battalion *
     battalion_dynamic_table_init(player_battalion, &mock_friendly_dynamic_table, battalion_field_table_ptr, battalion_dynamic_table_field_table_ptr, battalion_count);
     battalion_dynamic_table_init(enemy_battalion, &mock_enemy_dynamic_table, battalion_field_table_ptr, battalion_dynamic_table_field_table_ptr, battalion_count);
     
-    battalion_static_diff_table_init(battalion_count, &mock_friendly_static_table_diff, &mock_friendly_static_table, &mock_enemy_static_table, battalion_static_table_diff_field_table_ptr, battalion_static_table_field_table_ptr);
-    battalion_dynamic_diff_table_init(battalion_count, &mock_friendly_dynamic_table_diff, &mock_friendly_dynamic_table, &mock_enemy_dynamic_table, battalion_dynamic_table_diff_field_table_ptr, battalion_dynamic_table_field_table_ptr);
+    //battalion_static_diff_table_init(battalion_count, &mock_friendly_static_table_diff, &mock_friendly_static_table, &mock_enemy_static_table, battalion_static_table_diff_field_table_ptr, battalion_static_table_field_table_ptr);
+    //battalion_dynamic_diff_table_init(battalion_count, &mock_friendly_dynamic_table_diff, &mock_friendly_dynamic_table, &mock_enemy_dynamic_table, battalion_dynamic_table_diff_field_table_ptr, battalion_dynamic_table_field_table_ptr);
 
-    battalion_static_diff_table_init(battalion_count, &mock_enemy_static_table_diff, &mock_enemy_static_table, &mock_friendly_static_table, battalion_static_table_diff_field_table_ptr, battalion_static_table_field_table_ptr);
-    battalion_dynamic_diff_table_init(battalion_count, &mock_enemy_dynamic_table_diff, &mock_enemy_dynamic_table, &mock_friendly_dynamic_table, battalion_dynamic_table_diff_field_table_ptr, battalion_dynamic_table_field_table_ptr);
+    //battalion_static_diff_table_init(battalion_count, &mock_enemy_static_table_diff, &mock_enemy_static_table, &mock_friendly_static_table, battalion_static_table_diff_field_table_ptr, battalion_static_table_field_table_ptr);
+    //battalion_dynamic_diff_table_init(battalion_count, &mock_enemy_dynamic_table_diff, &mock_enemy_dynamic_table, &mock_friendly_dynamic_table, battalion_dynamic_table_diff_field_table_ptr, battalion_dynamic_table_field_table_ptr);
 
     player_tables->battalion_tables.friendly_static = mock_friendly_static_table;
     player_tables->battalion_tables.enemy_static = mock_enemy_static_table;
@@ -238,11 +239,11 @@ void battalion_table_init(Table *player_tables, Table *enemy_tables, Battalion *
     enemy_tables->battalion_tables.friendly_dynamic = mock_enemy_dynamic_table;
     enemy_tables->battalion_tables.enemy_dynamic = mock_friendly_dynamic_table;
 
-    player_tables->battalion_tables.friendly_static_diff = mock_friendly_static_table_diff;
-    player_tables->battalion_tables.friendly_dynamic_diff = mock_friendly_dynamic_table_diff;
+    //player_tables->battalion_tables.friendly_static_diff = mock_friendly_static_table_diff;
+    //player_tables->battalion_tables.friendly_dynamic_diff = mock_friendly_dynamic_table_diff;
 
-    enemy_tables->battalion_tables.friendly_static_diff = mock_enemy_static_table_diff;
-    enemy_tables->battalion_tables.friendly_dynamic_diff = mock_enemy_dynamic_table_diff;
+    //enemy_tables->battalion_tables.friendly_static_diff = mock_enemy_static_table_diff;
+    //enemy_tables->battalion_tables.friendly_dynamic_diff = mock_enemy_dynamic_table_diff;
 
 }
 
@@ -637,22 +638,23 @@ static void allocate_mock_soa_memory(
     unsigned int obj_count,
     BattalionStaticTable *mock_friendly_static_table,
     BattalionStaticTable *mock_enemy_static_table,
-    BattalionStaticTableDiff *mock_friendly_static_table_diff,
-    BattalionStaticTableDiff *mock_enemy_static_table_diff,
+    //BattalionStaticTableDiff *mock_friendly_static_table_diff,
+    //BattalionStaticTableDiff *mock_enemy_static_table_diff,
     BattalionDynamicTable *mock_friendly_dynamic_table,
     BattalionDynamicTable *mock_enemy_dynamic_table,
-    BattalionDynamicTableDiff *mock_friendly_dynamic_table_diff,
-    BattalionDynamicTableDiff *mock_enemy_dynamic_table_diff) {
+    //BattalionDynamicTableDiff *mock_friendly_dynamic_table_diff,
+    //BattalionDynamicTableDiff *mock_enemy_dynamic_table_diff
+    ) {
 
     battalion_table_start_address_alloc = memory_arena_current_pointer();
     allocate_mem_for_mock(obj_count, battalion_static_table_field_table_ptr, mock_friendly_static_table);
     allocate_mem_for_mock(obj_count, battalion_static_table_field_table_ptr, mock_enemy_static_table);
-    allocate_mem_for_mock(obj_count, battalion_static_table_diff_field_table_ptr, mock_friendly_static_table_diff);
-    allocate_mem_for_mock(obj_count, battalion_static_table_diff_field_table_ptr, mock_enemy_static_table_diff);
+    //allocate_mem_for_mock(obj_count, battalion_static_table_diff_field_table_ptr, mock_friendly_static_table_diff);
+    //allocate_mem_for_mock(obj_count, battalion_static_table_diff_field_table_ptr, mock_enemy_static_table_diff);
     allocate_mem_for_mock(obj_count, battalion_dynamic_table_field_table_ptr, mock_friendly_dynamic_table);
     allocate_mem_for_mock(obj_count, battalion_dynamic_table_field_table_ptr, mock_enemy_dynamic_table);
-    allocate_mem_for_mock(obj_count, battalion_dynamic_table_diff_field_table_ptr, mock_friendly_dynamic_table_diff);
-    allocate_mem_for_mock(obj_count, battalion_dynamic_table_diff_field_table_ptr, mock_enemy_dynamic_table_diff);
+    //allocate_mem_for_mock(obj_count, battalion_dynamic_table_diff_field_table_ptr, mock_friendly_dynamic_table_diff);
+    //allocate_mem_for_mock(obj_count, battalion_dynamic_table_diff_field_table_ptr, mock_enemy_dynamic_table_diff);
 
 }
 
@@ -713,7 +715,7 @@ static void battalion_dynamic_table_init(
 
 }
 
-static void battalion_static_diff_table_init(
+/*static void battalion_static_diff_table_init(
     unsigned int obj_count,
     BattalionStaticTableDiff *mock_static_table_diff,
     BattalionStaticTable *mock_friendly_static_table,
@@ -774,9 +776,9 @@ static void battalion_static_diff_table_init(
 
     }
 
-}
+}*/
 
-static void battalion_dynamic_diff_table_init(
+/*static void battalion_dynamic_diff_table_init(
     unsigned int obj_count,
     BattalionDynamicTableDiff *mock_dynamic_table_diff,
     BattalionDynamicTable *mock_friendly_dynamic_table,
@@ -862,4 +864,4 @@ static void battalion_dynamic_diff_table_init(
 
     }
 
-}
+}*/

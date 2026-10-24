@@ -32,11 +32,11 @@ typedef struct BattalionStaticTable {
 
 } BattalionStaticTable;
 
-typedef struct BattalionStaticTableDiff {
+/*typedef struct BattalionStaticTableDiff {
 
     const float *diff_armor;
 
-} BattalionStaticTableDiff;
+} BattalionStaticTableDiff;*/
 
 // dynamic tables
 
@@ -87,7 +87,7 @@ typedef struct BattalionDynamicTable {
 
 } BattalionDynamicTable;
 
-typedef struct BattalionDynamicTableDiff {
+/*typedef struct BattalionDynamicTableDiff {
 
     enum ThreatLevel *threat;
     float *dx;
@@ -101,7 +101,7 @@ typedef struct BattalionDynamicTableDiff {
     float *diff_meele_defense;
     float *diff_strength;
 
-} BattalionDynamicTableDiff;
+} BattalionDynamicTableDiff;*/
 /*
 // comparison table
 
@@ -223,8 +223,8 @@ typedef struct BattalionTable {
     BattalionDynamicTable friendly_dynamic;
     BattalionDynamicTable enemy_dynamic;
 
-    BattalionStaticTableDiff friendly_static_diff;
-    BattalionDynamicTableDiff friendly_dynamic_diff;
+    //BattalionStaticTableDiff friendly_static_diff;
+    //BattalionDynamicTableDiff friendly_dynamic_diff;
 
 } BattalionTable;
 

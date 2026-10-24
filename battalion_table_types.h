@@ -7,11 +7,11 @@ typedef struct BattalionTable BattalionTable;
 
 // static table
 typedef struct BattalionStaticTable BattalionStaticTable;
-typedef struct BattalionStaticTableDiff BattalionStaticTableDiff;
+//typedef struct BattalionStaticTableDiff BattalionStaticTableDiff;
 
 // dynamic tables
 typedef struct BattalionDynamicTable BattalionDynamicTable;
-typedef struct BattalionDynamicTableDiff BattalionDynamicTableDiff;
+//typedef struct BattalionDynamicTableDiff BattalionDynamicTableDiff;
 
 enum HeadlessMovementMode {
 
@@ -22,12 +22,12 @@ enum HeadlessMovementMode {
 
 };
 
-extern const ComplexFieldEntry *const battalion_spreadsheet_field_table_ptr;
+//extern const ComplexFieldEntry *const battalion_spreadsheet_field_table_ptr;
 
 extern const ComplexFieldEntry *const battalion_static_table_field_table_ptr;
-extern const ComplexFieldEntry *const battalion_static_table_diff_field_table_ptr;
+//extern const ComplexFieldEntry *const battalion_static_table_diff_field_table_ptr;
 extern const ComplexFieldEntry *const battalion_dynamic_table_field_table_ptr;
-extern const ComplexFieldEntry *const battalion_dynamic_table_diff_field_table_ptr;
-extern const ComplexFieldEntry *const battalion_comparison_table_field_table_ptr;
+//extern const ComplexFieldEntry *const battalion_dynamic_table_diff_field_table_ptr;
+//extern const ComplexFieldEntry *const battalion_comparison_table_field_table_ptr;
 
 #endif
