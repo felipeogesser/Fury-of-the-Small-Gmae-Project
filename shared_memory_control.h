@@ -5,17 +5,19 @@
 #include <stddef.h>
 
 #include "battalion_table_span.h"
+#include "shared_memory_orders.h"
 
 #define SHARED_MEMORY_MAGIC 0x53484D41u
-#define SHARED_MEMORY_VERSION 1u
+#define SHARED_MEMORY_VERSION 2u
 #define SHARED_MEMORY_CACHE_LINE 64u
 #define SHARED_MEMORY_CONTROL_SIZE 1024u
 
 enum EpisodeResult {
     EPISODE_RUNNING = 0,
-    EPISODE_FRIENDLY_WON = 1,
+    EPISODE_PLAYER_WON = 1,
     EPISODE_ENEMY_WON = 2,
-    EPISODE_DRAW = 3
+    EPISODE_DRAW = 3,
+    EPISODE_TIMEOUT = 4
 };
 
 enum SharedMemoryWaitResult {
@@ -47,16 +49,12 @@ typedef struct SharedMemoryControl {
     SignalLine py_step;
     SignalLine episode_result;
     SignalLine episode_index;
-    SignalLine py_reset_request;
-    SignalLine c_reset_ack;
+    SignalLine battalion_count;
+    SignalLine battle_active;
     SignalLine c_shutdown;
     SignalLine py_shutdown;
-    SignalLine battalion_count;
-    uint8_t _reserved[SHARED_MEMORY_CONTROL_SIZE - 11 * SHARED_MEMORY_CACHE_LINE];
+    uint8_t _reserved[SHARED_MEMORY_CONTROL_SIZE - 10 * SHARED_MEMORY_CACHE_LINE];
 } SharedMemoryControl;
-
-OrderBuffer *shared_memory_order_create(SharedMemoryControl *control);
-void shared_memory_control_begin_episode(SharedMemoryControl *control, uint64_t battalion_count);
 
 _Static_assert(sizeof(SignalLine) == 64, "SignalLine size changed");
 _Static_assert(sizeof(SharedMemoryHeader) == 64, "SharedMemoryHeader size changed");
@@ -66,30 +64,30 @@ _Static_assert(offsetof(SharedMemoryControl, c_step) == 128, "offset changed");
 _Static_assert(offsetof(SharedMemoryControl, py_step) == 192, "offset changed");
 _Static_assert(offsetof(SharedMemoryControl, episode_result) == 256, "offset changed");
 _Static_assert(offsetof(SharedMemoryControl, episode_index) == 320, "offset changed");
-_Static_assert(offsetof(SharedMemoryControl, py_reset_request) == 384, "offset changed");
-_Static_assert(offsetof(SharedMemoryControl, c_reset_ack) == 448, "offset changed");
+_Static_assert(offsetof(SharedMemoryControl, battalion_count) == 384, "offset changed");
+_Static_assert(offsetof(SharedMemoryControl, battle_active) == 448, "offset changed");
 _Static_assert(offsetof(SharedMemoryControl, c_shutdown) == 512, "offset changed");
 _Static_assert(offsetof(SharedMemoryControl, py_shutdown) == 576, "offset changed");
-_Static_assert(offsetof(SharedMemoryControl, battalion_count) == 640, "offset changed");
-
-SharedMemoryControl *shared_memory_control_create(void);
-BattalionTableSpan *shared_memory_span_create(SharedMemoryControl *control);
-
-void shared_memory_control_publish_layout(SharedMemoryControl *control);
-uint64_t shared_memory_control_publish_step(SharedMemoryControl *control);
-
-enum SharedMemoryWaitResult shared_memory_control_wait_for_python(const SharedMemoryControl *control, uint64_t step, unsigned int max_spins);
-
-void shared_memory_control_begin_episode(SharedMemoryControl *control, uint64_t battalion_count);
-void shared_memory_control_set_episode_result(SharedMemoryControl *control, enum EpisodeResult result);
-_Bool shared_memory_control_reset_requested(const SharedMemoryControl *control);
-void shared_memory_control_ack_reset(SharedMemoryControl *control);
-
-void shared_memory_control_shutdown(SharedMemoryControl *control);
-_Bool shared_memory_control_python_shutdown_requested(const SharedMemoryControl *control);
 
 extern SharedMemoryControl *shared_memory_control_base_ptr;
 extern BattalionTableSpan *battalion_table_span_base_ptr;
 extern OrderBuffer *order_buffer_base_ptr;
+
+SharedMemoryControl *shared_memory_control_create(void);
+BattalionTableSpan *shared_memory_span_create(SharedMemoryControl *control);
+OrderBuffer *shared_memory_order_create(SharedMemoryControl *control);
+
+void shared_memory_control_publish_layout(SharedMemoryControl *control);
+uint64_t shared_memory_control_publish_step(SharedMemoryControl *control);
+enum SharedMemoryWaitResult shared_memory_control_wait_for_python(const SharedMemoryControl *control, uint64_t step, unsigned int max_spins);
+
+void shared_memory_control_begin_battle(SharedMemoryControl *control, uint64_t battalion_count);
+void shared_memory_control_set_episode_result(SharedMemoryControl *control, enum EpisodeResult result);
+enum EpisodeResult shared_memory_control_episode_result(const SharedMemoryControl *control);
+void shared_memory_control_end_battle(SharedMemoryControl *control);
+_Bool shared_memory_control_is_battle_active(const SharedMemoryControl *control);
+
+void shared_memory_control_shutdown(SharedMemoryControl *control);
+_Bool shared_memory_control_python_shutdown_requested(const SharedMemoryControl *control);
 
 #endif
