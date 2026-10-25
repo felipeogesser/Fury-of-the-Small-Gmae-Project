@@ -1,4 +1,3 @@
-#include "baking.h"
 #include "game_loop.h"
 #include "game_shutdown.h"
 #include "init.h"
@@ -17,9 +16,7 @@ int main(int argc, char *argv[]) {
     }
 
     init(is_ai_bypass_disabled);
-    
-    data_baking();
-    
+        
     game_loop();
 
     game_shutdown();
