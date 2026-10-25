@@ -48,6 +48,10 @@ void game_loop(void) {
                 }
 
                 if (step_result == BATTLE_STEP_WAITING) {
+                    if (!python_process_is_alive()) {
+                        fprintf(stderr, "python agent died\n");
+                        *window_running = false;
+                    }
                     continue;
                 }
 
