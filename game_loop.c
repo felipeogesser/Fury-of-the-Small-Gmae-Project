@@ -1,3 +1,10 @@
+#include "game_loop.h"
+#include "engine_internal.h"
+#include "game_clock.h"
+#include "game_state_internal.h"
+#include "peripherals.h"
+#include "scene_handler.h"
+
 void game_loop(void) {
 
     GameState *game = engine.game;
@@ -12,7 +19,7 @@ void game_loop(void) {
 
     game_clock_start();
 
-    while (*window_running) {
+    while (*window_running && !engine_cleanup_shutdown_requested()) {
 
         float dt = game_clock_advance();
         game->delta = (!is_ai_training || engine.is_ai_bypass_disabled) ? dt : (1.0f / 60.0f);
@@ -79,8 +86,5 @@ void game_loop(void) {
     if (is_ai_training) {
         shared_memory_control_shutdown(shared_memory_control_ptr);
     }
-
-    scene_destroy();
-    destroy_window();
 
 }
