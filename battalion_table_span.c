@@ -8,8 +8,6 @@
         (uint64_t)((size_t)(count) * sizeof *(table)->field) \
     })
 
-void *battalion_table_span_base_ptr = NULL;
-
 static void battalion_static_span_set(BattalionStaticTableSpan *s, const BattalionStaticTable *t, const void *base, size_t n) {
 
     s->battalion_type = SPAN(base, t, battalion_type, n);

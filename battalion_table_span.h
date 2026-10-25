@@ -79,6 +79,4 @@ _Static_assert(sizeof(BattalionTableSpan) == (2 * 14 + 2 * 34) * 16, "BattalionT
 
 void set_table_shared_memory_span(BattalionTableSpan *spans, const Table *tables, size_t battalion_count);
 
-extern void *battalion_table_span_base_ptr;
-
 #endif
