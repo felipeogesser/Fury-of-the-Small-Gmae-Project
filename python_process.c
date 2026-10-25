@@ -1,4 +1,5 @@
 #include "python_process.h"
+#include "engine_cleanup.h"
 #include <errno.h>
 #include <signal.h>
 #include <spawn.h>
@@ -79,6 +80,7 @@ enum PythonReadyResult python_process_wait_ready(const SharedMemoryControl *cont
 
         if (shared_memory_control_is_python_ready(control)) return PYTHON_READY;
         if (!python_process_is_alive()) return PYTHON_DIED;
+        if (engine_cleanup_shutdown_requested()) return PYTHON_READY_TIMEOUT;
 
         sleep_ms(10);
 
@@ -88,13 +90,29 @@ enum PythonReadyResult python_process_wait_ready(const SharedMemoryControl *cont
 
 }
 
+pid_t python_process_pid(void) {
+
+    return (python_exited) ? -1 : python_pid;
+
+}
+
 void python_process_stop(SharedMemoryControl *control, unsigned int timeout_ms) {
 
-    shared_memory_control_shutdown(control);
+    if (control != NULL) {
+        shared_memory_control_shutdown(control);
+    }
+
+    if (!python_process_is_alive()) {
+        python_pid = -1;
+        return;
+    }
 
     for (unsigned int waited = 0; waited < timeout_ms; waited += 10) {
 
-        if (!python_process_is_alive()) return;
+        if (!python_process_is_alive()) {
+            python_pid = -1;
+            return;
+        }
         sleep_ms(10);
 
     }
@@ -103,7 +121,10 @@ void python_process_stop(SharedMemoryControl *control, unsigned int timeout_ms) 
 
     for (unsigned int waited = 0; waited < 1000; waited += 10) {
 
-        if (!python_process_is_alive()) return;
+        if (!python_process_is_alive()) {
+            python_pid = -1;
+            return;
+        }
         sleep_ms(10);
 
     }
@@ -111,5 +132,6 @@ void python_process_stop(SharedMemoryControl *control, unsigned int timeout_ms) 
     kill(python_pid, SIGKILL);
     waitpid(python_pid, NULL, 0);
     python_exited = true;
+    python_pid = -1;
 
 }
