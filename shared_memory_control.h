@@ -30,6 +30,7 @@ typedef struct SignalLine {
     uint64_t value;
     uint8_t _pad[56];
 } SignalLine;
+#define SHARED_MEMORY_VERSION 3u
 
 typedef struct SharedMemoryHeader {
     uint32_t magic;
@@ -39,7 +40,8 @@ typedef struct SharedMemoryHeader {
     uint64_t span_size;
     uint64_t order_offset;
     uint64_t order_size;
-    uint8_t _pad[16];
+    uint64_t c_pid;
+    uint8_t _pad[8];
 } SharedMemoryHeader;
 
 typedef struct SharedMemoryControl {
@@ -53,9 +55,14 @@ typedef struct SharedMemoryControl {
     SignalLine battle_active;
     SignalLine c_shutdown;
     SignalLine py_shutdown;
-    uint8_t _reserved[SHARED_MEMORY_CONTROL_SIZE - 10 * SHARED_MEMORY_CACHE_LINE];
+    SignalLine py_ready;
+    SignalLine py_pid;
+    uint8_t _reserved[SHARED_MEMORY_CONTROL_SIZE - 12 * SHARED_MEMORY_CACHE_LINE];
 } SharedMemoryControl;
 
+_Static_assert(offsetof(SharedMemoryHeader, c_pid) == 48, "offset changed");
+_Static_assert(offsetof(SharedMemoryControl, py_ready) == 640, "offset changed");
+_Static_assert(offsetof(SharedMemoryControl, py_pid) == 704, "offset changed");
 _Static_assert(sizeof(SignalLine) == 64, "SignalLine size changed");
 _Static_assert(sizeof(SharedMemoryHeader) == 64, "SharedMemoryHeader size changed");
 _Static_assert(sizeof(SharedMemoryControl) == SHARED_MEMORY_CONTROL_SIZE, "SharedMemoryControl size changed");
@@ -72,6 +79,9 @@ _Static_assert(offsetof(SharedMemoryControl, py_shutdown) == 576, "offset change
 extern SharedMemoryControl *shared_memory_control_base_ptr;
 extern BattalionTableSpan *battalion_table_span_base_ptr;
 extern OrderBuffer *order_buffer_base_ptr;
+
+_Bool shared_memory_control_is_python_ready(const SharedMemoryControl *control);
+uint64_t shared_memory_control_python_pid(const SharedMemoryControl *control);
 
 SharedMemoryControl *shared_memory_control_create(void);
 BattalionTableSpan *shared_memory_span_create(SharedMemoryControl *control);

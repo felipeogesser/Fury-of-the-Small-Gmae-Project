@@ -1,10 +1,10 @@
+#include "shared_memory_control.h"
+#include "memory_arena.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sched.h>
-
-#include "shared_memory_control.h"
-#include "memory_arena.h"
+#include <unistd.h>
 
 SharedMemoryControl *shared_memory_control_base_ptr = NULL;
 BattalionTableSpan *battalion_table_span_base_ptr = NULL;
@@ -43,9 +43,22 @@ SharedMemoryControl *shared_memory_control_create(void) {
 
     control->header.magic = SHARED_MEMORY_MAGIC;
     control->header.version = SHARED_MEMORY_VERSION;
+    control->header.c_pid = (uint64_t)getpid();
     control->header.control_size = sizeof *control;
 
     return control;
+
+}
+
+_Bool shared_memory_control_is_python_ready(const SharedMemoryControl *control) {
+
+    return signal_load(&control->py_ready) != 0;
+
+}
+
+uint64_t shared_memory_control_python_pid(const SharedMemoryControl *control) {
+
+    return signal_load(&control->py_pid);
 
 }
 
