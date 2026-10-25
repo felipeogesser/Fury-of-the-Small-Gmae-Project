@@ -35,7 +35,9 @@ typedef struct SharedMemoryHeader {
     uint64_t control_size;
     uint64_t span_offset;
     uint64_t span_size;
-    uint8_t _pad[32];
+    uint64_t order_offset;
+    uint64_t order_size;
+    uint8_t _pad[16];
 } SharedMemoryHeader;
 
 typedef struct SharedMemoryControl {
@@ -52,6 +54,9 @@ typedef struct SharedMemoryControl {
     SignalLine battalion_count;
     uint8_t _reserved[SHARED_MEMORY_CONTROL_SIZE - 11 * SHARED_MEMORY_CACHE_LINE];
 } SharedMemoryControl;
+
+OrderBuffer *shared_memory_order_create(SharedMemoryControl *control);
+void shared_memory_control_begin_episode(SharedMemoryControl *control, uint64_t battalion_count);
 
 _Static_assert(sizeof(SignalLine) == 64, "SignalLine size changed");
 _Static_assert(sizeof(SharedMemoryHeader) == 64, "SharedMemoryHeader size changed");
@@ -84,5 +89,7 @@ void shared_memory_control_shutdown(SharedMemoryControl *control);
 _Bool shared_memory_control_python_shutdown_requested(const SharedMemoryControl *control);
 
 extern SharedMemoryControl *shared_memory_control_base_ptr;
+extern BattalionTableSpan *battalion_table_span_base_ptr;
+extern OrderBuffer *order_buffer_base_ptr;
 
 #endif

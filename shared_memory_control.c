@@ -23,7 +23,6 @@ static inline void signal_store(SignalLine *s, uint64_t value) {
 
 static inline void cpu_relax(void) {
 
-#if defined(__x86_64__) || defined(__i386__)
     __builtin_ia32_pause();
 
 }

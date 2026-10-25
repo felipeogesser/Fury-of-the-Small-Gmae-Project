@@ -8,10 +8,9 @@ static void *baked_data_end_ptr = NULL;
 
 void data_baking(void) {
 
-    if (engine.has_program_been_initialized_with_ai_bypass) {
-        shared_memory_control_base_ptr = shared_memory_control_create();
-        battalion_table_span_base_ptr = shared_memory_span_create(shared_memory_control_base_ptr);
-    }
+    shared_memory_control_base_ptr = shared_memory_control_create();
+    battalion_table_span_base_ptr = shared_memory_span_create(shared_memory_control_base_ptr);
+    order_buffer_base_ptr = shared_memory_order_create(shared_memory_control_base_ptr);
 
     load_sprites_into_memory();
 

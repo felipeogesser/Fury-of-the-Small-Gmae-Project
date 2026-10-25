@@ -40,26 +40,23 @@ void game_loop(void) {
 
                 process_peripherals(window_running);
 
-                if (is_ai_training) {
-
-                    if (pending_step == 0) {
-                        pending_step = shared_memory_control_publish_step(shared_memory_control_ptr);
-                    }
-
-                    enum SharedMemoryWaitResult wait_result = shared_memory_control_wait_for_python(shared_memory_control_ptr, pending_step, 100000);
-
-                    if (wait_result == SHARED_MEMORY_WAIT_SHUTDOWN) {
-                        *window_running = false;
-                        continue;
-                    }
-
-                    if (wait_result == SHARED_MEMORY_WAIT_TIMEOUT) {
-                        continue;
-                    }
-
-                    pending_step = 0;
-
+                if (pending_step == 0) {
+                    pending_step = shared_memory_control_publish_step(shared_memory_control_ptr);
                 }
+
+                enum SharedMemoryWaitResult wait_result = shared_memory_control_wait_for_python(shared_memory_control_ptr, pending_step, 100000);
+
+                if (wait_result == SHARED_MEMORY_WAIT_SHUTDOWN) {
+                    *window_running = false;
+                    continue;
+                }
+
+                if (wait_result == SHARED_MEMORY_WAIT_TIMEOUT) {
+                    continue;
+                }
+
+                battlefield_apply_orders();
+                pending_step = 0;
 
                 scene_update(game->delta);
 
