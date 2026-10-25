@@ -1,5 +1,4 @@
 #include "baking.h"
-#include "battalion_table_span.h"
 #include "engine_internal.h"
 #include "shared_memory_control.h"
 #include "sprites.h"
@@ -11,6 +10,7 @@ void data_baking(void) {
     shared_memory_control_base_ptr = shared_memory_control_create();
     battalion_table_span_base_ptr = shared_memory_span_create(shared_memory_control_base_ptr);
     order_buffer_base_ptr = shared_memory_order_create(shared_memory_control_base_ptr);
+    shared_memory_control_publish_layout(shared_memory_control_base_ptr);
 
     load_sprites_into_memory();
 
