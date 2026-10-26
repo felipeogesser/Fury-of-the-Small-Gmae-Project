@@ -230,8 +230,8 @@ void battleplan_init(void) {
 
     } else {
 
-        load_generals_from_csv_deployment_layout_to_player_board(&battleplan, "tutorial.csv");
-        load_generals_from_csv_deployment_layout_to_enemy_board(&battleplan, "tutorial.csv");
+        load_generals_from_csv_deployment_layout_to_player_board(&battleplan, "stages/current.csv");
+        load_generals_from_csv_deployment_layout_to_enemy_board(&battleplan, "stages/current.csv");
         set_minimal_general_sprite_and_animation_data(battleplan.player_inventory_general, battleplan.player_board.general_count);
         set_minimal_general_sprite_and_animation_data(battleplan.stage_enemy_general, battleplan.enemy_board.general_count);
 
