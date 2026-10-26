@@ -1,4 +1,5 @@
 #include "game_loop.h"
+#include "battle_step.h"
 #include "engine_internal.h"
 #include "game_clock.h"
 #include "game_state_internal.h"
@@ -22,7 +23,7 @@ void game_loop(void) {
     while (*window_running && !engine_cleanup_shutdown_requested()) {
 
         float dt = game_clock_advance();
-        game->delta = (!is_ai_training || engine.is_ai_bypass_disabled) ? dt : (1.0f / 60.0f);
+        game->delta = (engine.is_ai_bypass_disabled) ? dt : BATTLE_TICK_DT;
         switch(game->scene_state.scene) {
 
             case MAIN_MENU:
