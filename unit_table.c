@@ -25,6 +25,26 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+#define UNIT_MASS_BASE 1.0f
+#define UNIT_MASS_LARGE 3.0f
+#define UNIT_MASS_ANCHORED 4.0f
+#define UNIT_MASS_CHARGING 2.5f
+#define UNIT_MASS_ROUTING 0.5f
+#define RANGE_HYSTERESIS 1.25f
+#define ENGAGED_APPROACH 0.6f
+#define ENGAGED_STOP_FRACTION 0.9f
+#define BATTALION_REACH 900.0f
+
+#define DISTANCE 36.0f // DISTANCE_BETWEEN_GENERAL_AND_BATTALION_CENTROID
+#define UNIT_WIDTH 24.0f
+#define UNIT_HEIGHT 24.0f
+#define PADDING_X 20.0f
+#define PADDING_Y 16.0f
+#define CATCH_UP 1.5f // a unit moves at most battalion speed * CATCH_UP per tick, so it can catch up with its slot
+#define MIN_DIST 32.0f
+#define ENEMY_MIN_DIST 26.0f
+#define PASSES 6
+
 // private prototypes
 static void unit_dynamic_table_init(
     Unit *unit,
@@ -52,6 +72,8 @@ static void move_units_by_vec(Table *tables, unsigned int unit_count, unsigned i
 static void update_alpha(Table *tables, unsigned int unit_count, unsigned int battalion_size, float dt);
 //static float wrap_direction(float dir);
 static void search_enemy_battalion(float fx, float fy, const Table *tables, unsigned int battalion_size, unsigned int battalion_idx, float *best_dist, enum TargetType *best_type, unsigned int *best_idx);
+static float unit_mass(const UnitDynamicTable *units, const BattalionStaticTable *battalion_static, const BattalionDynamicTable *battalion_dynamic, unsigned int i, unsigned int battalion_size);
+static void resolve_collisions_with_enemy(Table *tables, unsigned int battalion_count, unsigned int battalion_size, float min_dist, unsigned int passes);
 
 static void *unit_table_start_address_alloc = NULL;
 
@@ -185,6 +207,7 @@ void unit_table_update(Table *tables, const Map *map, unsigned int battalion_cou
                 float fx = unit_tables->friendly_dynamic.x[friendly_idx];
                 float fy = unit_tables->friendly_dynamic.y[friendly_idx];
                 float range = battalion_tables->friendly_static.range[battalion_idx];
+                if (unit_tables->friendly_dynamic.is_target_in_range[friendly_idx]) range *= RANGE_HYSTERESIS;
                 unit_tables->friendly_dynamic.is_target_in_range[friendly_idx] = is_enemy_in_range(fx, fy, range, tx, ty);
 
             }
@@ -448,15 +471,6 @@ static void update_alpha(Table *tables, unsigned int unit_count, unsigned int ba
 
 static void update_position(Table *tables, const Map *map, unsigned int battalion_count, unsigned int battalion_size, unsigned int unit_count, enum ArmyBattlefieldSide side) {
 
-    #define DISTANCE 36.0f // DISTANCE_BETWEEN_GENERAL_AND_BATTALION_CENTROID
-    #define UNIT_WIDTH 24.0f
-    #define UNIT_HEIGHT 24.0f
-    #define PADDING_X 12.0f
-    #define PADDING_Y 8.0f
-    #define CATCH_UP 1.5f // a unit moves at most battalion speed * CATCH_UP per tick, so it can catch up with its slot
-    #define MIN_DIST 22.0f
-    #define PASSES 4
-
     float *x = tables->unit_tables.friendly_dynamic.x;
     float *y = tables->unit_tables.friendly_dynamic.y;
     float *vec_x = tables->unit_tables.friendly_dynamic.vec_x;
@@ -468,29 +482,23 @@ static void update_position(Table *tables, const Map *map, unsigned int battalio
         vec_y[i] = 0.0f;
     }
 
-    if(1)formation_update(tables,
+    formation_update(tables,
                 battalion_count, unit_count, battalion_size,
                 UNIT_WIDTH, UNIT_HEIGHT, PADDING_X, PADDING_Y,
                 DISTANCE, CATCH_UP);
-    if(1)steer_headless_units(
+    steer_headless_units(
         tables, battalion_count, unit_count, battalion_size,
         UNIT_WIDTH, UNIT_HEIGHT, PADDING_X, PADDING_Y, CATCH_UP);
-    if(1)get_close_to_engaged_target(tables, unit_count, battalion_size, CATCH_UP);
+    get_close_to_engaged_target(tables, unit_count, battalion_size, CATCH_UP);
 
-    if(1)routing_units(tables, unit_count, battalion_size, side);
+    routing_units(tables, unit_count, battalion_size, side);
 
-    if(1)move_units_by_vec(tables, unit_count, battalion_size, CATCH_UP);
+    move_units_by_vec(tables, unit_count, battalion_size, CATCH_UP);
 
-    float *enemy_x = tables->unit_tables.enemy_dynamic.x;
-    float *enemy_y = tables->unit_tables.enemy_dynamic.y;
-    const _Bool *enemy_is_present = tables->unit_tables.enemy_dynamic.is_present;
-    if(1)resolve_collisions(x, y, is_present, unit_count, MIN_DIST, PASSES);
-    if(1)resolve_collisions_between(
-        x, y, is_present, unit_count,
-        enemy_x, enemy_y, enemy_is_present, unit_count,
-        MIN_DIST, PASSES);
+    resolve_collisions(x, y, is_present, unit_count, MIN_DIST, PASSES);
+    resolve_collisions_with_enemy(tables, battalion_count, battalion_size, ENEMY_MIN_DIST, PASSES);
 
-    if(1)apply_map_bounds(tables, map, unit_count, battalion_size, UNIT_WIDTH, UNIT_HEIGHT);
+    apply_map_bounds(tables, map, unit_count, battalion_size, UNIT_WIDTH, UNIT_HEIGHT);
 
     #undef DISTANCE
     #undef UNIT_WIDTH
@@ -538,8 +546,8 @@ static void get_close_to_engaged_target(Table *tables, unsigned int unit_count, 
     for (unsigned int i = 0; i < unit_count; i++) {
 
         if (!tables->unit_tables.friendly_dynamic.is_present[i]) continue;
-        if (!is_unit_going_for_target(tables, i, battalion_size)) continue; // holding / walking: stays in its slot
-        if (tables->unit_tables.friendly_dynamic.is_target_in_range[i]) continue; // in range: hold, vec stays 0
+        if (!is_unit_going_for_target(tables, i, battalion_size)) continue;
+        if (tables->unit_tables.friendly_dynamic.is_target_in_range[i]) continue;
 
         float x = tables->unit_tables.friendly_dynamic.x[i];
         float y = tables->unit_tables.friendly_dynamic.y[i];
@@ -557,13 +565,95 @@ static void get_close_to_engaged_target(Table *tables, unsigned int unit_count, 
 
         const float dx = target_x - x;
         const float dy = target_y - y;
-        const float dist = dx * dx + dy * dy;
+        const float len = sqrtf(dx * dx + dy * dy);
+        if (len < 0.0001f) continue;
 
-        const float len = sqrtf(dist);
-        const float max_step = tables->battalion_tables.friendly_dynamic.speed[i / battalion_size] * catch_up;
-        if (len > max_step) {
-            tables->unit_tables.friendly_dynamic.vec_x[i] += dx * (max_step / len);
-            tables->unit_tables.friendly_dynamic.vec_y[i] += dy * (max_step / len);
+        const unsigned int b = i / battalion_size;
+        const float range = tables->battalion_tables.friendly_static.range[b];
+        const _Bool is_charging = tables->unit_tables.friendly_dynamic.is_charging[i];
+        const float speed = tables->battalion_tables.friendly_dynamic.speed[b];
+        float step = len - range * ENGAGED_STOP_FRACTION;
+        const float max_step = speed * (is_charging ? catch_up : ENGAGED_APPROACH);
+        if (step <= 0.0f) continue;
+        if (step > max_step) step = max_step;
+
+        tables->unit_tables.friendly_dynamic.vec_x[i] += dx / len * step;
+        tables->unit_tables.friendly_dynamic.vec_y[i] += dy / len * step;
+
+    }
+
+}
+
+static float unit_mass(const UnitDynamicTable *units, const BattalionStaticTable *battalion_static, const BattalionDynamicTable *battalion_dynamic, unsigned int i, unsigned int battalion_size) {
+
+    const unsigned int b = i / battalion_size;
+    float mass = battalion_static->is_large[b] ? UNIT_MASS_LARGE : UNIT_MASS_BASE;
+
+    if (battalion_dynamic->lifecycle_state[b] == ROUTING) return mass * UNIT_MASS_ROUTING;
+    if (units->is_charging[i]) return mass * UNIT_MASS_CHARGING;
+    if (units->is_engaged[i] && units->is_target_in_range[i]) return mass * UNIT_MASS_ANCHORED;
+
+    return mass;
+
+}
+
+static void resolve_collisions_with_enemy(Table *tables, unsigned int battalion_count, unsigned int battalion_size, float min_dist, unsigned int passes) {
+
+    UnitDynamicTable *own = &tables->unit_tables.friendly_dynamic;
+    const UnitDynamicTable *enemy = &tables->unit_tables.enemy_dynamic;
+    const BattalionStaticTable *own_static = &tables->battalion_tables.friendly_static;
+    const BattalionDynamicTable *own_dynamic = &tables->battalion_tables.friendly_dynamic;
+    const BattalionStaticTable *enemy_static = &tables->battalion_tables.enemy_static;
+    const BattalionDynamicTable *enemy_dynamic = &tables->battalion_tables.enemy_dynamic;
+    const float reach2 = BATTALION_REACH * BATTALION_REACH;
+    const float min_dist2 = min_dist * min_dist;
+
+    for (unsigned int pass = 0; pass < passes; pass++) {
+
+        for (unsigned int ob = 0; ob < battalion_count; ob++) {
+
+            for (unsigned int eb = 0; eb < battalion_count; eb++) {
+
+                const float bdx = enemy_dynamic->x[eb] - own_dynamic->x[ob];
+                const float bdy = enemy_dynamic->y[eb] - own_dynamic->y[ob];
+                if (bdx * bdx + bdy * bdy > reach2) continue;
+
+                for (unsigned int k = 0; k < battalion_size; k++) {
+
+                    const unsigned int i = ob * battalion_size + k;
+                    if (!own->is_present[i]) continue;
+
+                    const float own_mass = unit_mass(own, own_static, own_dynamic, i, battalion_size);
+
+                    for (unsigned int m = 0; m < battalion_size; m++) {
+
+                        const unsigned int j = eb * battalion_size + m;
+                        if (!enemy->is_present[j]) continue;
+
+                        float dx = own->x[i] - enemy->x[j];
+                        float dy = own->y[i] - enemy->y[j];
+                        const float d2 = dx * dx + dy * dy;
+                        if (d2 >= min_dist2) continue;
+
+                        float d = sqrtf(d2);
+                        if (d < 0.0001f) {
+                            dx = (i & 1) ? 1.0f : -1.0f;
+                            dy = 0.0f;
+                            d = 1.0f;
+                        }
+
+                        const float enemy_mass = unit_mass(enemy, enemy_static, enemy_dynamic, j, battalion_size);
+                        const float push = (min_dist - d) * (enemy_mass / (own_mass + enemy_mass));
+
+                        own->x[i] += dx / d * push;
+                        own->y[i] += dy / d * push;
+
+                    }
+
+                }
+
+            }
+
         }
 
     }

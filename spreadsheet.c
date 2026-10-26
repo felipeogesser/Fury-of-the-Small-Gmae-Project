@@ -47,8 +47,8 @@ const Spreadsheet spreadsheet = {
             .armor = 45,
             .attack_speed = 1,
 
-            .formation_x = 2,
-            .formation_y = 25,
+            .formation_x = 5,
+            .formation_y = 10,
 
             .is_shielded = 0,
             .is_ranged = 0,

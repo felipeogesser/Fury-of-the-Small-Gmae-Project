@@ -15,6 +15,7 @@
 #define TURN_RATE 0.02f
 #define FACING_MIN_STEP_FRACTION 0.3f
 #define SLOT_DEADBAND 3.0f
+#define FIGHTING_HOLD_RADIUS 48.0f
 
 // private prototypes
 static float wrap_direction(float dir);
@@ -55,6 +56,7 @@ void formation_update(Table *tables,
     float *unit_vx = tables->unit_tables.friendly_dynamic.vec_x;
     float *unit_vy = tables->unit_tables.friendly_dynamic.vec_y;
     //enum Direction *general_direction = tables->general_tables.friendly_dynamic.direction;
+    const enum BattalionMovementMode *movement_state = tables->battalion_tables.friendly_dynamic.movement_state;
 
     const _Bool *is_unit_present = tables->unit_tables.friendly_dynamic.is_present;
     const _Bool *is_headless = tables->battalion_tables.friendly_dynamic.is_headless;
@@ -129,6 +131,16 @@ void formation_update(Table *tables,
             formation_slot(slot, to_place, files, center_x, center_y,
                            forward_x, forward_y, step_depth, step_side,
                            &slot_x, &slot_y);
+
+            if (movement_state[b] == FIGHTING) {
+                float hold_dx = slot_x - unit_x[idx];
+                float hold_dy = slot_y - unit_y[idx];
+                if (hold_dx * hold_dx + hold_dy * hold_dy < FIGHTING_HOLD_RADIUS * FIGHTING_HOLD_RADIUS) {
+                    steer_separation(unit_x, unit_y, is_unit_present, idx, battalion_size, unit_count,
+                                     sep_radius, &unit_vx[idx], &unit_vy[idx]);
+                    continue;
+                }
+            }
 
             steer_arrive(unit_x[idx], unit_y[idx], slot_x, slot_y, max_step,
                          &unit_vx[idx], &unit_vy[idx]);
