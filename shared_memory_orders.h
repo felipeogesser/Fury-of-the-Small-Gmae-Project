@@ -1,9 +1,9 @@
 #ifndef SHARED_MEMORY_ORDERS_H
 #define SHARED_MEMORY_ORDERS_H
 
-#include <stdint.h>
-
 #include "table_types.h"
+#include "maps_types.h"
+#include <stdint.h>
 
 #define MAX_BATTALIONS 20
 
@@ -28,6 +28,6 @@ typedef struct OrderBuffer {
 _Static_assert(sizeof(OrderBufferArmy) == 5 * 4 * MAX_BATTALIONS, "OrderBufferArmy size changed");
 _Static_assert(sizeof(OrderBuffer) == 2 * 5 * 4 * MAX_BATTALIONS, "OrderBuffer size changed");
 
-void order_buffer_apply(const OrderBufferArmy *orders, Table *tables, unsigned int battalion_count);
+void order_buffer_apply(const OrderBufferArmy *orders, Table *tables, unsigned int battalion_count, const Map *map);
 
 #endif

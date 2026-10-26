@@ -21,6 +21,7 @@ void init(_Bool is_ai_bypass_disabled) {
     game_clock_init();
     srand((unsigned int)time(NULL));
     memory_arena_init();
+    engine_cleanup_install();
     data_baking();
     PythonProcessConfig python_config = {
         .python_path = "python3",

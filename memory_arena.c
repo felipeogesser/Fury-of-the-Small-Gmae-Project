@@ -82,13 +82,17 @@ void memory_arena_unlink_name(void) {
 
 void memory_arena_free(void) {
 
+    if (arena.base == NULL) return;
+
     memset(arena.base, 0, arena.capacity);
 
     if (munmap(arena.base, arena.capacity) != 0) {
         perror("munmap");
         fprintf(stderr, "memory arena freeing failed\n");
-        exit(EXIT_FAILURE);
     }
+
+    arena.base = NULL;
+    arena.current = NULL;
 
     memory_arena_unlink_name();
 

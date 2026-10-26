@@ -1,4 +1,5 @@
 #include "shared_memory_control.h"
+#include "maps_internal.h"
 #include "memory_arena.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -176,5 +177,28 @@ void shared_memory_control_shutdown(SharedMemoryControl *control) {
 _Bool shared_memory_control_python_shutdown_requested(const SharedMemoryControl *control) {
 
     return signal_load(&control->py_shutdown) != 0;
+
+}
+
+void shared_memory_control_set_map(SharedMemoryControl *control, const Map *map) {
+
+    SharedMemoryMapInfo *info = &control->map_info;
+
+    info->left = (float)map->mapLeftLimit;
+    info->top = (float)map->mapTopLimit;
+    info->right = (float)map->mapRightLimit;
+    info->bottom = (float)map->mapBottomLimit;
+    info->width = (float)map->mapSizeX;
+    info->height = (float)map->mapSizeY;
+
+}
+
+void shared_memory_control_set_timing(SharedMemoryControl *control, float tick_dt, uint32_t ticks_per_decision, uint64_t max_ticks) {
+
+    SharedMemoryTimingInfo *info = &control->timing_info;
+
+    info->tick_dt = tick_dt;
+    info->ticks_per_decision = ticks_per_decision;
+    info->max_ticks = max_ticks;
 
 }

@@ -2,6 +2,18 @@
 #include "battalion_table_internal.h"
 #include "memory_arena.h"
 
+_Static_assert(sizeof(_Bool) == 1, "_Bool must be 1 byte");
+_Static_assert(sizeof(unsigned char) == 1, "unsigned char must be 1 byte");
+_Static_assert(sizeof(unsigned int) == 4, "unsigned int must be 4 bytes");
+_Static_assert(sizeof(float) == 4, "float must be 4 bytes");
+_Static_assert(sizeof(enum BattalionType) == 4, "enum BattalionType must be 4 bytes");
+_Static_assert(sizeof(enum HeadlessMovementMode) == 4, "enum HeadlessMovementMode must be 4 bytes");
+_Static_assert(sizeof(enum FatigueState) == 4, "enum FatigueState must be 4 bytes");
+_Static_assert(sizeof(enum MoraleState) == 4, "enum MoraleState must be 4 bytes");
+_Static_assert(sizeof(enum BattalionLifecycle) == 4, "enum BattalionLifecycle must be 4 bytes");
+_Static_assert(sizeof(enum BattalionMovementMode) == 4, "enum BattalionMovementMode must be 4 bytes");
+_Static_assert(sizeof(enum BattalionMovementPace) == 4, "enum BattalionMovementPace must be 4 bytes");
+
 #define SPAN(base, table, field, count) \
     ((Span){ \
         (uint64_t)((const char *)(table)->field - (const char *)(base)), \
