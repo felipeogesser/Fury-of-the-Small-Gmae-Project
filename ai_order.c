@@ -1,5 +1,6 @@
 #include "ai_order.h"
 #include "ai_order_internal.h"
+#include "battalion_types.h"
 #include "field_entry.h"
 #include "field_entry_internal.h"
 #include "memory_arena.h"
