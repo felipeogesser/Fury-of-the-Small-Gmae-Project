@@ -51,6 +51,7 @@ static void routing_units(Table *tables, unsigned int unit_count, unsigned int b
 static void move_units_by_vec(Table *tables, unsigned int unit_count, unsigned int battalion_size, float catch_up);
 static void update_alpha(Table *tables, unsigned int unit_count, unsigned int battalion_size, float dt);
 //static float wrap_direction(float dir);
+static void search_enemy_battalion(float fx, float fy, const Table *tables, unsigned int battalion_size, unsigned int battalion_idx, float *best_dist, enum TargetType *best_type, unsigned int *best_idx);
 
 static void *unit_table_start_address_alloc = NULL;
 
@@ -654,73 +655,80 @@ static float wrap_direction(float dir) {
 */
 static _Bool try_engage_enemy(float fx, float fy, enum TargetType *target_type, unsigned int *target_idx, Table *tables, unsigned int battalion_count, unsigned int battalion_size, unsigned int engaged_battalion_idx) {
 
-    #define MEELE_SEARCH_RANGE 200
+    #define MEELE_SEARCH_RANGE 200.0f
+    #define BATTALION_SPREAD 400.0f
 
-    _Bool found_enemy = false;
-    enum TargetType type = UNKNOWN_TARGET;
-    unsigned int target = -1U;
-    float smallest_dist_recorded = MEELE_SEARCH_RANGE * MEELE_SEARCH_RANGE;
+    float best_dist = MEELE_SEARCH_RANGE * MEELE_SEARCH_RANGE;
+    enum TargetType best_type = UNKNOWN_TARGET;
+    unsigned int best_idx = -1U;
 
-    for (unsigned int i = 0; i < battalion_size; i++) {
+    if (engaged_battalion_idx < battalion_count && tables->battalion_tables.enemy_dynamic.is_present[engaged_battalion_idx]) {
+        search_enemy_battalion(fx, fy, tables, battalion_size, engaged_battalion_idx, &best_dist, &best_type, &best_idx);
+    }
 
-        unsigned int idx = engaged_battalion_idx * battalion_size + i;
+    if (best_type == UNKNOWN_TARGET) {
 
-        _Bool is_present = tables->unit_tables.enemy_dynamic.is_present[idx];
-        if (!is_present) continue;
+        const float reach = MEELE_SEARCH_RANGE + BATTALION_SPREAD;
 
-        float tx = tables->unit_tables.enemy_dynamic.x[idx];
-        float ty = tables->unit_tables.enemy_dynamic.y[idx];
+        for (unsigned int b = 0; b < battalion_count; b++) {
 
+            if (b == engaged_battalion_idx) continue;
+            if (!tables->battalion_tables.enemy_dynamic.is_present[b]) continue;
+
+            const float dx = tables->battalion_tables.enemy_dynamic.x[b] - fx;
+            const float dy = tables->battalion_tables.enemy_dynamic.y[b] - fy;
+            if (dx * dx + dy * dy > reach * reach) continue;
+
+            search_enemy_battalion(fx, fy, tables, battalion_size, b, &best_dist, &best_type, &best_idx);
+
+        }
+
+    }
+
+    *target_type = best_type;
+    *target_idx = best_idx;
+
+    #undef MEELE_SEARCH_RANGE
+    #undef BATTALION_SPREAD
+
+    return best_type != UNKNOWN_TARGET;
+
+}
+
+static void search_enemy_battalion(float fx, float fy, const Table *tables, unsigned int battalion_size, unsigned int battalion_idx, float *best_dist, enum TargetType *best_type, unsigned int *best_idx) {
+
+    for (unsigned int k = 0; k < battalion_size; k++) {
+
+        const unsigned int idx = battalion_idx * battalion_size + k;
+        if (!tables->unit_tables.enemy_dynamic.is_present[idx]) continue;
+
+        const float tx = tables->unit_tables.enemy_dynamic.x[idx];
+        const float ty = tables->unit_tables.enemy_dynamic.y[idx];
         if (tx == 0 || ty == 0) continue;
-        float dx = tx - fx;
-        float dy = ty - fy;
-        float dist2 = dx * dx + dy * dy;
-        if (dist2 <= smallest_dist_recorded) {
 
-            found_enemy = true;
-            smallest_dist_recorded = dist2;
-            target = idx;
-            type = TARGET_UNIT;
-
+        const float dx = tx - fx;
+        const float dy = ty - fy;
+        const float dist = dx * dx + dy * dy;
+        if (dist <= *best_dist) {
+            *best_dist = dist;
+            *best_type = TARGET_UNIT;
+            *best_idx = idx;
         }
 
     }
 
-    for (unsigned int i = 0; i < battalion_count; i++) {
+    if (tables->general_tables.enemy_dynamic.is_present[battalion_idx]) {
 
-        _Bool is_present = tables->general_tables.enemy_dynamic.is_present[i];
-        if (!is_present) continue;
-
-        float tx = tables->general_tables.enemy_dynamic.x[i];
-        float ty = tables->general_tables.enemy_dynamic.y[i];
-
-        float dx = tx - fx;
-        float dy = ty - fy;
-        float dist2 = dx * dx + dy * dy;
-        if (dist2 <= smallest_dist_recorded) {
-
-            smallest_dist_recorded = dist2;
-            target = i;
-            type = TARGET_GENERAL;
-
+        const float dx = tables->general_tables.enemy_dynamic.x[battalion_idx] - fx;
+        const float dy = tables->general_tables.enemy_dynamic.y[battalion_idx] - fy;
+        const float dist = dx * dx + dy * dy;
+        if (dist <= *best_dist) {
+            *best_dist = dist;
+            *best_type = TARGET_GENERAL;
+            *best_idx = battalion_idx;
         }
 
     }
-
-    *target_idx = target;
-
-    if (found_enemy) {
-        
-        *target_type = type;
-        return true;
-
-    } else {
-
-        *target_type = UNKNOWN_TARGET;
-
-    }
-
-    return false;
 
 }
 
