@@ -1,5 +1,6 @@
 #include "baking.h"
 #include "engine_internal.h"
+#include "memory_arena.h"
 #include "shared_memory_control.h"
 #include "sprites.h"
 

@@ -44,11 +44,17 @@
 #include "spreadsheet_types.h"
 #include "unit_table.h"
 
+#include "baking.h"
+#include "shared_memory_control.h"
+#include "shared_memory_orders.h"
+#include "battle_outcome.h"
+#include "battle_step.h"
+
 // private prototypes
 static Armies *load_armies_onto_battlefield(GeneralPayload **general_payload, unsigned int armies_count, unsigned int battalion_size);
 //static void render_generals(void);
 //static void render_units(void);
-static _Bool is_battle_over(Table *player_tables, Table *enemy_tables, unsigned int battalion_count);
+//static _Bool is_battle_over(Table *player_tables, Table *enemy_tables, unsigned int battalion_count);
 static void update_balance_of_power(Table *player_tables, Table *enemy_tables, unsigned int battalion_count, signed int *balance_of_power);
 
 _Bool show_quads = false;
@@ -101,7 +107,14 @@ void battlefield_init(void) {
     general_table_init(&battlefield.player_tables, &battlefield.enemy_tables, player_general, enemy_general, battalion_count);
     unit_table_init(&battlefield.player_tables, &battlefield.enemy_tables, player_unit, enemy_unit, battalion_count, battalion_size);
 
+    battlefield.tick = 0;
 
+    set_table_shared_memory_span(battalion_table_span_base_ptr, &battlefield.player_tables, battalion_count);
+    shared_memory_control_set_map(shared_memory_control_base_ptr, engine.map);
+    shared_memory_control_set_timing(shared_memory_control_base_ptr, BATTLE_TICK_DT, BATTLE_TICKS_PER_DECISION, BATTLE_MAX_TICKS);
+    battle_step_reset();
+    shared_memory_control_begin_battle(shared_memory_control_base_ptr, battalion_count);
+    
     mailbag_letters_destroy(&mailbag);
 
     //calculateAmountOfQuadrants();
@@ -141,6 +154,24 @@ void battlefield_input(SDL_Event *e) {
         battlefield.player_tables.battalion_order.type[2] = ORDER_ATTACK;
         battlefield.player_tables.battalion_order.type[3] = ORDER_ATTACK;
         battlefield.player_tables.battalion_order.type[4] = ORDER_ATTACK;
+
+        battlefield.enemy_tables.battalion_order.target[0] = 0;
+        battlefield.enemy_tables.battalion_order.target[1] = 1;
+        battlefield.enemy_tables.battalion_order.target[2] = 2;
+        battlefield.enemy_tables.battalion_order.target[3] = 3;
+        battlefield.enemy_tables.battalion_order.target[4] = 4;
+
+        battlefield.enemy_tables.battalion_order.pace[0] = PACE_RUN;
+        battlefield.enemy_tables.battalion_order.pace[1] = PACE_RUN;
+        battlefield.enemy_tables.battalion_order.pace[2] = PACE_RUN;
+        battlefield.enemy_tables.battalion_order.pace[3] = PACE_RUN;
+        battlefield.enemy_tables.battalion_order.pace[4] = PACE_RUN;
+    
+        battlefield.enemy_tables.battalion_order.type[0] = ORDER_ATTACK;
+        battlefield.enemy_tables.battalion_order.type[1] = ORDER_ATTACK;
+        battlefield.enemy_tables.battalion_order.type[2] = ORDER_ATTACK;
+        battlefield.enemy_tables.battalion_order.type[3] = ORDER_ATTACK;
+        battlefield.enemy_tables.battalion_order.type[4] = ORDER_ATTACK;
 
     }
     if(0)debug_print_battalions(&battlefield.player_tables, 5, "playr");
@@ -233,9 +264,14 @@ void battlefield_update(float dt) {
 
     }
 
-    if(is_battle_over(player_tables, enemy_tables, battalion_count)) {
+    battlefield.tick++;
 
-        scene_switch(BATTLEPLAN);
+    if (shared_memory_control_episode_result(shared_memory_control_base_ptr) == EPISODE_RUNNING) {
+
+        enum EpisodeResult result = battle_outcome_evaluate(player_tables, enemy_tables, battalion_count, battlefield.tick);
+        if (result != EPISODE_RUNNING) {
+            shared_memory_control_set_episode_result(shared_memory_control_base_ptr, result);
+        }
 
     }
 
@@ -348,9 +384,16 @@ void battlefield_render(void) {
 
 void battlefield_destroy(void) {
 
-    //animation_destroy();
-    //table_destroy();
-    memory_arena_reset();
+    memory_arena_reset_to_address(data_baking_end_pointer());
+    
+}
+
+void battlefield_apply_orders(void) {
+
+    unsigned int battalion_count = battlefield.battalion_count / 2;
+
+    order_buffer_apply(&order_buffer_base_ptr->army[ORDER_BUFFER_PLAYER], &battlefield.player_tables, battalion_count, engine.map);
+    order_buffer_apply(&order_buffer_base_ptr->army[ORDER_BUFFER_ENEMY], &battlefield.enemy_tables, battalion_count, engine.map);
 
 }
 
@@ -371,7 +414,7 @@ static Armies *load_armies_onto_battlefield(GeneralPayload **general_payload, un
 
 }
 
-static _Bool is_battle_over(Table *player_tables, Table *enemy_tables, unsigned int battalion_count) {
+/*static _Bool is_battle_over(Table *player_tables, Table *enemy_tables, unsigned int battalion_count) {
 
     unsigned int player_battalion_not_present_count = 0;
     unsigned int enemy_battalion_not_present_count = 0;
@@ -384,7 +427,7 @@ static _Bool is_battle_over(Table *player_tables, Table *enemy_tables, unsigned 
 
     return ((player_battalion_not_present_count == battalion_count) || (enemy_battalion_not_present_count == battalion_count));
 
-}
+}*/
 
 static void update_balance_of_power(Table *player_tables, Table *enemy_tables, unsigned int battalion_count, signed int *balance_of_power) {
 

@@ -4,6 +4,7 @@
 #include "battlefield_types.h"
 #include "battleplan_battlefield_handoff.h"
 #include "table_internal.h"
+#include <stdint.h>
 
 typedef struct Battlefield {
 
@@ -13,6 +14,7 @@ typedef struct Battlefield {
     unsigned int battalion_count;
     unsigned int battalion_size;
     signed int balance_of_power; // range -10..10
+    uint64_t tick;
 
 } Battlefield;
 

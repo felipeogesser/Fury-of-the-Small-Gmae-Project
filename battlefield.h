@@ -13,4 +13,6 @@ void battlefield_render(void);
 
 void battlefield_destroy(void);
 
+void battlefield_apply_orders(void);
+
 #endif

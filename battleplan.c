@@ -3,6 +3,7 @@
 #include "battleplan_battlefield_handoff.h"
 #include "animation.h"
 #include "animation_internal.h"
+#include "baking.h"
 #include "contract.h"
 #include "contract_types.h"
 #include "deployment_loader.h"
@@ -76,7 +77,7 @@ static _Bool grid_is_empty(void);
 static _Bool grids_has_same_general_count(void);
 static Position battleplan_calculate_general_position(General *general, unsigned int x, unsigned int y, _Bool is_enemy_army);
 static void send_battleplan_placement_to_battlefield(GeneralPayload *general_payload);
-
+static void start_battle(void);
 
 static Battleplan battleplan = {0};
 
@@ -105,6 +106,7 @@ static _Bool try_once = true;
 static _Bool general_placement_valid = false;
 static _Bool button_main_menu_clicked = false;
 static _Bool button_init_battle_clicked = false;
+static _Bool auto_start_battle_pending = false;
 
 static unsigned int mouse_left_button_holding_down_counter = 0;
 
@@ -215,6 +217,28 @@ void battleplan_init(void) {
     battleplan.button_init_battle.a = 255;
     battleplan.button_init_battle.text = "Init battle";
 
+    if (!engine.has_program_been_initialized_with_ai_bypass) {
+
+        clear_payload(&drag_payload);
+        battleplan.player_inventory_general = inventory_init();
+        set_drawer_slot_generals_index(battleplan.player_inventory_general);
+
+        load_generals_from_csv_deployment_layout_to_enemy_board(&battleplan, "tutorial.csv");
+
+        set_minimal_general_sprite_and_animation_data(battleplan.player_inventory_general, engine.inventory->general_count);
+        set_minimal_general_sprite_and_animation_data(battleplan.stage_enemy_general, battleplan.enemy_board.general_count);
+
+    } else {
+
+        load_generals_from_csv_deployment_layout_to_player_board(&battleplan, "tutorial.csv");
+        load_generals_from_csv_deployment_layout_to_enemy_board(&battleplan, "tutorial.csv");
+        set_minimal_general_sprite_and_animation_data(battleplan.player_inventory_general, battleplan.player_board.general_count);
+        set_minimal_general_sprite_and_animation_data(battleplan.stage_enemy_general, battleplan.enemy_board.general_count);
+
+        auto_start_battle_pending = true;
+
+    }
+
     if (TTF_Init() == -1) {
         SDL_Log("TTF_Init failed: %s", TTF_GetError());
     }
@@ -240,51 +264,6 @@ void battleplan_init(void) {
     if (!battleplan_message) {
         SDL_Log("SDL_CreateTextureFromSurface failed: %s", SDL_GetError());
         return;
-    }
-
-    if (engine.is_ai_bypass_disabled) {
-        
-        clear_payload(&drag_payload);
-        //player_board_init();
-        //enemy_board_init();
-        battleplan.player_inventory_general = inventory_init(); // needs manual free();
-        set_drawer_slot_generals_index(battleplan.player_inventory_general);
-        
-        load_generals_from_csv_deployment_layout_to_enemy_board(&battleplan, "tutorial.csv");
-
-        set_minimal_general_sprite_and_animation_data(battleplan.player_inventory_general, engine.inventory->general_count);
-        set_minimal_general_sprite_and_animation_data(battleplan.stage_enemy_general, battleplan.enemy_board.general_count);
-    
-    } else {
-    
-        load_generals_from_csv_deployment_layout_to_player_board(&battleplan, "tutorial.csv");
-        load_generals_from_csv_deployment_layout_to_enemy_board(&battleplan, "tutorial.csv");
-        set_minimal_general_sprite_and_animation_data(battleplan.player_inventory_general, battleplan.player_board.general_count);
-        set_minimal_general_sprite_and_animation_data(battleplan.stage_enemy_general, battleplan.enemy_board.general_count);
-    
-        if (grid_is_empty() == false && grids_has_same_general_count() == true) {
-        
-            Padding padding = {
-                .left = 100,
-                .right = 100,
-                .top = 50,
-                .bottom = 50,
-                .in_between_armies = 1000
-            };
-            unsigned int dimension_x = GRID_DIMENSION_X;
-            unsigned int dimension_y = GRID_DIMENSION_Y;
-            unsigned int map_size_x = padding.left + 48 * 10 * dimension_x * 2 + padding.right;
-            unsigned int map_size_y = padding.top + 48 * 10 * dimension_y + padding.bottom;
-            engine.map = map_init(map_size_x, map_size_y, &padding);
-
-            GeneralPayload *general_payload = save_battleplan_placement(battleplan.player_board.grid, battleplan.player_board.general_count, false);
-            GeneralPayload *enemy_general_payload = save_battleplan_placement(battleplan.enemy_board.grid, battleplan.enemy_board.general_count, true);
-            send_battleplan_placement_to_battlefield(general_payload);
-            send_battleplan_placement_to_battlefield(enemy_general_payload);
-
-            scene_switch(BATTLEFIELD);
-        
-        }
     }
 
 }
@@ -316,6 +295,38 @@ void battleplan_input(SDL_Event *e) {
 
 void battleplan_update(float dt) {
 
+    if (auto_start_battle_pending) {
+
+        auto_start_battle_pending = false;
+
+        if (grid_is_empty() == false && grids_has_same_general_count() == true) {
+            start_battle();
+            return;
+        }
+
+        fprintf(stderr, "training deployment layout is invalid\n");
+        exit(EXIT_FAILURE);
+
+    }
+
+    if (button_main_menu_clicked) {
+
+        scene_switch(MAIN_MENU);
+        return;
+
+    }
+
+    if (button_init_battle_clicked) {
+
+        button_init_battle_clicked = false;
+
+        if (grid_is_empty() == false && grids_has_same_general_count() == true) {
+            start_battle();
+            return;
+        }
+
+    }
+
     if (button_main_menu_clicked) {
         
         scene_switch(MAIN_MENU);
@@ -327,7 +338,8 @@ void battleplan_update(float dt) {
         button_init_battle_clicked = false;
         if (grid_is_empty() == false && grids_has_same_general_count() == true) {
         
-            Padding padding = {
+            start_battle();
+            /*Padding padding = {
                 .left = 100,
                 .right = 100,
                 .top = 50,
@@ -345,7 +357,7 @@ void battleplan_update(float dt) {
             send_battleplan_placement_to_battlefield(general_payload);
             send_battleplan_placement_to_battlefield(enemy_general_payload);
 
-            scene_switch(BATTLEFIELD);
+            scene_switch(BATTLEFIELD);*/
 
             return;
         
@@ -480,7 +492,7 @@ void battleplan_destroy(void) {
 
     }
 
-    memory_arena_reset();
+    memory_arena_reset_to_address(data_baking_end_pointer());
 
 }
 
@@ -500,7 +512,8 @@ static void booleans_init(void) {
     general_placement_valid = false;
     button_main_menu_clicked = false;
     button_init_battle_clicked = false;
-
+    auto_start_battle_pending = false;
+    
 }
 
 static void variables_init(void) {
@@ -518,6 +531,30 @@ static void variables_init(void) {
     for (unsigned int i = 0; i < 10; i++) {
         drawer_slot[i] = empty_drawer_slot;
     }
+
+}
+
+static void start_battle(void) {
+
+    Padding padding = {
+        .left = 100,
+        .right = 100,
+        .top = 50,
+        .bottom = 50,
+        .in_between_armies = 1000
+    };
+    unsigned int dimension_x = GRID_DIMENSION_X;
+    unsigned int dimension_y = GRID_DIMENSION_Y;
+    unsigned int map_size_x = padding.left + 48 * 10 * dimension_x * 2 + padding.right;
+    unsigned int map_size_y = padding.top + 48 * 10 * dimension_y + padding.bottom;
+    engine.map = map_init(map_size_x, map_size_y, &padding);
+
+    GeneralPayload *general_payload = save_battleplan_placement(battleplan.player_board.grid, battleplan.player_board.general_count, false);
+    GeneralPayload *enemy_general_payload = save_battleplan_placement(battleplan.enemy_board.grid, battleplan.enemy_board.general_count, true);
+    send_battleplan_placement_to_battlefield(general_payload);
+    send_battleplan_placement_to_battlefield(enemy_general_payload);
+
+    scene_switch(BATTLEFIELD);
 
 }
 
