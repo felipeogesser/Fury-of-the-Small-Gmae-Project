@@ -673,6 +673,8 @@ static void resolve_attack(Table *tables, unsigned int i, unsigned int battalion
     damage *= (is_target_large) ? 1.5f : 1.0f;
     target_armor = (is_armor_piercing) ? target_armor / 2 : target_armor;
     damage = apply_armor(damage, target_armor);
+    _Bool is_anti_large = tables->general_tables.friendly_static.is_anti_large[i];
+    damage *= (is_target_large && is_anti_large) ? 1.5f : 1.0f;
     float chance = hit_chance(meele_attack, target_meele_defense);
     _Bool hit = roll_hit(chance);
 
