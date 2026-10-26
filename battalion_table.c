@@ -48,10 +48,10 @@ static void allocate_mock_soa_memory(
     //BattalionStaticTableDiff *mock_friendly_static_table_diff,
     //BattalionStaticTableDiff *mock_enemy_static_table_diff,
     BattalionDynamicTable *mock_friendly_dynamic_table,
-    BattalionDynamicTable *mock_enemy_dynamic_table
+    BattalionDynamicTable *mock_enemy_dynamic_table);
     //BattalionDynamicTableDiff *mock_friendly_dynamic_table_diff,
     //BattalionDynamicTableDiff *mock_enemy_dynamic_table_diff
-);
+//);
 static void allocate_mem_for_mock(unsigned int obj_count, const ComplexFieldEntry *field_table, void *mock);
 static void battalion_static_table_init(
     Battalion *battalion,
@@ -212,10 +212,10 @@ void battalion_table_init(Table *player_tables, Table *enemy_tables, Battalion *
         //&mock_friendly_static_table_diff,
         //&mock_enemy_static_table_diff,
         &mock_friendly_dynamic_table,
-        &mock_enemy_dynamic_table,
+        &mock_enemy_dynamic_table);
         //&mock_friendly_dynamic_table_diff,
         //&mock_enemy_dynamic_table_diff
-    );
+    //);
 
     battalion_static_table_init(player_battalion, &mock_friendly_static_table, battalion_field_table_ptr, battalion_static_table_field_table_ptr, battalion_count);
     battalion_static_table_init(enemy_battalion, &mock_enemy_static_table, battalion_field_table_ptr, battalion_static_table_field_table_ptr, battalion_count);
@@ -641,10 +641,10 @@ static void allocate_mock_soa_memory(
     //BattalionStaticTableDiff *mock_friendly_static_table_diff,
     //BattalionStaticTableDiff *mock_enemy_static_table_diff,
     BattalionDynamicTable *mock_friendly_dynamic_table,
-    BattalionDynamicTable *mock_enemy_dynamic_table,
+    BattalionDynamicTable *mock_enemy_dynamic_table) {
     //BattalionDynamicTableDiff *mock_friendly_dynamic_table_diff,
     //BattalionDynamicTableDiff *mock_enemy_dynamic_table_diff
-    ) {
+    //) {
 
     battalion_table_start_address_alloc = memory_arena_current_pointer();
     allocate_mem_for_mock(obj_count, battalion_static_table_field_table_ptr, mock_friendly_static_table);

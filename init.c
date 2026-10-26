@@ -22,9 +22,9 @@ void init(_Bool is_ai_bypass_disabled) {
     srand((unsigned int)time(NULL));
     memory_arena_init();
     engine_cleanup_install();
-    data_baking();
+    data_baking_shared_memory();
     PythonProcessConfig python_config = {
-        .python_path = "python3",
+        .python_path = ".venv/bin/python",
         .script_path = "python/agent.py",
         .checkpoint_path = "checkpoints/latest.pt",
         .shared_name = memory_arena_shared_name(),
@@ -32,6 +32,7 @@ void init(_Bool is_ai_bypass_disabled) {
     };
     python_process_spawn(&python_config);
     create_window();
+    data_baking_assets();
     init_game_state();
     mailroom_init();
     enum PythonReadyResult ready = python_process_wait_ready(shared_memory_control_base_ptr, 30000);

@@ -2,7 +2,6 @@
 #define SHARED_MEMORY_SPAN_H
 
 #include "battalion_table_span.h"
-#include "ai_order_span.h"
 
 typedef struct SharedMemorySpan {
     BattalionTableSpan battalion;

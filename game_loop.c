@@ -1,5 +1,7 @@
 #include "game_loop.h"
 #include "battle_step.h"
+#include "battlefield.h"
+#include "engine_cleanup.h"
 #include "engine_internal.h"
 #include "game_clock.h"
 #include "game_state_internal.h"
@@ -8,6 +10,7 @@
 #include "scene_handler.h"
 #include "scenes.h"
 #include <stdio.h>
+#include <stdbool.h>
 
 void game_loop(void) {
 

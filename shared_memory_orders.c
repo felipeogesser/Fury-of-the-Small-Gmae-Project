@@ -1,6 +1,7 @@
 #include "shared_memory_orders.h"
 #include "ai_order_internal.h"
 #include "battalion_types.h"
+#include "maps_internal.h"
 #include "table_internal.h"
 #include <math.h>
 #include <stdint.h>

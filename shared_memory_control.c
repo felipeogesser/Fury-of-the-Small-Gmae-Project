@@ -43,7 +43,6 @@ SharedMemoryControl *shared_memory_control_create(void) {
     memset(control, 0, sizeof *control);
 
     control->header.magic = SHARED_MEMORY_MAGIC;
-    control->header.version = SHARED_MEMORY_VERSION;
     control->header.c_pid = (uint64_t)getpid();
     control->header.control_size = sizeof *control;
 

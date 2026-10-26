@@ -1,6 +1,6 @@
 #include "game_shutdown.h"
-#include "engine.h"
-#include "scenes.h"
+#include "engine_cleanup.h"
+#include "scene_handler.h"
 #include "window.h"
 
 void game_shutdown(void) {

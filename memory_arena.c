@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 struct Arena {
     char *base;
@@ -19,14 +20,15 @@ enum MemoryArenaAllocStatus {
     MEMORY_ARENA_ALLOC_FAILED
 };
 
+// private prototypes
+static enum MemoryArenaAllocStatus memory_arena_alloc(void);
+
 static enum MemoryArenaAllocStatus memory_arena_alloc_status;
-
 static struct Arena arena = {0};
-
 static char shared_name[64] = {0};
 static _Bool shared_name_linked = false;
 
-enum MemoryArenaAllocStatus memory_arena_alloc(void) {
+static enum MemoryArenaAllocStatus memory_arena_alloc(void) {
 
     size_t capacity = (size_t)(104857600ULL);
     arena.capacity = capacity;
@@ -123,7 +125,7 @@ void memory_arena_reset(void) {
 
 void memory_arena_reset_to_address(void *p) {
 
-    memset(p, 0, arena.current);
+    memset(p, 0, arena.current - (char *)p);
     arena.current = (char *)p;
 
 }

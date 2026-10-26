@@ -1,13 +1,13 @@
+#include "engine_cleanup.h"
+#include "memory_arena.h"
+#include "python_process.h"
+#include "shared_memory_control.h"
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
-
-#include "engine_cleanup.h"
-#include "memory_arena.h"
-#include "python_process.h"
-#include "shared_memory_control.h"
+#include <stdbool.h>
 
 static volatile sig_atomic_t termination_signal_count = 0;
 static _Bool cleanup_done = false;
