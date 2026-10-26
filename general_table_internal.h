@@ -55,6 +55,7 @@ typedef struct GeneralDynamicTable {
     float *meele_defense;
     float *strength;
     float *attack_timer;
+    float *facing;
     //_Bool *const is_routing;
     //_Bool *const controllable;
     float *alpha;

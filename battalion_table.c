@@ -486,17 +486,18 @@ static _Bool check_if_battalion_is_active(enum BattalionMovementMode movement_st
     
 }
 
-
 static void speed_update(float base_speed, float *speed, enum FatigueState state, enum BattalionMovementMode movement_state, float dt) {
 
     #define CHARGE_SPEED_MULT 1.3f
+    #define SPEED_SCALE 0.6f
 
-    float per_second = base_speed - (base_speed * 0.1f) * state;
+    float per_second = (base_speed - (base_speed * 0.1f) * state) * SPEED_SCALE;
     if (movement_state == CHARGING) per_second *= CHARGE_SPEED_MULT;
 
     *speed = per_second * dt;
 
     #undef CHARGE_SPEED_MULT
+    #undef SPEED_SCALE
 
 }
 

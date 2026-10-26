@@ -12,6 +12,9 @@
 #define ARRIVE_GAIN        0.15f  /* desired speed per unit of distance to a slot       */
 #define ARRIVE_WEIGHT      0.5f   /* how hard units steer toward slots / targets        */
 #define SEPARATION_WEIGHT  0.6f   /* push strength between units that are too close     */
+#define TURN_RATE 0.02f
+#define FACING_MIN_STEP_FRACTION 0.3f
+#define SLOT_DEADBAND 3.0f
 
 // private prototypes
 static float wrap_direction(float dir);
@@ -39,6 +42,7 @@ static void steer_separation(const float *unit_x, const float *unit_y,
 /*static void integrate_unit(float *x, float *y, float *vx, float *vy,
                     float force_x, float force_y, float max_speed);*/
 static void clamp_length(float *x, float *y, float max);
+static float turn_toward(float current, float desired, float max_turn);
 
 void formation_update(Table *tables,
                 const unsigned int battalion_count, const unsigned int unit_count,
@@ -50,7 +54,7 @@ void formation_update(Table *tables,
     const float *unit_y = tables->unit_tables.friendly_dynamic.y;
     float *unit_vx = tables->unit_tables.friendly_dynamic.vec_x;
     float *unit_vy = tables->unit_tables.friendly_dynamic.vec_y;
-    enum Direction *general_direction = tables->general_tables.friendly_dynamic.direction;
+    //enum Direction *general_direction = tables->general_tables.friendly_dynamic.direction;
 
     const _Bool *is_unit_present = tables->unit_tables.friendly_dynamic.is_present;
     const _Bool *is_headless = tables->battalion_tables.friendly_dynamic.is_headless;
@@ -61,6 +65,7 @@ void formation_update(Table *tables,
     const float *general_y = tables->general_tables.friendly_dynamic.y;
     const float *general_vec_x = tables->general_tables.friendly_dynamic.vec_x;
     const float *general_vec_y = tables->general_tables.friendly_dynamic.vec_y;
+    float *general_facing = tables->general_tables.friendly_dynamic.facing;
 
     float step_depth = unit_h + padding_x;   /* between ranks */
     float step_side  = unit_w + padding_y;   /* between units in a rank */
@@ -78,8 +83,14 @@ void formation_update(Table *tables,
             printf("err\n");
             continue;
         }
-        float direction = direction_from_vec(general_vec_x[b], general_vec_y[b],
-                                     general_direction[b] == LEFT ? 2.0f : 0.0f);
+        //float direction = direction_from_vec(general_vec_x[b], general_vec_y[b],
+        //                             general_direction[b] == LEFT ? 2.0f : 0.0f);
+        float general_step = sqrtf(general_vec_x[b] * general_vec_x[b] + general_vec_y[b] * general_vec_y[b]);
+        if (general_step > speed[b] * FACING_MIN_STEP_FRACTION) {
+            float desired = direction_from_vec(general_vec_x[b], general_vec_y[b], general_facing[b]);
+            general_facing[b] = turn_toward(general_facing[b], desired, TURN_RATE);
+        }
+        float direction = general_facing[b];
         unsigned int to_place = min_uint(count_in_formation(is_unit_present,
                                                             b, battalion_size, unit_count),
                                                             ranks * files);
@@ -226,8 +237,11 @@ static unsigned int count_in_formation(const _Bool *is_unit_present,
 static void steer_arrive(float x, float y,
                   float target_x, float target_y, float max_step,
                   float *vec_x, float *vec_y) {
-    float want_x = (target_x - x) * ARRIVE_GAIN;
-    float want_y = (target_y - y) * ARRIVE_GAIN;
+    float dx = target_x - x;
+    float dy = target_y - y;
+    if (dx * dx + dy * dy < SLOT_DEADBAND * SLOT_DEADBAND) return;
+    float want_x = dx * ARRIVE_GAIN;
+    float want_y = dy * ARRIVE_GAIN;
     clamp_length(&want_x, &want_y, max_step);
     *vec_x += want_x;
     *vec_y += want_y;
@@ -283,4 +297,12 @@ static void clamp_length(float *x, float *y, float max) {
         *x *= k;
         *y *= k;
     }
+}
+
+static float turn_toward(float current, float desired, float max_turn) {
+    float diff = wrap_direction(desired - current);
+    if (diff > DIR_STEPS / 2.0f) diff -= DIR_STEPS;
+    if (diff > max_turn) diff = max_turn;
+    if (diff < -max_turn) diff = -max_turn;
+    return wrap_direction(current + diff);
 }

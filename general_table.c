@@ -102,6 +102,7 @@ static const ComplexFieldEntry general_dynamic_table_field_table[] = {
     { "meele_defense",       OFFSET_OF(GeneralDynamicTable, meele_defense),       ELEMENT_SIZE_OF(GeneralDynamicTable, meele_defense),       FLOAT,  NULL },
     { "strength",            OFFSET_OF(GeneralDynamicTable, strength),            ELEMENT_SIZE_OF(GeneralDynamicTable, strength),            FLOAT,  NULL },
     { "attack_timer",        OFFSET_OF(GeneralDynamicTable, attack_timer),        ELEMENT_SIZE_OF(GeneralDynamicTable, attack_timer),        FLOAT,  NULL },
+    { "facing", OFFSET_OF(GeneralDynamicTable, facing), ELEMENT_SIZE_OF(GeneralDynamicTable, facing), FLOAT, NULL },
     { "alpha",   OFFSET_OF(GeneralDynamicTable, alpha),   ELEMENT_SIZE_OF(GeneralDynamicTable, alpha),   FLOAT, NULL },
     { "is_dead", OFFSET_OF(GeneralDynamicTable, is_dead), ELEMENT_SIZE_OF(GeneralDynamicTable, is_dead), BOOL,  NULL },
     { "is_target_in_range",  OFFSET_OF(GeneralDynamicTable, is_target_in_range),  ELEMENT_SIZE_OF(GeneralDynamicTable, is_target_in_range),  BOOL,   NULL },
@@ -847,7 +848,7 @@ static void general_dynamic_table_init(
         mock_dynamic_table->direction[i] = (side == ARMY_SIDE_LEFT) ? RIGHT : LEFT;
         mock_dynamic_table->is_charging[i] = false;
         mock_dynamic_table->attack_timer[i] = 0.0f;
-
+        mock_dynamic_table->facing[i] = (side == ARMY_SIDE_LEFT) ? 0.0f : 2.0f;
     }
 
 }
