@@ -135,45 +135,6 @@ void battlefield_input(SDL_Event *e) {
     if (e->key.keysym.sym == SDLK_3) update_units_formation = true;
     if (e->key.keysym.sym == SDLK_4) update_battalions_formation = true;*/
 
-    if (e->key.keysym.sym == SDLK_1) {
-
-        battlefield.player_tables.battalion_order.target[0] = 0;
-        battlefield.player_tables.battalion_order.target[1] = 1;
-        battlefield.player_tables.battalion_order.target[2] = 2;
-        battlefield.player_tables.battalion_order.target[3] = 3;
-        battlefield.player_tables.battalion_order.target[4] = 4;
-
-        battlefield.player_tables.battalion_order.pace[0] = PACE_RUN;
-        battlefield.player_tables.battalion_order.pace[1] = PACE_RUN;
-        battlefield.player_tables.battalion_order.pace[2] = PACE_RUN;
-        battlefield.player_tables.battalion_order.pace[3] = PACE_RUN;
-        battlefield.player_tables.battalion_order.pace[4] = PACE_RUN;
-    
-        battlefield.player_tables.battalion_order.type[0] = ORDER_ATTACK;
-        battlefield.player_tables.battalion_order.type[1] = ORDER_ATTACK;
-        battlefield.player_tables.battalion_order.type[2] = ORDER_ATTACK;
-        battlefield.player_tables.battalion_order.type[3] = ORDER_ATTACK;
-        battlefield.player_tables.battalion_order.type[4] = ORDER_ATTACK;
-
-        battlefield.enemy_tables.battalion_order.target[0] = 0;
-        battlefield.enemy_tables.battalion_order.target[1] = 1;
-        battlefield.enemy_tables.battalion_order.target[2] = 2;
-        battlefield.enemy_tables.battalion_order.target[3] = 3;
-        battlefield.enemy_tables.battalion_order.target[4] = 4;
-
-        battlefield.enemy_tables.battalion_order.pace[0] = PACE_RUN;
-        battlefield.enemy_tables.battalion_order.pace[1] = PACE_RUN;
-        battlefield.enemy_tables.battalion_order.pace[2] = PACE_RUN;
-        battlefield.enemy_tables.battalion_order.pace[3] = PACE_RUN;
-        battlefield.enemy_tables.battalion_order.pace[4] = PACE_RUN;
-    
-        battlefield.enemy_tables.battalion_order.type[0] = ORDER_ATTACK;
-        battlefield.enemy_tables.battalion_order.type[1] = ORDER_ATTACK;
-        battlefield.enemy_tables.battalion_order.type[2] = ORDER_ATTACK;
-        battlefield.enemy_tables.battalion_order.type[3] = ORDER_ATTACK;
-        battlefield.enemy_tables.battalion_order.type[4] = ORDER_ATTACK;
-
-    }
     if(0)debug_print_battalions(&battlefield.player_tables, 5, "playr");
 
     Player *player = engine.player;

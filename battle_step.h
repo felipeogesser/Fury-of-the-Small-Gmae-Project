@@ -4,7 +4,7 @@
 #include "shared_memory_control.h"
 
 #define BATTLE_TICK_DT (1.0f / 60.0f)
-#define BATTLE_TICKS_PER_DECISION 1u
+#define BATTLE_TICKS_PER_DECISION 15u
 
 enum BattleStepResult {
     BATTLE_STEP_NEW_ORDERS = 0,
