@@ -49,6 +49,8 @@
 #include "shared_memory_orders.h"
 #include "battle_outcome.h"
 #include "battle_step.h"
+#include "spreadsheet.h"
+#include "sprites_internal.h"
 
 // private prototypes
 static Armies *load_armies_onto_battlefield(GeneralPayload **general_payload, unsigned int armies_count, unsigned int battalion_size);
@@ -56,6 +58,18 @@ static Armies *load_armies_onto_battlefield(GeneralPayload **general_payload, un
 //static void render_units(void);
 //static _Bool is_battle_over(Table *player_tables, Table *enemy_tables, unsigned int battalion_count);
 static void update_balance_of_power(Table *player_tables, Table *enemy_tables, unsigned int battalion_count, signed int *balance_of_power);
+static SDL_Texture *create_army_marker_texture(SDL_Renderer *renderer);
+static void render_army_markers(Table *tables, unsigned int battalion_count, unsigned int battalion_size, Uint8 r, Uint8 g, Uint8 b);
+
+static SDL_Texture *army_marker_texture = NULL;
+static _Bool show_army_markers = false;
+
+#define UNIT_MARKER_W 30
+#define UNIT_MARKER_H 12
+#define GENERAL_MARKER_W 44
+#define GENERAL_MARKER_H 18
+#define MARKER_FOOT_OFFSET 40
+#define MARKER_ALPHA 150
 
 _Bool show_quads = false;
 _Bool update_formation = false;
@@ -117,6 +131,9 @@ void battlefield_init(void) {
     
     mailbag_letters_destroy(&mailbag);
 
+    if (army_marker_texture == NULL) {
+        army_marker_texture = create_army_marker_texture(engine.renderer);
+    }
     //calculateAmountOfQuadrants();
     //init_grids();
     //initialCheckUnitQuadrant(engine.armies, engine.game, engine.battlefield_grid);
@@ -166,6 +183,9 @@ void battlefield_input(SDL_Event *e) {
     }
 
     camera_input(e);
+
+    if (e->type == SDL_KEYDOWN && e->key.keysym.sym == SDLK_a) show_army_markers = true;
+    if (e->type == SDL_KEYUP && e->key.keysym.sym == SDLK_a) show_army_markers = false;
 
 }
 
@@ -262,6 +282,11 @@ void battlefield_render(void) {
     camera_world_to_screen(&player_render);
     SDL_SetRenderDrawColor(renderer, 255, 104, 230, 255);
     SDL_RenderFillRect(renderer, &player_render);
+
+    if (show_army_markers && army_marker_texture != NULL) {
+        render_army_markers(&battlefield.player_tables, battlefield.battalion_count / 2, battlefield.battalion_size, 60, 200, 60);
+        render_army_markers(&battlefield.enemy_tables, battlefield.battalion_count / 2, battlefield.battalion_size, 220, 50, 50);
+    }
 
     unit_table_render(&battlefield.player_tables, battlefield.battalion_count / 2, battlefield.battalion_size);
     unit_table_render(&battlefield.enemy_tables, battlefield.battalion_count / 2, battlefield.battalion_size);
@@ -530,3 +555,117 @@ static void render_units(void) {
     }
 
 }*/
+
+static SDL_Texture *create_army_marker_texture(SDL_Renderer *renderer) {
+
+    const int width = 64;
+    const int height = 32;
+
+    SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, SDL_PIXELFORMAT_RGBA32);
+    if (surface == NULL) {
+        SDL_Log("marker surface failed: %s", SDL_GetError());
+        return NULL;
+    }
+
+    SDL_LockSurface(surface);
+
+    Uint32 *pixels = (Uint32 *)surface->pixels;
+    const int pitch = surface->pitch / 4;
+    const float radius_x = width / 2.0f;
+    const float radius_y = height / 2.0f;
+
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+
+            const float dx = (x + 0.5f - radius_x) / radius_x;
+            const float dy = (y + 0.5f - radius_y) / radius_y;
+            const float d = dx * dx + dy * dy;
+
+            Uint8 alpha = 0;
+            if (d <= 0.8f) alpha = 255;
+            else if (d <= 1.0f) alpha = (Uint8)((1.0f - d) / 0.2f * 255.0f);
+
+            pixels[y * pitch + x] = SDL_MapRGBA(surface->format, 255, 255, 255, alpha);
+
+        }
+    }
+
+    SDL_UnlockSurface(surface);
+
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+
+    if (texture == NULL) {
+        SDL_Log("marker texture failed: %s", SDL_GetError());
+        return NULL;
+    }
+
+    SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+
+    return texture;
+
+}
+
+static void render_army_markers(Table *tables, unsigned int battalion_count, unsigned int battalion_size, Uint8 r, Uint8 g, Uint8 b) {
+
+    SDL_Renderer *renderer = engine.renderer;
+
+    SDL_SetTextureColorMod(army_marker_texture, r, g, b);
+    SDL_SetTextureAlphaMod(army_marker_texture, MARKER_ALPHA);
+
+    unsigned int unit_count = battalion_count * battalion_size;
+    for (unsigned int i = 0; i < unit_count; i++) {
+
+        if (!tables->unit_tables.friendly_dynamic.is_present[i]) continue;
+
+        const enum BattalionType battalion_type = tables->battalion_tables.friendly_static.battalion_type[i / battalion_size];
+        const enum Sprites sprite_type = get_battalion_spreadsheet(battalion_type).sprite_type;
+        const enum Animation anim_type = tables->unit_tables.friendly_dynamic.animation[i];
+        const Sprite *sprite = &engine.sprite_pack->sprite[sprite_type][anim_type];
+        if (sprite->frames_count == 0) continue;
+
+        const int frame_width = sprite->width / sprite->frames_count;
+        const int frame_height = sprite->height;
+        const float x = tables->unit_tables.friendly_dynamic.x[i];
+        const float y = tables->unit_tables.friendly_dynamic.y[i];
+
+        SDL_Rect marker = {
+            (int)x + frame_width / 2 - UNIT_MARKER_W / 2,
+            (int)y + frame_height - UNIT_MARKER_H / 2 - MARKER_FOOT_OFFSET,
+            UNIT_MARKER_W,
+            UNIT_MARKER_H
+        };
+        camera_world_to_screen(&marker);
+        SDL_RenderCopy(renderer, army_marker_texture, NULL, &marker);
+
+    }
+
+    for (unsigned int i = 0; i < battalion_count; i++) {
+
+        if (!tables->general_tables.friendly_dynamic.is_present[i]) continue;
+
+        const enum Sprites sprite_type = tables->general_tables.friendly_static.sprite_type[i];
+        const enum Animation anim_type = tables->general_tables.friendly_dynamic.animation[i];
+        const Sprite *sprite = &engine.sprite_pack->sprite[sprite_type][anim_type];
+        if (sprite->frames_count == 0) continue;
+
+        const int frame_width = sprite->width / sprite->frames_count;
+        const int frame_height = sprite->height;
+        const float x = tables->general_tables.friendly_dynamic.x[i];
+        const float y = tables->general_tables.friendly_dynamic.y[i];
+
+        SDL_Rect marker = {
+            (int)x + frame_width / 2 - GENERAL_MARKER_W / 2,
+            (int)y + frame_height - GENERAL_MARKER_H / 2 - MARKER_FOOT_OFFSET,
+            GENERAL_MARKER_W,
+            GENERAL_MARKER_H
+        };
+        camera_world_to_screen(&marker);
+        SDL_RenderCopy(renderer, army_marker_texture, NULL, &marker);
+
+    }
+
+    SDL_SetTextureColorMod(army_marker_texture, 255, 255, 255);
+    SDL_SetTextureAlphaMod(army_marker_texture, 255);
+
+}
