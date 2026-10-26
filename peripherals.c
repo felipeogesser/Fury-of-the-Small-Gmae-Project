@@ -1,4 +1,5 @@
 #include "peripherals.h"
+#include "engine_internal.h"
 #include "scene_handler.h"
 #include <stdbool.h>
 #include <SDL2/SDL.h>
@@ -19,13 +20,22 @@ void process_peripherals(_Bool *window_running) {
         
         if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
             *window_running = false;
-            continue;
+            break;
         }
         
         if (e.type == SDL_QUIT) {
             *window_running = false;
             break;
         }
+
+        if (engine.has_program_been_initialized_with_ai_bypass &&
+            e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_SPACE) {
+            engine.is_ai_bypass_disabled = !engine.is_ai_bypass_disabled;
+            engine.render = (engine.render == ENABLED) ? DISABLED : ENABLED;
+            SDL_RenderSetVSync(engine.renderer, engine.render == ENABLED);
+
+        }
+
         
         scene_input(&e);
 

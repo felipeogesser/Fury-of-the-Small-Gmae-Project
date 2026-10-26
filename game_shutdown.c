@@ -1,8 +1,12 @@
 #include "game_shutdown.h"
-#include "memory_arena.h"
+#include "engine.h"
+#include "scenes.h"
+#include "window.h"
 
 void game_shutdown(void) {
 
-    memory_arena_free();
-    
+    scene_destroy();
+    destroy_window();
+    engine_cleanup_run();
+
 }

@@ -5,7 +5,7 @@
 #include "armies_types.h"
 #include "game_state_types.h"
 
-void init_general_battalion_taxonomy(void);
+//void init_general_battalion_taxonomy(void);
 
 void init_general(General *general, General *general_from_battleplan_payload, unsigned int x, unsigned int y);
 

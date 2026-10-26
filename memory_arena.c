@@ -1,9 +1,12 @@
 #include "memory_arena.h"
+#include "engine_internal.h"
 #include <sys/mman.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 struct Arena {
     char *base;
@@ -20,45 +23,78 @@ static enum MemoryArenaAllocStatus memory_arena_alloc_status;
 
 static struct Arena arena = {0};
 
-static enum MemoryArenaAllocStatus memory_arena_alloc(void) {
+static char shared_name[64] = {0};
+static _Bool shared_name_linked = false;
 
-    size_t capacity = (size_t)(2147483648ULL);
+enum MemoryArenaAllocStatus memory_arena_alloc(void) {
+
+    size_t capacity = (size_t)(104857600ULL);
     arena.capacity = capacity;
-    
-    void *ptr = mmap(
-        NULL,
-        capacity,
-        PROT_READ | PROT_WRITE,
-        MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB,
-        -1,
-        0
-    );
 
-    if (ptr == MAP_FAILED) {
+    snprintf(shared_name, sizeof shared_name, "/battle_arena_%ld", (long)getpid());
+    shm_unlink(shared_name);
 
-        ptr = mmap(
-            NULL,
-            capacity,
-            PROT_READ | PROT_WRITE,
-            MAP_PRIVATE | MAP_ANONYMOUS,
-            -1,
-            0
-        );
-
-
-        if (ptr != MAP_FAILED) {
-            madvise(ptr, capacity, MADV_HUGEPAGE);
-        }
-
-    }
-
-    if (ptr == MAP_FAILED) {
+    signed int fd = shm_open(shared_name, O_CREAT | O_EXCL | O_RDWR, 0600);
+    if (fd == -1) {
+        perror("shm_open");
         return MEMORY_ARENA_ALLOC_FAILED;
     }
-    
-    arena.base = ptr;
+    shared_name_linked = true;
+
+    if (ftruncate(fd, (off_t)capacity) == -1) {
+        perror("ftruncate");
+        close(fd);
+        memory_arena_unlink_name();
+        return MEMORY_ARENA_ALLOC_FAILED;
+    }
+
+    void *shared = mmap(NULL, capacity, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    close(fd);
+
+    if (shared == MAP_FAILED) {
+        perror("mmap");
+        memory_arena_unlink_name();
+        return MEMORY_ARENA_ALLOC_FAILED;
+    }
+
+    madvise(shared, capacity, MADV_HUGEPAGE);
+
+    arena.base = shared;
 
     return MEMORY_ARENA_ALLOC_SUCCESS;
+
+}
+
+const char *memory_arena_shared_name(void) {
+
+    return shared_name;
+
+}
+
+void memory_arena_unlink_name(void) {
+
+    if (shared_name_linked) {
+        shm_unlink(shared_name);
+        shared_name_linked = false;
+    }
+
+}
+
+void memory_arena_free(void) {
+
+    if (arena.base == NULL) return;
+
+    memset(arena.base, 0, arena.capacity);
+
+    if (munmap(arena.base, arena.capacity) != 0) {
+        perror("munmap");
+        fprintf(stderr, "memory arena freeing failed\n");
+    }
+
+    arena.base = NULL;
+    arena.current = NULL;
+
+    memory_arena_unlink_name();
 
 }
 
@@ -85,18 +121,16 @@ void memory_arena_reset(void) {
 
 }
 
-void memory_arena_free(void) {
+void memory_arena_reset_to_address(void *p) {
 
-    memset(arena.base, 0, arena.capacity);
+    memset(p, 0, arena.current);
+    arena.current = (char *)p;
 
-    if (munmap(arena.base, arena.capacity) != 0) {
-        
-        perror("munmap");
-        
-        fprintf(stderr, "memory arena freeing failed\n");
-        exit(EXIT_FAILURE);
+}
 
-    }
+char *memory_arena_base(void) {
+
+    return arena.base;
 
 }
 
@@ -114,7 +148,7 @@ size_t memory_arena_memory_used(void) {
 
 size_t memory_arena_memory_remainder(void) {
 
-    return arena.capacity - (size_t)(arena.current - arena.base);
+    return arena.capacity - (size_t)(arena.current - arena.base) + 64; // 64 bytes for simulating padding
 
 }
 
