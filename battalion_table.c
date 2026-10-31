@@ -449,11 +449,32 @@ static void send_order_to_general(Table *tables, _Bool is_controllable, unsigned
 
 }
 
+// Archers told to attack walk until the ordered battalion is well inside bow range, so the back
+// ranks can shoot too, instead of stopping as soon as the front rank sees anything.
+_Bool is_ranged_battalion_in_position(const Table *tables, unsigned int i) {
+
+    #define RANGED_STOP_FRACTION 0.75f
+
+    if (!tables->battalion_tables.friendly_static.is_ranged[i]) return false;
+    if (tables->battalion_order.type[i] != ORDER_ATTACK) return false;
+
+    const unsigned int ordered_battalion_idx = tables->battalion_order.target[i];
+    const float dx = tables->battalion_tables.enemy_dynamic.x[ordered_battalion_idx] - tables->battalion_tables.friendly_dynamic.x[i];
+    const float dy = tables->battalion_tables.enemy_dynamic.y[ordered_battalion_idx] - tables->battalion_tables.friendly_dynamic.y[i];
+    const float stop = tables->battalion_tables.friendly_static.range[i] * RANGED_STOP_FRACTION;
+    return dx * dx + dy * dy <= stop * stop;
+
+    #undef RANGED_STOP_FRACTION
+
+}
+
 static enum BattalionMovementMode evaluate_battalion_movement(Table *tables, unsigned int i) {
 
     BattalionOrderTable order = tables->battalion_order;
     enum BattalionMovementMode movement_state = 0;
     if (order.type[i] == ORDER_HOLD) return STATIONARY;
+    // archers that reached shooting distance stand still to shoot, resting instead of tiring
+    if (is_ranged_battalion_in_position(tables, i)) return STATIONARY;
     if (order.type[i] == ORDER_MOVE || order.type[i] == ORDER_ATTACK) {
         if (order.pace[i] == PACE_WALK) movement_state = WALKING;
         if (order.pace[i] == PACE_RUN) movement_state = RUNNING;
@@ -572,6 +593,7 @@ static _Bool check_if_battalion_can_charge(Table *tables, enum BattalionMovement
     _Bool is_engaged = tables->battalion_tables.friendly_dynamic.is_engaged[i];
     if (!is_engaging || movement_state != RUNNING) return false;
     if (tables->battalion_order.type[i] != ORDER_ATTACK) return false;
+    if (tables->battalion_tables.friendly_static.is_ranged[i]) return false;
     if (is_engaged) return false;
 
     _Bool is_charging = tables->battalion_tables.friendly_dynamic.is_charging[i];

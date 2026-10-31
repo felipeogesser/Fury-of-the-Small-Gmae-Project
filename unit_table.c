@@ -14,6 +14,8 @@
 #include "formation.h"
 #include "maps_internal.h"
 #include "memory_arena.h"
+#include "projectile.h"
+#include "projectile_internal.h"
 #include "spreadsheet.h"
 #include "spreadsheet_internal.h"
 #include "sprites_internal.h"
@@ -34,6 +36,9 @@
 #define ENGAGED_APPROACH 0.6f
 #define ENGAGED_STOP_FRACTION 0.9f
 #define BATTALION_REACH 900.0f
+#define MEELE_SEARCH_RANGE 200.0f
+#define ARCHER_MELEE_RANGE 35.0f // an enemy this close gets a melee blow instead of an arrow
+#define ARCHER_MELEE_SWING 1.0f  // seconds between an archer's melee blows; attack_speed is its reload
 
 #define DISTANCE 36.0f // DISTANCE_BETWEEN_GENERAL_AND_BATTALION_CENTROID
 #define UNIT_WIDTH 24.0f
@@ -58,13 +63,16 @@ static void allocate_mock_soa_memory(
     UnitDynamicTable *mock_friendly_dynamic_table,
     UnitDynamicTable *mock_enemy_dynamic_table);
 static void allocate_mem_for_mock(unsigned int obj_count, const ComplexFieldEntry *field_table, void *mock);
-static void resolve_attack(Table *tables, unsigned int unit_count, unsigned int battalion_size, float dt);
+static void resolve_attack(Table *tables, unsigned int battalion_count, unsigned int battalion_size, enum ArmyBattlefieldSide side, float dt);
+static _Bool aim_ranged_attack(Table *tables, unsigned int i, unsigned int battalion_count, unsigned int battalion_size, _Bool holds_fire);
+static void fire_arrow(Table *tables, unsigned int i, unsigned int battalion_size, enum ArmyBattlefieldSide side, float dt);
+static unsigned int nearest_unit_of_battalion(float fx, float fy, const Table *tables, unsigned int battalion_size, unsigned int battalion_idx);
 static void update_position(Table *tables, const Map *map, unsigned int battalion_count, unsigned int battalion_size, unsigned int unit_count, enum ArmyBattlefieldSide side);
 static void apply_map_bounds(Table *tables, const Map *map, unsigned int unit_count, unsigned int battalion_size, float unit_w, float unit_h);
 static void keep_inside_map(float *x, float *y, const Map *map, float w, float h);
 static void update_direction(Table *tables, unsigned int unit_count);
 static void animation_table_update(Table *tables, unsigned int unit_count, unsigned int battalion_size);
-static _Bool try_engage_enemy(float fx, float fy, enum TargetType *target_type, unsigned int *target_idx, Table *tables, unsigned int battalion_count, unsigned int battalion_size, unsigned int engaged_battalion_idx);
+static _Bool try_engage_enemy(float fx, float fy, float search_range, enum TargetType *target_type, unsigned int *target_idx, Table *tables, unsigned int battalion_count, unsigned int battalion_size, unsigned int engaged_battalion_idx);
 static _Bool is_enemy_in_range(float fx, float fy, float range, float tx, float ty);
 static void get_close_to_engaged_target(Table *tables, unsigned int unit_count, unsigned int battalion_size, float catch_up);
 static void routing_units(Table *tables, unsigned int unit_count, unsigned int battalion_size, enum ArmyBattlefieldSide side);
@@ -154,9 +162,12 @@ void unit_table_update(Table *tables, const Map *map, unsigned int battalion_cou
             if (!is_engaged || !is_target_in_range) {
 
                 unsigned int engaged_battalion_idx = battalion_tables->friendly_dynamic.target_battalion_idx[battalion_idx];
+                const _Bool is_ranged = battalion_tables->friendly_static.is_ranged[battalion_idx];
+                const float search_range = is_ranged ? battalion_tables->friendly_static.range[battalion_idx] : MEELE_SEARCH_RANGE;
                 is_engaged = try_engage_enemy(
                     unit_tables->friendly_dynamic.x[friendly_idx],
                     unit_tables->friendly_dynamic.y[friendly_idx],
+                    search_range,
                     &unit_tables->friendly_dynamic.target_type[friendly_idx],
                     &unit_tables->friendly_dynamic.target_idx[friendly_idx],
                     tables,
@@ -216,7 +227,7 @@ void unit_table_update(Table *tables, const Map *map, unsigned int battalion_cou
 
     }
 
-    if(1)resolve_attack(tables, unit_count, battalion_size, dt);
+    if(1)resolve_attack(tables, battalion_count, battalion_size, side, dt);
     if(1)update_position(tables, map, battalion_count, battalion_size, unit_count, side);
     if(1)update_direction(tables, unit_count);
     if(1)animation_table_update(tables, unit_count, battalion_size);
@@ -303,8 +314,9 @@ void unit_table_destroy(void) {
 
 }
 
-static void resolve_attack(Table *tables, unsigned int unit_count, unsigned int battalion_size, float dt) {
+static void resolve_attack(Table *tables, unsigned int battalion_count, unsigned int battalion_size, enum ArmyBattlefieldSide side, float dt) {
 
+    const unsigned int unit_count = battalion_count * battalion_size;
     for (unsigned int i = 0; i < unit_count; i++) {
 
         if (!tables->unit_tables.friendly_dynamic.is_present[i]) continue;
@@ -316,6 +328,21 @@ static void resolve_attack(Table *tables, unsigned int unit_count, unsigned int 
         if (attack_timer > 0.0f) continue;
 
         if (!tables->unit_tables.friendly_dynamic.is_target_in_range[i]) continue;
+
+        const _Bool is_ranged = tables->battalion_tables.friendly_static.is_ranged[i / battalion_size];
+        if (is_ranged) {
+
+            // archers don't shoot on the march, nor while running away, but still defend themselves
+            const _Bool is_moving = tables->battalion_order.type[i / battalion_size] == ORDER_MOVE;
+            const _Bool is_routing = tables->battalion_tables.friendly_dynamic.lifecycle_state[i / battalion_size] == ROUTING;
+            const _Bool holds_fire = is_moving | is_routing;
+            const _Bool is_melee = aim_ranged_attack(tables, i, battalion_count, battalion_size, holds_fire);
+            if (!is_melee) {
+                if (!holds_fire) fire_arrow(tables, i, battalion_size, side, dt);
+                continue;
+            }
+
+        }
 
         float strength = tables->battalion_tables.friendly_dynamic.strength[i / battalion_size];
         float charge_bonus = tables->battalion_tables.friendly_static.charge_bonus[i / battalion_size];
@@ -347,7 +374,7 @@ static void resolve_attack(Table *tables, unsigned int unit_count, unsigned int 
         if (target_hp == NULL || *target_hp <= 0.0f) continue;
 
         float attack_speed = tables->battalion_tables.friendly_static.attack_speed[i / battalion_size];
-        tables->unit_tables.friendly_dynamic.attack_timer[i] = attack_speed;
+        tables->unit_tables.friendly_dynamic.attack_timer[i] = (is_ranged) ? ARCHER_MELEE_SWING : attack_speed;
 
         // the charge counts for this unit's first swing only: the front rank spends it on impact,
         // the back ranks keep it until they reach someone (the battalion clears it when the charge ends)
@@ -365,6 +392,108 @@ static void resolve_attack(Table *tables, unsigned int unit_count, unsigned int 
         if (hit) *target_hp -= damage;
 
     }
+
+}
+
+// Picks a ranged unit's target right before it attacks: an enemy at arm's length first (returns true,
+// the unit fights it in melee), otherwise the closest enemy in range, preferring the ordered battalion.
+static _Bool aim_ranged_attack(Table *tables, unsigned int i, unsigned int battalion_count, unsigned int battalion_size, _Bool holds_fire) {
+
+    const unsigned int b = i / battalion_size;
+    const float x = tables->unit_tables.friendly_dynamic.x[i];
+    const float y = tables->unit_tables.friendly_dynamic.y[i];
+    const unsigned int ordered_battalion_idx = tables->battalion_tables.friendly_dynamic.target_battalion_idx[b];
+    const float range = tables->battalion_tables.friendly_static.range[b];
+    enum TargetType target_type = UNKNOWN_TARGET;
+    unsigned int target_idx = -1U;
+
+    if (try_engage_enemy(x, y, ARCHER_MELEE_RANGE, &target_type, &target_idx, tables, battalion_count, battalion_size, ordered_battalion_idx)) {
+        tables->unit_tables.friendly_dynamic.target_type[i] = target_type;
+        tables->unit_tables.friendly_dynamic.target_idx[i] = target_idx;
+        return true;
+    }
+
+    if (holds_fire) return false;
+
+    if (try_engage_enemy(x, y, range, &target_type, &target_idx, tables, battalion_count, battalion_size, ordered_battalion_idx)) {
+
+        // the general stands in front of his men, but archers loose at the ranks; he is
+        // only aimed at once his battalion has nobody left
+        if (target_type == TARGET_GENERAL) {
+            const unsigned int unit_idx = nearest_unit_of_battalion(x, y, tables, battalion_size, target_idx);
+            if (unit_idx != -1U) {
+                target_type = TARGET_UNIT;
+                target_idx = unit_idx;
+            }
+        }
+
+        tables->unit_tables.friendly_dynamic.target_type[i] = target_type;
+        tables->unit_tables.friendly_dynamic.target_idx[i] = target_idx;
+
+    }
+
+    return false;
+
+}
+
+static unsigned int nearest_unit_of_battalion(float fx, float fy, const Table *tables, unsigned int battalion_size, unsigned int battalion_idx) {
+
+    float best_dist = INFINITY;
+    unsigned int best_idx = -1U;
+    for (unsigned int k = 0; k < battalion_size; k++) {
+
+        const unsigned int idx = battalion_idx * battalion_size + k;
+        if (!tables->unit_tables.enemy_dynamic.is_present[idx]) continue;
+
+        const float dx = tables->unit_tables.enemy_dynamic.x[idx] - fx;
+        const float dy = tables->unit_tables.enemy_dynamic.y[idx] - fy;
+        const float dist = dx * dx + dy * dy;
+        if (dist < best_dist) {
+            best_dist = dist;
+            best_idx = idx;
+        }
+
+    }
+
+    return best_idx;
+
+}
+
+static void fire_arrow(Table *tables, unsigned int i, unsigned int battalion_size, enum ArmyBattlefieldSide side, float dt) {
+
+    const unsigned int b = i / battalion_size;
+    const unsigned int target_idx = tables->unit_tables.friendly_dynamic.target_idx[i];
+    const enum TargetType target_type = tables->unit_tables.friendly_dynamic.target_type[i];
+    ProjectileLaunch launch = {
+        .side = side,
+        .x = tables->unit_tables.friendly_dynamic.x[i],
+        .y = tables->unit_tables.friendly_dynamic.y[i],
+        .damage = tables->battalion_tables.friendly_dynamic.strength[b],
+        .is_armor_piercing = tables->battalion_tables.friendly_static.is_armor_piercing[b]
+    };
+
+    if (target_type == TARGET_UNIT) {
+
+        launch.target_x = tables->unit_tables.enemy_dynamic.x[target_idx];
+        launch.target_y = tables->unit_tables.enemy_dynamic.y[target_idx];
+        launch.target_vec_x = tables->unit_tables.enemy_dynamic.vec_x[target_idx];
+        launch.target_vec_y = tables->unit_tables.enemy_dynamic.vec_y[target_idx];
+
+    } else if (target_type == TARGET_GENERAL) {
+
+        launch.target_x = tables->general_tables.enemy_dynamic.x[target_idx];
+        launch.target_y = tables->general_tables.enemy_dynamic.y[target_idx];
+        launch.target_vec_x = tables->general_tables.enemy_dynamic.vec_x[target_idx];
+        launch.target_vec_y = tables->general_tables.enemy_dynamic.vec_y[target_idx];
+
+    } else {
+
+        return;
+
+    }
+
+    tables->unit_tables.friendly_dynamic.attack_timer[i] = tables->battalion_tables.friendly_static.attack_speed[b];
+    projectile_launch(&launch, dt);
 
 }
 
@@ -410,7 +539,9 @@ static void animation_table_update(Table *tables, unsigned int unit_count, unsig
         }
 
         if (lifecycle_state == ROUTING) new_animation = RUN;
-        if (is_target_in_range) new_animation = ATTACK_01;
+        const _Bool is_ranged = tables->battalion_tables.friendly_static.is_ranged[i / battalion_size];
+        const _Bool holds_fire = is_ranged & (tables->battalion_order.type[i / battalion_size] == ORDER_MOVE);
+        if (is_target_in_range & !holds_fire) new_animation = ATTACK_01;
         if (!is_present) new_animation = anim; // withdrawn: keeps the animation it left with
         if (is_dead) new_animation = DEATH;
 
@@ -489,7 +620,7 @@ static void update_position(Table *tables, const Map *map, unsigned int battalio
     steer_headless_units(
         tables, battalion_count, unit_count, battalion_size,
         UNIT_WIDTH, UNIT_HEIGHT, PADDING_X, PADDING_Y, CATCH_UP);
-    get_close_to_engaged_target(tables, unit_count, battalion_size, CATCH_UP);
+    if(0)get_close_to_engaged_target(tables, unit_count, battalion_size, CATCH_UP);
 
     routing_units(tables, unit_count, battalion_size, side);
 
@@ -745,12 +876,11 @@ static float wrap_direction(float dir) {
 #undef PI
 #undef DIR_STEPS
 */
-static _Bool try_engage_enemy(float fx, float fy, enum TargetType *target_type, unsigned int *target_idx, Table *tables, unsigned int battalion_count, unsigned int battalion_size, unsigned int engaged_battalion_idx) {
+static _Bool try_engage_enemy(float fx, float fy, float search_range, enum TargetType *target_type, unsigned int *target_idx, Table *tables, unsigned int battalion_count, unsigned int battalion_size, unsigned int engaged_battalion_idx) {
 
-    #define MEELE_SEARCH_RANGE 200.0f
     #define BATTALION_SPREAD 400.0f
 
-    float best_dist = MEELE_SEARCH_RANGE * MEELE_SEARCH_RANGE;
+    float best_dist = search_range * search_range;
     enum TargetType best_type = UNKNOWN_TARGET;
     unsigned int best_idx = -1U;
 
@@ -760,7 +890,7 @@ static _Bool try_engage_enemy(float fx, float fy, enum TargetType *target_type, 
 
     if (best_type == UNKNOWN_TARGET) {
 
-        const float reach = MEELE_SEARCH_RANGE + BATTALION_SPREAD;
+        const float reach = search_range + BATTALION_SPREAD;
 
         for (unsigned int b = 0; b < battalion_count; b++) {
 
@@ -780,7 +910,6 @@ static _Bool try_engage_enemy(float fx, float fy, enum TargetType *target_type, 
     *target_type = best_type;
     *target_idx = best_idx;
 
-    #undef MEELE_SEARCH_RANGE
     #undef BATTALION_SPREAD
 
     return best_type != UNKNOWN_TARGET;

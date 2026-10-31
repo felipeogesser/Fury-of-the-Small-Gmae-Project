@@ -3,6 +3,7 @@
 #include "animation.h"
 #include "animation_types.h"
 #include "aos_soa_transformer.h"
+#include "battalion_table.h"
 #include "battlefield_types.h"
 #include "camera.h"
 #include "combat.h"
@@ -49,7 +50,7 @@ static void general_dynamic_table_init(
 static void update_stats(Table *tables, unsigned int i);
 static void update_status(Table *tables, Map *map, unsigned int i);
 static void try_engage_enemy(Table *tables, unsigned int battalion_count, unsigned int battalion_size, unsigned int i);
-static void update_position(Table *tables, const Map *map, enum ArmyBattlefieldSide side, unsigned int i);
+static void update_position(Table *tables, const Map *map, enum ArmyBattlefieldSide side, unsigned int battalion_size, unsigned int i);
 static void keep_inside_map(float *x, float *y, const Map *map, float w, float h);
 static void update_direction(Table *tables, unsigned int i);
 static void resolve_attack(Table *tables, unsigned int i, unsigned int battalion_size, float dt);
@@ -58,6 +59,7 @@ static void run_off_map(Table *tables, enum ArmyBattlefieldSide side, unsigned i
 static void update_alpha(Table *tables, unsigned int i, float dt);
 //static float direction_from_vec(float vec_x, float vec_y, float fallback);
 //static float wrap_direction(float dir);
+static _Bool battalion_in_contact(const Table *tables, unsigned int i, unsigned int battalion_size);
 
 static void *general_table_start_address_alloc = NULL;
 
@@ -187,7 +189,7 @@ void general_table_update(Table *tables, Map *map, enum ArmyBattlefieldSide side
         if (tables->general_tables.friendly_dynamic.is_present[i]) {
 
             try_engage_enemy(tables, battalion_count, battalion_size, i);
-            update_position(tables, map, side, i);
+            update_position(tables, map, side, battalion_size, i);
             update_direction(tables, i);
             resolve_attack(tables, i, battalion_size, dt);
 
@@ -416,7 +418,7 @@ static void try_engage_enemy(Table *tables, unsigned int battalion_count, unsign
 
 }
 
-static void update_position(Table *tables, const Map *map, enum ArmyBattlefieldSide side, unsigned int i) {
+static void update_position(Table *tables, const Map *map, enum ArmyBattlefieldSide side, unsigned int battalion_size, unsigned int i) {
 
     #define GENERAL_WIDTH 24.0f
     #define GENERAL_HEIGHT 24.0f
@@ -432,6 +434,11 @@ static void update_position(Table *tables, const Map *map, enum ArmyBattlefieldS
     if (is_routing) {
 
         vec_x = (side == ARMY_SIDE_LEFT) ? -speed : speed;
+
+    } else if (tables->battalion_order.type[i] != ORDER_MOVE && battalion_in_contact(tables, i, battalion_size)) {
+
+        vec_x = 0.0f;
+        vec_y = 0.0f;
 
     } else if (tables->general_tables.friendly_dynamic.is_engaging[i]) {
 
@@ -1002,3 +1009,23 @@ static void general_dynamic_table_init(
     }
 
 }*/
+
+static _Bool battalion_in_contact(const Table *tables, unsigned int i, unsigned int battalion_size) {
+
+    if (tables->general_tables.friendly_dynamic.is_engaged[i]) return true;
+
+    if (tables->battalion_tables.friendly_static.is_ranged[i] & (tables->battalion_order.type[i] == ORDER_ATTACK)) {
+        return is_ranged_battalion_in_position(tables, i);
+    }
+
+    for (unsigned int k = 0; k < battalion_size; k++) {
+
+        const unsigned int idx = i * battalion_size + k;
+        if (!tables->unit_tables.friendly_dynamic.is_present[idx]) continue;
+        if (tables->unit_tables.friendly_dynamic.is_engaged[idx] && tables->unit_tables.friendly_dynamic.is_target_in_range[idx]) return true;
+
+    }
+
+    return false;
+
+}

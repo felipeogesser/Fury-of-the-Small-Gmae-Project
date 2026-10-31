@@ -49,6 +49,7 @@
 #include "shared_memory_orders.h"
 #include "battle_outcome.h"
 #include "battle_step.h"
+#include "projectile.h"
 #include "spreadsheet.h"
 #include "sprites_internal.h"
 
@@ -99,7 +100,10 @@ void battlefield_init(void) {
     animation_init();
     //init_general_battalion_taxonomy();
 
-    unsigned int player_id = create_player(50 ,1000, "lipe", 100.0f, 100.0f, 30.0f, 30.0f, true, 4, 150.0f, 2.4f);
+    float player_size = 30.0f;
+    float player_spawn_x = ((float)engine.map->mapLeftLimit + (float)engine.map->mapRightLimit - player_size) / 2.0f;
+    float player_spawn_y = ((float)engine.map->mapTopLimit + (float)engine.map->mapBottomLimit - player_size) / 2.0f;
+    unsigned int player_id = create_player(50 ,1000, "lipe", player_spawn_x, player_spawn_y, player_size, player_size, true, 4, 150.0f, 2.4f);
     engine.player = get_player(player_id);
 
     unsigned int armies_count = 2;
@@ -122,6 +126,7 @@ void battlefield_init(void) {
     unit_table_init(&battlefield.player_tables, &battlefield.enemy_tables, player_unit, enemy_unit, battalion_count, battalion_size);
 
     battlefield.tick = 0;
+    projectile_reset();
 
     set_table_shared_memory_span(battalion_table_span_base_ptr, &battlefield.player_tables, battalion_count);
     shared_memory_control_set_map(shared_memory_control_base_ptr, engine.map);
@@ -238,6 +243,8 @@ void battlefield_update(float dt) {
     unit_table_update(player_tables, engine.map, battalion_count, battalion_size, ARMY_SIDE_LEFT, dt);
     unit_table_update(enemy_tables, engine.map, battalion_count, battalion_size, ARMY_SIDE_RIGHT, dt);
 
+    projectile_update(player_tables, enemy_tables, battalion_count, battalion_size, dt);
+
     if (is_ai_bypass_disabled) {
 
         camera_update();
@@ -295,8 +302,10 @@ void battlefield_render(void) {
 
         general_table_render(&battlefield.player_tables, i);
         general_table_render(&battlefield.enemy_tables, i);
-    
+
     }
+
+    projectile_render();
 
     /*Battalion *battalions = armies->army->battalions;
     unsigned int unit_count = battalions->unit_count;

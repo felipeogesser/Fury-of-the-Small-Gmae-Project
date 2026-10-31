@@ -51,6 +51,7 @@ static const ComplexFieldEntry sprite_pack_complex_field_table[] = {
     #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
 
     { "sprite",        OFFSET_OF(SpritePack, sprite),        SIZE_OF(SpritePack, sprite),        NOT_DEFINED, sprite_complex_field_table },
+    { "projectile",    OFFSET_OF(SpritePack, projectile),    SIZE_OF(SpritePack, projectile),    NOT_DEFINED, sprite_complex_field_table },
     { "sprite_count",  OFFSET_OF(SpritePack, sprite_count),  SIZE_OF(SpritePack, sprite_count),  U_INT,       NULL },
     { "obj_size",      0,                                    sizeof(SpritePack),                 NOT_DEFINED, NULL },
 
@@ -102,6 +103,7 @@ static const FieldEntry sprite_pack_field_table[] = {
     #define SIZE_OF(type, member) (sizeof(((type *)0)->member))
 
     { "sprite",        OFFSET_OF(SpritePack, sprite),        SIZE_OF(SpritePack, sprite)        },
+    { "projectile",    OFFSET_OF(SpritePack, projectile),    SIZE_OF(SpritePack, projectile)    },
     { "sprite_count",  OFFSET_OF(SpritePack, sprite_count),  SIZE_OF(SpritePack, sprite_count)  },
     { "obj_size",      0,                                    sizeof(SpritePack)                 },
 
@@ -124,6 +126,7 @@ static unsigned int parse_frame_count_from_path(const char *path);
 static signed int is_word_char(char c);
 static signed int stristr_found(const char *haystack, const char *needle);
 static signed int parse_animation_from_path(const char *path);
+static void load_projectile_sprite(SDL_Renderer *renderer, const char *path, enum Projectiles projectile);
 
 static signed int count_pngs_in_folder(const char *path) {
     DIR *dir = opendir(path);
@@ -287,5 +290,31 @@ void load_sprites_into_memory(void) {
 
     memset(sprites_string, 0, sizeof(SpritesPath) * (size_t)idx);
     free(sprites_string);
+
+    load_projectile_sprite(renderer, "assets/sprites/Arrow/1_Arrow.png", PROJECTILE_ARROW);
+
+}
+
+// projectiles have no animations, so they live in their own slot instead of sprite[type][animation]
+static void load_projectile_sprite(SDL_Renderer *renderer, const char *path, enum Projectiles projectile) {
+
+    SDL_RWops *rw = SDL_RWFromFile(path, "rb");
+    SDL_Surface *surface = IMG_Load_RW(rw, 1);
+    if (!surface) {
+        fprintf(stderr, "Projectile texture load failed for '%s': %s\n", path, IMG_GetError());
+        exit(EXIT_FAILURE);
+    }
+
+    unsigned int frames = parse_frame_count_from_path(path);
+    if (frames == 0) {
+        fprintf(stderr, "Projectile sprite '%s' missing frame-count prefix.\n", path);
+        exit(EXIT_FAILURE);
+    }
+
+    sprite_pack.projectile[projectile].texture      = SDL_CreateTextureFromSurface(renderer, surface);
+    sprite_pack.projectile[projectile].frames_count = (unsigned char)frames;
+    sprite_pack.projectile[projectile].width        = (signed short)surface->w;
+    sprite_pack.projectile[projectile].height       = (signed short)surface->h;
+    SDL_FreeSurface(surface);
 
 }

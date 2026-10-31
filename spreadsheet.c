@@ -105,6 +105,31 @@ const Spreadsheet spreadsheet = {
             .is_large = 0,
             .is_armor_piercing = 1,
             .is_anti_large = 0
+        },
+        [ARCHERS] = {
+            .battalion_type = ARCHERS,
+            .sprite_type = SPRITE_ARCHERS,
+
+            .morale = 85,
+            .fatigue = 100,
+            .hp = 6000,
+            .speed = 200,
+            .meele_attack = 18,
+            .meele_defense = 16,
+            .strength = 16,        // arrow damage, and melee damage when cornered
+            .range = 600,          // bow range
+            .charge_bonus = 0,
+            .armor = 15,
+            .attack_speed = 4.0f,  // seconds to reload
+
+            .formation_x = 5,
+            .formation_y = 10,
+
+            .is_shielded = 0,
+            .is_ranged = 1,
+            .is_large = 0,
+            .is_armor_piercing = 0,
+            .is_anti_large = 0
         }
     },
 
@@ -193,6 +218,28 @@ const Spreadsheet spreadsheet = {
                 .is_shielded = 0,
                 .is_ranged = 0,
                 .is_large = 1,
+                .is_armor_piercing = 0,
+                .is_anti_large = 0
+
+        },
+        [GENERAL_ARCHERS] = {
+
+                .general_type = GENERAL_ARCHERS,
+                .sprite_type = SPRITE_ARCHERS,
+                .battalion_type = ARCHERS,
+                .units_type = SPRITE_ARCHERS,
+                .hp = 800,
+                .meele_attack = 14,
+                .meele_defense = 10,
+                .strength = 10,
+                .range = 20,       // the general fights with a blade, his battalion does the shooting
+                .charge_bonus = 0,
+                .armor = 5,
+                .attack_speed = 1,
+
+                .is_shielded = 0,
+                .is_ranged = 0,
+                .is_large = 0,
                 .is_armor_piercing = 0,
                 .is_anti_large = 0
 

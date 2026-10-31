@@ -18,6 +18,12 @@ enum Sprites {
     SPRITES_COUNT
 };
 
+enum Projectiles {
+    PROJECTILE_UNKNOWN = -1,
+    PROJECTILE_ARROW,
+    PROJECTILES_COUNT
+};
+
 extern const ComplexFieldEntry *const sprite_complex_field_table_ptr;
 extern const ComplexFieldEntry sprite_info_complex_field_table[];
 extern const ComplexFieldEntry *const sprite_pack_complex_field_table_ptr;

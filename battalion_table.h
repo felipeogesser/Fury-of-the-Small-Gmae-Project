@@ -9,5 +9,6 @@
 void battalion_table_init(Table *player_tables, Table *enemy_tables, Battalion *player_battalion, Battalion *enemy_battalion,/* const ComplexFieldEntry *battalion_field_table,*/ unsigned int battalion_count);
 void battalion_table_update(const Spreadsheet *spreadsheet, Table *tables, signed int balance_of_power, unsigned int battalion_count, unsigned int battalion_size, float dt);
 void battalion_table_destroy(void);
+_Bool is_ranged_battalion_in_position(const Table *tables, unsigned int i);
 
 #endif
