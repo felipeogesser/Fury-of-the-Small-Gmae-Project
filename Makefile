@@ -1,6 +1,6 @@
 CC = gcc
 
-CFLAGS_RELEASE = -O0
+CFLAGS_RELEASE = -O2 -march=native
 
 CFLAGS_DEBUG = -g3 -O0 \
 -Wall -Wextra -Wpedantic \
@@ -31,6 +31,9 @@ SRC = \
 	battalion.c \
 	battalion_policy.c \
 	battalion_table.c \
+	battalion_table_span.c \
+	battle_outcome.c \
+	battle_step.c \
 	battlefield.c \
 	battlefield_grid.c \
 	battleplan.c \
@@ -41,10 +44,12 @@ SRC = \
 	contract.c \
 	deployment_loader.c \
 	engine.c \
+	engine_cleanup.c \
 	fatigue.c \
 	fatigue_policy.c \
 	field_entry.c \
 	file_io.c \
+	flank.c \
 	formation.c \
 	game_clock.c \
 	game_loop.c \
@@ -72,9 +77,13 @@ SRC = \
 	player.c \
 	player_collision.c \
 	position.c \
+	projectile.c \
+	python_process.c \
 	quadrant.c \
 	scene_handler.c \
 	scene_registry.c \
+	shared_memory_control.c \
+	shared_memory_orders.c \
 	spreadsheet.c \
 	sprites.c \
 	steering.c \

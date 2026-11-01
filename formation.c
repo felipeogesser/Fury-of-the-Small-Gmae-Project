@@ -16,7 +16,8 @@
 #define FACING_MIN_STEP_FRACTION 0.3f
 #define SLOT_DEADBAND 3.0f
 #define FIGHTING_HOLD_RADIUS 48.0f
-#define ENGAGE_LEASH 24.0f
+#define ENGAGE_LEASH 72.0f   /* furthest an engaged unit may leave its slot to reach its target */
+#define ENGAGE_REACH 0.8f     /* engaged units close to this fraction of their melee range */
 
 // private prototypes
 static float wrap_direction(float dir);
@@ -132,6 +133,19 @@ void formation_update(Table *tables,
             if (is_unit_going_for_target(tables, idx, battalion_size)) {
                 float target_x = 0.0f, target_y = 0.0f;
                 if (unit_target_position(tables, idx, &target_x, &target_y)) {
+                    // aim for the point just inside melee reach, so the unit can swing
+                    // instead of stopping short where its slot ends
+                    float reach = tables->battalion_tables.friendly_static.range[b] * ENGAGE_REACH;
+                    float to_x = target_x - unit_x[idx];
+                    float to_y = target_y - unit_y[idx];
+                    float to_len = sqrtf(to_x * to_x + to_y * to_y);
+                    if (to_len > reach) {
+                        target_x -= to_x / to_len * reach;
+                        target_y -= to_y / to_len * reach;
+                    } else {
+                        target_x = unit_x[idx];
+                        target_y = unit_y[idx];
+                    }
                     float leash_x = target_x - slot_x;
                     float leash_y = target_y - slot_y;
                     clamp_length(&leash_x, &leash_y, ENGAGE_LEASH);

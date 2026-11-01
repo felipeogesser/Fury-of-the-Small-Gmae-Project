@@ -19,6 +19,8 @@
 #define FLANK_SIDE_DAMAGE 1.25f
 #define FLANK_REAR_DAMAGE 1.5f
 #define CAVALRY_FLANK_DAMAGE 1.25f // on top of the above, so riders seek the flanks instead of the front
+#define FILE_SPACING 40.0f        // UNIT_WIDTH + PADDING_Y in unit_table.c
+#define RANK_SPACING 44.0f        // UNIT_HEIGHT + PADDING_X in unit_table.c
 
 // private prototypes
 static void copy_facing(Table *tables, unsigned int battalion_count);
@@ -129,11 +131,22 @@ static enum FlankState classify_angle(const Table *tables, unsigned int attacker
 
     const float dx = own->x[attacker] - enemy->x[target];
     const float dy = own->y[attacker] - enemy->y[target];
-    const float length = sqrtf(dx * dx + dy * dy);
+
+    // offsets in the target's own frame, scaled by its frontage and depth, so the
+    // whole front face of a wide line counts as front and not just its middle
+    const float angle = enemy->facing[target] * (2.0f * PI / DIR_STEPS);
+    const float forward_x = cosf(angle);
+    const float forward_y = sinf(angle);
+    const float half_depth = 0.5f * RANK_SPACING * (float)tables->battalion_tables.enemy_static.formation_x[target];
+    const float half_width = 0.5f * FILE_SPACING * (float)tables->battalion_tables.enemy_static.formation_y[target];
+    if (half_depth <= 0.0f || half_width <= 0.0f) return FLANK_NONE;
+
+    const float along = (dx * forward_x + dy * forward_y) / half_depth;
+    const float across = (dy * forward_x - dx * forward_y) / half_width;
+    const float length = sqrtf(along * along + across * across);
     if (length < 0.0001f) return FLANK_NONE;
 
-    const float angle = enemy->facing[target] * (2.0f * PI / DIR_STEPS);
-    const float cos_to_attacker = (dx * cosf(angle) + dy * sinf(angle)) / length;
+    const float cos_to_attacker = along / length;
 
     if (cos_to_attacker >= FLANK_FRONT_COS) return FLANK_NONE;
     if (cos_to_attacker <= FLANK_REAR_COS) return FLANK_REAR;

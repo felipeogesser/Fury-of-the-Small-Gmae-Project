@@ -378,21 +378,6 @@ static void try_engage_enemy(Table *tables, unsigned int battalion_count, unsign
     const unsigned int target_battalion_idx = tables->battalion_tables.friendly_dynamic.target_battalion_idx[i];
     if (target_battalion_idx < battalion_count && tables->battalion_tables.enemy_dynamic.is_present[target_battalion_idx]) {
 
-        if (tables->general_tables.enemy_dynamic.is_present[target_battalion_idx]) {
-
-            const float dx = tables->general_tables.enemy_dynamic.x[target_battalion_idx] - x;
-            const float dy = tables->general_tables.enemy_dynamic.y[target_battalion_idx] - y;
-            const float dist = dx * dx + dy * dy;
-            if (dist < shortest_dist) {
-
-                closest_enemy_idx = target_battalion_idx;
-                shortest_dist = dist;
-                personal_target_type = TARGET_GENERAL;
-
-            }
-
-        }
-
         for (unsigned int h = battalion_size * target_battalion_idx, k = 0; k < battalion_size; k++) {
 
             unsigned int idx = h + k;
@@ -406,6 +391,21 @@ static void try_engage_enemy(Table *tables, unsigned int battalion_count, unsign
                 closest_enemy_idx = idx;
                 shortest_dist = dist;
                 personal_target_type = TARGET_UNIT;
+
+            }
+
+        }
+
+        if (closest_enemy_idx == -1U && tables->general_tables.enemy_dynamic.is_present[target_battalion_idx]) {
+
+            const float dx = tables->general_tables.enemy_dynamic.x[target_battalion_idx] - x;
+            const float dy = tables->general_tables.enemy_dynamic.y[target_battalion_idx] - y;
+            const float dist = dx * dx + dy * dy;
+            if (dist < shortest_dist) {
+
+                closest_enemy_idx = target_battalion_idx;
+                shortest_dist = dist;
+                personal_target_type = TARGET_GENERAL;
 
             }
 
@@ -1018,14 +1018,26 @@ static _Bool battalion_in_contact(const Table *tables, unsigned int i, unsigned 
         return is_ranged_battalion_in_position(tables, i);
     }
 
+    // the battalion keeps pressing until half a rank is fighting, so a lone soldier in reach
+    // does not freeze the whole line short of the enemy
+    #define CONTACT_RANK_SHARE 0.5f
+    unsigned int present = 0;
+    unsigned int in_contact = 0;
     for (unsigned int k = 0; k < battalion_size; k++) {
 
         const unsigned int idx = i * battalion_size + k;
         if (!tables->unit_tables.friendly_dynamic.is_present[idx]) continue;
-        if (tables->unit_tables.friendly_dynamic.is_engaged[idx] && tables->unit_tables.friendly_dynamic.is_target_in_range[idx]) return true;
+        present++;
+        if (tables->unit_tables.friendly_dynamic.is_engaged[idx] && tables->unit_tables.friendly_dynamic.is_target_in_range[idx]) in_contact++;
 
     }
 
-    return false;
+    const unsigned int files = tables->battalion_tables.friendly_static.formation_y[i];
+    const unsigned int rank = (files < present) ? files : present;
+    unsigned int needed = (unsigned int)ceilf((float)rank * CONTACT_RANK_SHARE);
+    if (needed == 0) needed = 1;
+    #undef CONTACT_RANK_SHARE
+
+    return in_contact >= needed;
 
 }
