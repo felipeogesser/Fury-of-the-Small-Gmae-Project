@@ -639,7 +639,7 @@ static void update_position(Table *tables, const Map *map, unsigned int battalio
 
     move_units_by_vec(tables, unit_count, battalion_size, CATCH_UP);
 
-    resolve_collisions(x, y, is_present, unit_count, MIN_DIST, PASSES);
+    resolve_collisions_by_battalion(x, y, is_present, battalion_count, battalion_size, MIN_DIST, PASSES);
     resolve_collisions_with_enemy(tables, battalion_count, battalion_size, ENEMY_MIN_DIST, PASSES);
 
     apply_map_bounds(tables, map, unit_count, battalion_size, UNIT_WIDTH, UNIT_HEIGHT);
@@ -752,6 +752,30 @@ static void resolve_collisions_with_enemy(Table *tables, unsigned int battalion_
     const float reach2 = BATTALION_REACH * BATTALION_REACH;
     const float min_dist2 = min_dist * min_dist;
 
+    float box[battalion_count][4];
+    _Bool has_units[battalion_count];
+    for (unsigned int eb = 0; eb < battalion_count; eb++) {
+
+        has_units[eb] = false;
+        for (unsigned int m = 0; m < battalion_size; m++) {
+
+            const unsigned int j = eb * battalion_size + m;
+            if (!enemy->is_present[j]) continue;
+            if (!has_units[eb]) {
+                box[eb][0] = box[eb][1] = enemy->x[j];
+                box[eb][2] = box[eb][3] = enemy->y[j];
+                has_units[eb] = true;
+                continue;
+            }
+            if (enemy->x[j] < box[eb][0]) box[eb][0] = enemy->x[j];
+            if (enemy->x[j] > box[eb][1]) box[eb][1] = enemy->x[j];
+            if (enemy->y[j] < box[eb][2]) box[eb][2] = enemy->y[j];
+            if (enemy->y[j] > box[eb][3]) box[eb][3] = enemy->y[j];
+
+        }
+
+    }
+
     for (unsigned int pass = 0; pass < passes; pass++) {
 
         for (unsigned int ob = 0; ob < battalion_count; ob++) {
@@ -761,11 +785,14 @@ static void resolve_collisions_with_enemy(Table *tables, unsigned int battalion_
                 const float bdx = enemy_dynamic->x[eb] - own_dynamic->x[ob];
                 const float bdy = enemy_dynamic->y[eb] - own_dynamic->y[ob];
                 if (bdx * bdx + bdy * bdy > reach2) continue;
+                if (!has_units[eb]) continue;
 
                 for (unsigned int k = 0; k < battalion_size; k++) {
 
                     const unsigned int i = ob * battalion_size + k;
                     if (!own->is_present[i]) continue;
+                    if (own->x[i] < box[eb][0] - min_dist || own->x[i] > box[eb][1] + min_dist ||
+                        own->y[i] < box[eb][2] - min_dist || own->y[i] > box[eb][3] + min_dist) continue;
 
                     const float own_mass = unit_mass(own, own_static, own_dynamic, i, battalion_size);
 
