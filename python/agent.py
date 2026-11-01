@@ -30,7 +30,7 @@ def parse_arguments():
 
 def run(client, runner, rotation, stop):
     current_episode = None
-    while not stop.requested:
+    while not stop.requested and not getattr(runner, "wants_stop", False):
         if client.c_shutdown():
             break
         if not client.battle_active():
@@ -61,10 +61,11 @@ def main():
     exit_code = 0
     try:
         if arguments.mode == "train":
+            from parallel import actor_from_environment
             from runners import TrainRunner
             from stage_rotation import StageRotation
             config = TrainConfig()
-            runner = TrainRunner(arguments.checkpoint, config)
+            runner = actor_from_environment(config) or TrainRunner(arguments.checkpoint, config)
             rotation = StageRotation(config.stage_path, config.battles_per_layout, config.stage_min_battalions, config.stage_max_battalions)
             rotation.new_layout()
         else:

@@ -76,9 +76,12 @@ class RunningNorm:
     def update(self, values):
         if values.shape[0] == 0:
             return
-        batch_mean = values.mean(axis=0)
-        batch_var = values.var(axis=0)
-        batch_count = values.shape[0]
+        self.merge(values.mean(axis=0), values.var(axis=0), values.shape[0])
+
+    def merge(self, batch_mean, batch_var, batch_count):
+        """Fold in statistics gathered elsewhere, e.g. by a parallel worker."""
+        if batch_count <= 0:
+            return
         delta = batch_mean - self.mean
         total = self.count + batch_count
         self.mean = self.mean + delta * batch_count / total

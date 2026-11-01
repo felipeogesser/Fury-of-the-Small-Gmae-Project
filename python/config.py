@@ -99,6 +99,15 @@ class ImitationConfig:
 
 
 @dataclass
+class ParallelConfig:
+    workers: int = 8
+    chunk_size: int = 128
+    max_lag: int = 1
+    steps_per_update: int = 8192
+    minibatch_size: int = 512
+
+
+@dataclass
 class TrainConfig:
     battles_per_layout: int = 30
     stage_path: str = "stages/current.csv"
@@ -123,3 +132,4 @@ class TrainConfig:
     rewards: RewardConfig = field(default_factory=RewardConfig)
     opponents: OpponentConfig = field(default_factory=OpponentConfig)
     imitation: ImitationConfig = field(default_factory=ImitationConfig)
+    parallel: ParallelConfig = field(default_factory=ParallelConfig)
