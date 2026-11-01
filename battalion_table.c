@@ -34,6 +34,7 @@ static void send_order_to_general(Table *tables, _Bool is_controllable, unsigned
 static enum BattalionMovementMode evaluate_battalion_movement(Table *tables, unsigned int i);
 static _Bool evaluate_charge_timer(float *charge_timer, float dt);
 static _Bool check_if_battalion_is_active(enum BattalionMovementMode movement_state);
+static _Bool check_if_battalion_is_in_melee(const Table *tables, unsigned int i, unsigned int battalion_size);
 static void speed_update(float base_speed, float *speed, enum FatigueState state, enum BattalionMovementMode movement_state, float dt);
 static void hp_update(const Table *tables, float *hp, unsigned int i, unsigned int battalion_size);
 static void position_update(const Table *tables, float *x, float *y, unsigned int i, unsigned int battalion_size);
@@ -311,8 +312,9 @@ void battalion_table_update(const Spreadsheet *spreadsheet, Table *tables, signe
             .base = spreadsheet->battalion_spreadsheet[battalion_type].fatigue,
             .current = tables->battalion_tables.friendly_dynamic.fatigue[i]
         };
-        _Bool is_fighting = (tables->battalion_tables.friendly_dynamic.movement_state[i] == FIGHTING);
-        fatigue_update(&fatigue, is_active, is_fighting, dt);
+        const _Bool is_in_melee = check_if_battalion_is_in_melee(tables, i, battalion_size);
+        _Bool is_fighting = (tables->battalion_tables.friendly_dynamic.movement_state[i] == FIGHTING) | is_in_melee;
+        fatigue_update(&fatigue, is_active | is_in_melee, is_fighting, dt);
         tables->battalion_tables.friendly_dynamic.fatigue_state[i] = fatigue.state;
         tables->battalion_tables.friendly_dynamic.fatigue[i] = fatigue.current;
 
@@ -510,6 +512,32 @@ static _Bool check_if_battalion_is_active(enum BattalionMovementMode movement_st
     if (movement_state == RUNNING || movement_state == CHARGING || movement_state == FIGHTING) return true;
     return false;
     
+}
+
+static _Bool check_if_battalion_is_in_melee(const Table *tables, unsigned int i, unsigned int battalion_size) {
+
+    if (tables->battalion_tables.friendly_static.is_ranged[i]) return false;
+
+    #define MELEE_RANK_SHARE 0.5f
+    unsigned int present = 0;
+    unsigned int in_contact = 0;
+    for (unsigned int k = 0; k < battalion_size; k++) {
+
+        const unsigned int idx = i * battalion_size + k;
+        if (!tables->unit_tables.friendly_dynamic.is_present[idx]) continue;
+        present++;
+        if (tables->unit_tables.friendly_dynamic.is_engaged[idx] && tables->unit_tables.friendly_dynamic.is_target_in_range[idx]) in_contact++;
+
+    }
+
+    const unsigned int files = tables->battalion_tables.friendly_static.formation_y[i];
+    const unsigned int rank = (files < present) ? files : present;
+    unsigned int needed = (unsigned int)ceilf((float)rank * MELEE_RANK_SHARE);
+    if (needed == 0) needed = 1;
+    #undef MELEE_RANK_SHARE
+
+    return (present > 0) & (in_contact >= needed);
+
 }
 
 static void speed_update(float base_speed, float *speed, enum FatigueState state, enum BattalionMovementMode movement_state, float dt) {

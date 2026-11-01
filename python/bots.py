@@ -128,6 +128,7 @@ SPEAR_GUARD = 500.0         # spearmen step out at enemy cavalry this close to t
 ARCHER_ESCORT = 400.0       # enemy archers with infantry closer than this are escorted
 ARCHER_PATIENCE = 45        # 90 s: an army with more archers waits that long for the enemy to come
 STICKY = 1.5                # keep a target unless a new one is this much closer
+CHARGE_DISTANCE = 380.0     # infantry breaks into a run this close to its target, centre to centre
 
 
 class CommanderBot:
@@ -136,8 +137,9 @@ class CommanderBot:
     shooting from the second rank, spears guarding against horses, and cavalry that counters
     cavalry, hunts loose archers and hits pinned enemies in the rear.
 
-    Infantry walks into contact: a walking attack carries no charge, but it does not tire the
-    men either. Cavalry runs, because its charge bonus is what makes a rear attack decisive."""
+    Infantry walks up to save its legs and runs the last stretch so it hits with a charge;
+    melee tires the men whatever the pace. Cavalry runs, because its charge bonus is what makes
+    a rear attack decisive."""
 
     name = "commander"
 
@@ -209,7 +211,8 @@ class CommanderBot:
             j = self._sticky(i, cost)
             claimed[j] += 1
             approach = self._open_side(i, j, x, y, ex, ey, opponent, enemy_half_width, enemy_half_depth) if claimed[j] > 1 else APPROACH_FRONT
-            self._attack(actions, i, j, PACE_WALK, approach)
+            pace = PACE_RUN if distance[i, j] < CHARGE_DISTANCE else PACE_WALK
+            self._attack(actions, i, j, pace, approach)
 
         # archers keep their place in the line and shoot whatever comes in range
         for i in np.where(present & ranged)[0]:
