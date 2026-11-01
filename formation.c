@@ -18,6 +18,7 @@
 #define FIGHTING_HOLD_RADIUS 48.0f
 #define ENGAGE_LEASH 72.0f   /* furthest an engaged unit may leave its slot to reach its target */
 #define ENGAGE_REACH 0.8f     /* engaged units close to this fraction of their melee range */
+#define HOLD_FACE_MIN_DIST 50.0f /* a hold destination closer than this keeps the current facing */
 
 // private prototypes
 static float wrap_direction(float dir);
@@ -94,6 +95,15 @@ void formation_update(Table *tables,
         if (general_step > speed[b] * FACING_MIN_STEP_FRACTION) {
             float desired = direction_from_vec(general_vec_x[b], general_vec_y[b], general_facing[b]);
             general_facing[b] = turn_toward(general_facing[b], desired, TURN_RATE);
+        } else if (tables->battalion_order.type[b] == ORDER_HOLD &&
+                   !tables->battalion_tables.friendly_dynamic.is_engaged[b]) {
+            // a holding battalion turns to face its order destination, so a line can face the enemy
+            float face_x = tables->battalion_order.dest_x[b] - general_x[b];
+            float face_y = tables->battalion_order.dest_y[b] - general_y[b];
+            if (face_x * face_x + face_y * face_y > HOLD_FACE_MIN_DIST * HOLD_FACE_MIN_DIST) {
+                float desired = direction_from_vec(face_x, face_y, general_facing[b]);
+                general_facing[b] = turn_toward(general_facing[b], desired, TURN_RATE);
+            }
         }
         float direction = general_facing[b];
         unsigned int to_place = min_uint(count_in_formation(is_unit_present,
