@@ -100,7 +100,7 @@ class ImitationConfig:
 
 @dataclass
 class ParallelConfig:
-    workers: int = 8
+    workers: int = 16
     chunk_size: int = 128
     max_lag: int = 1
     steps_per_update: int = 8192

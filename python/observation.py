@@ -2,7 +2,7 @@ import numpy as np
 
 from actions import ORDER_FEATURE_DIM
 from config import DEST_GRID_X, DEST_GRID_Y, ENUM_SIZES, MAX_BATTALIONS, ROUTING_LIFECYCLE
-from geometry import crowding, facing_vectors, footprint, mirror_facing, sector
+from geometry import crowding, facing_vectors, footprint, mirror_facing, present_of, sector
 
 RAW_FIELDS = [
     "morale",
@@ -111,48 +111,93 @@ def safe(values):
     return np.nan_to_num(values, nan=0.0, posinf=0.0, neginf=0.0)
 
 
+VALIDITY_FIELDS = ("x", "y", "target_x", "target_y")
+
+
 def snapshot_army(static, dynamic, count):
-    snapshot = {}
+    """One army's tables as float64 rows of one block, cleaned of NaN and inf in one go;
+    <name>_valid keeps which positions were real, the rest of the code relies on clean values."""
+    names = [name for group in (static, dynamic) for name in group]
+    block = np.zeros((len(names), MAX_BATTALIONS), dtype=np.float64)
+    row = 0
     for group in (static, dynamic):
-        for name, view in group.items():
-            values = np.zeros(MAX_BATTALIONS, dtype=np.float64)
-            values[:count] = view[:count]
-            snapshot[name] = values
+        for view in group.values():
+            block[row, :count] = view[:count]
+            row += 1
+    snapshot = dict(zip(names, block))
+    valid = np.isfinite(block[[names.index(name) for name in VALIDITY_FIELDS]])
+    for name, mask in zip(VALIDITY_FIELDS, valid):
+        snapshot[name + "_valid"] = mask
+    np.nan_to_num(block, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
     return snapshot
 
 
 def present_mask(snapshot, count):
-    return (snapshot["is_present"] > 0.5) & (INDICES < count)
+    return present_of(snapshot, count)
 
 
 def army_total_hp(snapshot, count):
-    return float(np.clip(safe(snapshot["hp"][:count]), 0.0, None).sum())
+    return float(np.clip(snapshot["hp"][:count], 0.0, None).sum())
 
 
 def raw_matrix(snapshot):
-    return safe(np.stack([snapshot[name] for name in RAW_FIELDS], axis=1))
+    return np.stack([snapshot[name] for name in RAW_FIELDS], axis=1)
 
 
 def _one_hot(values, size):
-    indices = np.clip(safe(values).astype(np.int64) + 1, 0, size)
+    indices = np.clip(values.astype(np.int64) + 1, 0, size)
     out = np.zeros((MAX_BATTALIONS, size + 1), dtype=np.float32)
     out[INDICES, indices] = 1.0
     return out
 
 
-def _entity(snapshot, count, info, mirror, normalizer, order_features):
-    present = present_mask(snapshot, count)
-    target_valid = np.isfinite(snapshot["target_x"]) & np.isfinite(snapshot["target_y"])
-    x = safe(snapshot["x"])
-    y = safe(snapshot["y"])
-    target_x = safe(snapshot["target_x"])
-    target_y = safe(snapshot["target_y"])
-    facing = safe(snapshot["facing"])
+def _army(snapshot, count, raw, normalizer):
+    """The features of one army that do not depend on whose eyes it is seen through."""
+    max_hp = np.maximum(snapshot["max_hp"], 1e-6)
+    start = np.maximum(snapshot["start_entity_count"], 1.0)
+    hp_ratio = np.clip(snapshot["hp"] / max_hp, 0.0, 5.0)
+    ratios = np.stack([
+        hp_ratio,
+        snapshot["alive_entity_count"] / start,
+        snapshot["dead_entity_count"] / start,
+        snapshot["withdrawed_entity_count"] / start,
+        snapshot["unit_alive_count"] / start,
+    ], axis=1)
+    normalized = normalizer.normalize(raw)
+    bools = np.stack([snapshot[name] for name in BOOL_FIELDS], axis=1)
+    onehots = [_one_hot(snapshot[name], ENUM_SIZES[name]) for name in ENUM_FIELDS]
+    half_width, half_depth, radius = footprint(snapshot)
+    return {
+        "snapshot": snapshot,
+        "middle": np.concatenate([ratios, normalized, bools] + onehots, axis=1),
+        "present": present_mask(snapshot, count),
+        "controllable": snapshot["is_controllable"] > 0.5,
+        "half_width": half_width,
+        "half_depth": half_depth,
+        "radius": radius,
+        "hp_ratio": hp_ratio,
+        "raw": normalized,
+        "target": snapshot["target_battalion_idx"].astype(np.int64),
+        "large": snapshot["is_large"] > 0.5,
+        "anti_large": snapshot["is_anti_large"] > 0.5,
+        "ranged": snapshot["is_ranged"] > 0.5,
+        "routing": snapshot["lifecycle_state"].astype(np.int64) == ROUTING_LIFECYCLE,
+    }
+
+
+def _entity(army, info, mirror, order_features):
+    """One army seen from one side: only positions and facing change with the mirror."""
+    snapshot = army["snapshot"]
+    target_valid = snapshot["target_x_valid"] & snapshot["target_y_valid"]
+    x = snapshot["x"]
+    y = snapshot["y"]
+    target_x = snapshot["target_x"]
+    target_y = snapshot["target_y"]
+    facing = snapshot["facing"]
     if mirror:
         x = info.left + info.right - x
         target_x = info.left + info.right - target_x
         facing = mirror_facing(facing)
-    half_width, half_depth, radius = footprint(snapshot)
     forward_x, forward_y = facing_vectors(facing)
     xn = (x - info.left) / info.width
     yn = (y - info.top) / info.height
@@ -160,45 +205,13 @@ def _entity(snapshot, count, info, mirror, normalizer, order_features):
     target_yn = np.where(target_valid, (target_y - info.top) / info.height, 0.0)
     spatial = np.stack([
         xn, yn, target_xn, target_yn, target_valid.astype(np.float64),
-        forward_x, forward_y, half_width / info.width, half_depth / info.width,
+        forward_x, forward_y, army["half_width"] / info.width, army["half_depth"] / info.width,
     ], axis=1)
-    max_hp = np.maximum(safe(snapshot["max_hp"]), 1e-6)
-    start = np.maximum(safe(snapshot["start_entity_count"]), 1.0)
-    hp_ratio = np.clip(safe(snapshot["hp"]) / max_hp, 0.0, 5.0)
-    ratios = np.stack([
-        hp_ratio,
-        safe(snapshot["alive_entity_count"]) / start,
-        safe(snapshot["dead_entity_count"]) / start,
-        safe(snapshot["withdrawed_entity_count"]) / start,
-        safe(snapshot["unit_alive_count"]) / start,
-    ], axis=1)
-    raw = normalizer.normalize(raw_matrix(snapshot))
-    bools = np.stack([snapshot[name] for name in BOOL_FIELDS], axis=1)
-    onehots = [_one_hot(snapshot[name], ENUM_SIZES[name]) for name in ENUM_FIELDS]
     if order_features is None:
         order_features = np.zeros((MAX_BATTALIONS, ORDER_FEATURE_DIM), dtype=np.float32)
-    features = np.concatenate([spatial, ratios, raw, bools] + onehots + [order_features], axis=1).astype(np.float32)
-    features[~present] = 0.0
-    return {
-        "features": features,
-        "present": present,
-        "controllable": snapshot["is_controllable"] > 0.5,
-        "x": x,
-        "y": y,
-        "facing": facing,
-        "half_width": half_width,
-        "half_depth": half_depth,
-        "radius": radius,
-        "forward_x": forward_x,
-        "forward_y": forward_y,
-        "hp_ratio": hp_ratio,
-        "raw": raw,
-        "target": safe(snapshot["target_battalion_idx"]).astype(np.int64),
-        "large": snapshot["is_large"] > 0.5,
-        "anti_large": snapshot["is_anti_large"] > 0.5,
-        "ranged": snapshot["is_ranged"] > 0.5,
-        "routing": safe(snapshot["lifecycle_state"]).astype(np.int64) == ROUTING_LIFECYCLE,
-    }
+    features = np.concatenate([spatial, army["middle"], order_features], axis=1).astype(np.float32)
+    features[~army["present"]] = 0.0
+    return dict(army, features=features, x=x, y=y, facing=facing, forward_x=forward_x, forward_y=forward_y)
 
 
 def _raw_column(entity, name):
@@ -279,15 +292,17 @@ def _friend_pair(friend, info):
 
 def build_observations(snapshots, info, tick_fraction, normalizer, update_stats, order_features):
     count = info.battalion_count
+    raws = [raw_matrix(snapshot) for snapshot in snapshots]
     if update_stats:
-        rows = [raw_matrix(snapshot)[present_mask(snapshot, count)] for snapshot in snapshots]
+        rows = [raw[present_mask(snapshot, count)] for raw, snapshot in zip(raws, snapshots)]
         normalizer.update(np.concatenate(rows, axis=0))
+    armies = [_army(snapshot, count, raw, normalizer) for snapshot, raw in zip(snapshots, raws)]
     totals = [army_total_hp(snapshot, count) for snapshot in snapshots]
     observations = []
     for side in (0, 1):
         mirror = side == 1
-        friend = _entity(snapshots[side], count, info, mirror, normalizer, order_features[side])
-        enemy = _entity(snapshots[1 - side], count, info, mirror, normalizer, None)
+        friend = _entity(armies[side], info, mirror, order_features[side])
+        enemy = _entity(armies[1 - side], info, mirror, None)
         hp_sum = totals[side] + totals[1 - side]
         share = totals[side] / hp_sum if hp_sum > 0.0 else 0.5
         overlap = crowding(friend["x"], friend["y"], friend["radius"], friend["present"]).sum(axis=1)

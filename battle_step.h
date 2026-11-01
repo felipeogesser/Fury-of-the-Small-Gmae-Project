@@ -15,6 +15,6 @@ enum BattleStepResult {
 };
 
 void battle_step_reset(void);
-enum BattleStepResult battle_step_sync(SharedMemoryControl *control, unsigned int ticks_per_decision, unsigned int max_spins);
+enum BattleStepResult battle_step_sync(SharedMemoryControl *control, unsigned int ticks_per_decision, unsigned int timeout_ms);
 
 #endif

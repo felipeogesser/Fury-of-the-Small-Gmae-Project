@@ -57,7 +57,7 @@ void game_loop(void) {
 
                 process_peripherals(window_running);
 
-                enum BattleStepResult step_result = battle_step_sync(shared_memory_control_base_ptr, BATTLE_TICKS_PER_DECISION, 100000);
+                enum BattleStepResult step_result = battle_step_sync(shared_memory_control_base_ptr, BATTLE_TICKS_PER_DECISION, 10);
 
                 if (step_result == BATTLE_STEP_SHUTDOWN) {
                     *window_running = false;

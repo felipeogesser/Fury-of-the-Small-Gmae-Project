@@ -1,7 +1,9 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.distributions import Categorical
+from torch.distributions import Categorical, Distribution
+
+Distribution.set_default_validate_args(False)
 
 from config import (
     ACTION_ADVANCE,
@@ -116,6 +118,27 @@ def _forward(model, obs):
     return model(obs["friend"], obs["enemy"], obs["epair"], obs["fpair"], obs["glob"], obs["fmask"], obs["emask"])
 
 
+def _active_count(obs):
+    """Battalions are indexed from 0 and padded up to MAX_BATTALIONS; slots past the last one present in
+    any army of the batch are padding the network would only mask out again, so they are cut first."""
+    present = torch.nonzero((obs["fmask"] | obs["emask"]).any(dim=0))
+    return int(present[-1]) + 1 if present.numel() else 1
+
+
+def _trim(obs, count):
+    trimmed = dict(obs)
+    for key in ("friend", "enemy", "fmask", "emask", "cmask"):
+        trimmed[key] = obs[key][:, :count]
+    for key in ("epair", "fpair"):
+        trimmed[key] = obs[key][:, :count, :count]
+    return trimmed
+
+
+def _pad(values, size):
+    """Back to MAX_BATTALIONS slots; the padding slots are masked wherever these are used."""
+    return torch.nn.functional.pad(values, (0, size - values.shape[-1]))
+
+
 def _distributions(logits, target):
     index = target[..., None, None].expand(-1, -1, 1, logits["approach"].shape[-1])
     chosen = dict(logits, approach=torch.gather(logits["approach"], 2, index).squeeze(2))
@@ -142,6 +165,15 @@ def _log_prob(dists, actions):
 
 
 def evaluate_actions(model, obs, actions):
+    size = obs["fmask"].shape[1]
+    count = _active_count(obs)
+    obs = _trim(obs, count)
+    actions = {key: value[:, :count] for key, value in actions.items()}
+    log_prob, entropy, value = _evaluate(model, obs, actions)
+    return _pad(log_prob, size), _pad(entropy, size), _pad(value, size)
+
+
+def _evaluate(model, obs, actions):
     logits, value = _forward(model, obs)
     dists = _distributions(logits, actions["target"])
     probs = dists["type"].probs
@@ -168,13 +200,16 @@ def to_tensors(observations, device):
 @torch.no_grad()
 def select_actions(model, observations, deterministic):
     obs = to_tensors(observations, "cpu")
-    logits, value = _forward(model, obs)
+    size = obs["fmask"].shape[1]
+    logits, value = _forward(model, _trim(obs, _active_count(obs)))
     pick = (lambda d: d.probs.argmax(dim=-1)) if deterministic else (lambda d: d.sample())
     target = pick(Categorical(logits=logits["target"]))
     dists = _distributions(logits, target)
     actions = {key: pick(dists[key]) for key in ACTION_KEYS}
     actions["target"] = target
-    log_prob = _log_prob(dists, actions)
+    log_prob = _pad(_log_prob(dists, actions), size)
+    value = _pad(value, size)
+    actions = {key: _pad(values, size) for key, values in actions.items()}
     per_side = [{key: actions[key][index].numpy() for key in ACTION_KEYS} for index in range(len(observations))]
     return per_side, log_prob.numpy(), value.numpy()
 

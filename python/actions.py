@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 
 from config import (
@@ -25,9 +27,9 @@ from config import (
     PACE_WALK,
     TYPE_CAVALRY,
 )
-from geometry import facing_vectors, finite_positions, footprint, left_of, present_of, sector
+from geometry import QUARTER, facing_vectors, finite_positions, footprint, present_of
 
-PACE_VALUES = np.array([PACE_WALK, PACE_RUN], dtype=np.int32)
+PACE_CHOICES = (PACE_WALK, PACE_RUN)
 ORDER_FEATURE_DIM = ACTION_COUNT + APPROACH_COUNT + 2
 
 ARRIVE_RADIUS = 50.0 # general this close to his destination has arrived
@@ -44,7 +46,7 @@ FACE_DISTANCE = 1000.0 # hold destinations sit this far ahead, only their direct
 
 
 def _unit(dx, dy, fallback_x=1.0, fallback_y=0.0):
-    length = np.hypot(dx, dy)
+    length = math.hypot(dx, dy)
     if length < 1e-6:
         return fallback_x, fallback_y
     return dx / length, dy / length
@@ -118,26 +120,35 @@ class OrderBook:
 
     def step(self, views, own, opponent, info):
         count = info.battalion_count
-        x, y = finite_positions(own, info)
-        ex, ey = finite_positions(opponent, info)
-        present = present_of(own, count)
-        enemy_present = present_of(opponent, count)
-        half_width, half_depth, _ = footprint(own)
-        enemy_half_width, enemy_half_depth, _ = footprint(opponent)
-        fx, fy = facing_vectors(own["facing"])
-        lead = GENERAL_LEAD + half_depth
+        x_array, y_array = finite_positions(own, info)
+        ex_array, ey_array = finite_positions(opponent, info)
+        present_array = present_of(own, count)
+        x, y = x_array.tolist(), y_array.tolist()
+        ex, ey = ex_array.tolist(), ey_array.tolist()
+        present = present_array.tolist()
+        enemy_present_array = present_of(opponent, count)
+        enemies = [j for j in range(count) if enemy_present_array[j]]
+        enemy_present = set(enemies)
+        half_width, half_depth = (values.tolist() for values in footprint(own)[:2])
+        enemy_half_width, enemy_half_depth = (values.tolist() for values in footprint(opponent)[:2])
+        fx, fy = (values.tolist() for values in facing_vectors(own["facing"]))
+        lead = [GENERAL_LEAD + depth for depth in half_depth]
+        kinds = self.kind.tolist()
+        self.age[:count][present_array[:count]] += 1
 
-        order_type = np.full(MAX_BATTALIONS, ORDER_HOLD, dtype=np.int32)
-        pace = np.full(MAX_BATTALIONS, PACE_WALK, dtype=np.int32)
-        target = np.zeros(MAX_BATTALIONS, dtype=np.uint32)
-        dest_x = x.astype(np.float32)
-        dest_y = y.astype(np.float32)
+        order_type = [ORDER_HOLD] * MAX_BATTALIONS
+        pace = [PACE_WALK] * MAX_BATTALIONS
+        target = [0] * MAX_BATTALIONS
+        dest_x = list(x)
+        dest_y = list(y)
 
         def nearest_enemy(px, py):
-            if not enemy_present.any():
-                return -1
-            distance = np.where(enemy_present, np.hypot(ex - px, ey - py), np.inf)
-            return int(distance.argmin())
+            best, best_distance = -1, math.inf
+            for j in enemies:
+                distance = math.hypot(ex[j] - px, ey[j] - py)
+                if distance < best_distance:
+                    best, best_distance = j, distance
+            return best
 
         def hold(i, face_x, face_y):
             order_type[i] = ORDER_HOLD
@@ -152,12 +163,12 @@ class OrderBook:
             hold(i, *_unit(ex[j] - x[i], ey[j] - y[i], fx[i], fy[i]))
 
         def general_has_arrived(i, general_x, general_y):
-            return np.hypot(x[i] + fx[i] * lead[i] - general_x, y[i] + fy[i] * lead[i] - general_y) < ARRIVE_RADIUS
+            return math.hypot(x[i] + fx[i] * lead[i] - general_x, y[i] + fy[i] * lead[i] - general_y) < ARRIVE_RADIUS
 
         def take_position(i, slot_x, slot_y, face_x, face_y):
             general_x = slot_x + face_x * lead[i]
             general_y = slot_y + face_y * lead[i]
-            if general_has_arrived(i, general_x, general_y) or np.hypot(x[i] - slot_x, y[i] - slot_y) < ARRIVE_RADIUS:
+            if general_has_arrived(i, general_x, general_y) or math.hypot(x[i] - slot_x, y[i] - slot_y) < ARRIVE_RADIUS:
                 hold(i, face_x, face_y)
                 return
             order_type[i] = ORDER_MOVE
@@ -170,30 +181,29 @@ class OrderBook:
             dest_x[i] = ex[j]
             dest_y[i] = ey[j]
 
-        line = self._line_slots(own, x, y, ex, ey, enemy_present, present, half_width, half_depth, count)
+        line = self._line_slots(own, x, y, ex, ey, enemies, present, half_width, half_depth, kinds, count)
 
         for i in range(count):
             if not present[i]:
                 continue
-            self.age[i] += 1
-            pace[i] = PACE_VALUES[self.pace[i]]
-            kind = self.kind[i]
+            pace[i] = PACE_CHOICES[self.pace[i]]
+            kind = kinds[i]
 
             if kind == ACTION_MOVE:
-                if general_has_arrived(i, self.dest_x[i], self.dest_y[i]):
+                if general_has_arrived(i, float(self.dest_x[i]), float(self.dest_y[i])):
                     hold_facing_enemy(i)
                 else:
                     order_type[i] = ORDER_MOVE
-                    dest_x[i] = self.dest_x[i]
-                    dest_y[i] = self.dest_y[i]
+                    dest_x[i] = float(self.dest_x[i])
+                    dest_y[i] = float(self.dest_y[i])
 
             elif kind == ACTION_ATTACK:
                 j = int(self.target[i])
-                if j >= count or not enemy_present[j]:
+                if j >= count or j not in enemy_present:
                     self.kind[i] = ACTION_HOLD
                     hold_facing_enemy(i)
                     continue
-                if not self.committed[i] and self._flank_waypoint(i, j, x, y, ex, ey, opponent, enemy_half_width, enemy_half_depth, half_depth, order_type, dest_x, dest_y):
+                if not self.committed[i] and self._flank_waypoint(i, j, x, y, ex, ey, float(opponent["facing"][j]), enemy_half_width, enemy_half_depth, half_depth, order_type, dest_x, dest_y):
                     continue
                 self.committed[i] = True
                 attack(i, j)
@@ -211,7 +221,7 @@ class OrderBook:
                 if threat < 0:
                     hold(i, fx[i], fy[i])
                     continue
-                if np.hypot(ex[threat] - x[i], ey[threat] - y[i]) < SCREEN_INTERCEPT + half_depth[i] + enemy_half_depth[threat]:
+                if math.hypot(ex[threat] - x[i], ey[threat] - y[i]) < SCREEN_INTERCEPT + half_depth[i] + enemy_half_depth[threat]:
                     attack(i, threat)
                     continue
                 face_x, face_y = _unit(ex[threat] - x[j], ey[threat] - y[j])
@@ -227,21 +237,27 @@ class OrderBook:
         views["dest_x"][:] = dest_x
         views["dest_y"][:] = dest_y
 
-    def _flank_waypoint(self, i, j, x, y, ex, ey, opponent, enemy_half_width, enemy_half_depth, own_half_depth, order_type, dest_x, dest_y):
+    def _flank_waypoint(self, i, j, x, y, ex, ey, facing, enemy_half_width, enemy_half_depth, own_half_depth, order_type, dest_x, dest_y):
         """Steers i round to the requested side of j; returns False once it is there and should charge."""
         approach = int(self.approach[i])
         if approach == APPROACH_FRONT or self.age[i] > FLANK_GIVE_UP_STEPS:
             return False
-        facing = opponent["facing"][j]
-        cos, side = sector(x[i], y[i], ex[j], ey[j], facing, enemy_half_width[j], enemy_half_depth[j])
+        tfx, tfy = math.cos(facing * QUARTER), math.sin(facing * QUARTER)
+        tlx, tly = tfy, -tfx
+        # same sectors as geometry.sector and flank.c, for one point
+        dx = x[i] - ex[j]
+        dy = y[i] - ey[j]
+        along = (dx * tfx + dy * tfy) / max(enemy_half_depth[j], 1e-6)
+        across = (dx * tlx + dy * tly) / max(enemy_half_width[j], 1e-6)
+        length = math.sqrt(along * along + across * across)
+        cos = along / max(length, 1e-6) if length > 1e-6 else 1.0
+        side = (across > 0) - (across < 0)
         wanted_side = 1.0 if approach == APPROACH_LEFT else -1.0
         if approach == APPROACH_REAR and cos <= REAR_COS:
             return False
         if approach != APPROACH_REAR and FRONT_COS > cos > REAR_COS and side == wanted_side:
             return False
 
-        tfx, tfy = facing_vectors(facing)
-        tlx, tly = left_of(tfx, tfy)
         if approach == APPROACH_REAR:
             wanted_side = side if side != 0 else 1.0
         side_reach = enemy_half_width[j] + own_half_depth[i] + FLANK_MARGIN
@@ -260,21 +276,21 @@ class OrderBook:
         dest_y[i] = wy
         return True
 
-    def _line_slots(self, own, x, y, ex, ey, enemy_present, present, half_width, half_depth, count):
+    def _line_slots(self, own, x, y, ex, ey, enemies, present, half_width, half_depth, kinds, count):
         """Slots of one line, spaced by frontage, for every battalion on FORM_LINE or ADVANCE.
 
         Infantry stands in the middle ordered as it already stands, cavalry on the wings and
         archers in a second rank behind, all facing the enemy's centre."""
-        members = [i for i in range(count) if present[i] and self.kind[i] in (ACTION_FORM_LINE, ACTION_ADVANCE)]
+        members = [i for i in range(count) if present[i] and kinds[i] in (ACTION_FORM_LINE, ACTION_ADVANCE)]
         if not members:
             return {}
-        cx = float(np.mean(x[members]))
-        cy = float(np.mean(y[members]))
-        if enemy_present.any():
-            forward = _unit(float(ex[enemy_present].mean()) - cx, float(ey[enemy_present].mean()) - cy)
+        cx = sum(x[i] for i in members) / len(members)
+        cy = sum(y[i] for i in members) / len(members)
+        if enemies:
+            forward = _unit(sum(ex[j] for j in enemies) / len(enemies) - cx, sum(ey[j] for j in enemies) / len(enemies) - cy)
         else:
-            fx, fy = facing_vectors(own["facing"][members])
-            forward = _unit(float(fx.mean()), float(fy.mean()))
+            facing = [float(own["facing"][i]) * QUARTER for i in members]
+            forward = _unit(sum(map(math.cos, facing)) / len(facing), sum(map(math.sin, facing)) / len(facing))
         lateral = (-forward[1], forward[0])
 
         def offset(i):
@@ -291,8 +307,8 @@ class OrderBook:
         if not front:
             front, back = back, []
 
-        cx = float(np.mean(x[front]))
-        cy = float(np.mean(y[front]))
+        cx = sum(x[i] for i in front) / len(front)
+        cy = sum(y[i] for i in front) / len(front)
         slots = {}
         front_depth = max(half_depth[i] for i in front)
         for rank, depth in ((front, 0.0), (back, front_depth * 2.0 + LINE_SECOND_RANK_GAP)):
@@ -303,7 +319,7 @@ class OrderBook:
             for i in rank:
                 along = cursor + half_width[i]
                 cursor += 2.0 * half_width[i] + LINE_GAP
-                ahead = ADVANCE_STEP if self.kind[i] == ACTION_ADVANCE else 0.0
+                ahead = ADVANCE_STEP if kinds[i] == ACTION_ADVANCE else 0.0
                 slot_x = cx + lateral[0] * along + forward[0] * (ahead - depth)
                 slot_y = cy + lateral[1] * along + forward[1] * (ahead - depth)
                 slots[i] = (slot_x, slot_y, forward[0], forward[1])

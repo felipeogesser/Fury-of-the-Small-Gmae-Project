@@ -112,7 +112,7 @@ void shared_memory_control_set_timing(SharedMemoryControl *control, float tick_d
 
 void shared_memory_control_publish_layout(SharedMemoryControl *control);
 uint64_t shared_memory_control_publish_step(SharedMemoryControl *control);
-enum SharedMemoryWaitResult shared_memory_control_wait_for_python(const SharedMemoryControl *control, uint64_t step, unsigned int max_spins);
+enum SharedMemoryWaitResult shared_memory_control_wait_for_python(SharedMemoryControl *control, uint64_t step, unsigned int timeout_ms);
 
 void shared_memory_control_set_map(SharedMemoryControl *control, const Map *map);
 

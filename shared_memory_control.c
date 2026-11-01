@@ -4,8 +4,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sched.h>
+#include <limits.h>
+#include <linux/futex.h>
+#include <sys/syscall.h>
+#include <time.h>
 #include <unistd.h>
+
+#define SHORT_SPIN 64
 
 SharedMemoryControl *shared_memory_control_base_ptr = NULL;
 BattalionTableSpan *battalion_table_span_base_ptr = NULL;
@@ -26,6 +31,19 @@ static inline void signal_store(SignalLine *s, uint64_t value) {
 static inline void cpu_relax(void) {
 
     __builtin_ia32_pause();
+
+}
+
+static void signal_wait(const SignalLine *s, uint64_t seen, unsigned int timeout_ms) {
+
+    struct timespec timeout = { (time_t)(timeout_ms / 1000), (long)(timeout_ms % 1000) * 1000000L };
+    syscall(SYS_futex, (const uint32_t *)&s->value, FUTEX_WAIT, (uint32_t)seen, &timeout, NULL, 0);
+
+}
+
+static void signal_wake(SignalLine *s) {
+
+    syscall(SYS_futex, (uint32_t *)&s->value, FUTEX_WAKE, INT_MAX, NULL, NULL, 0);
 
 }
 
@@ -99,30 +117,29 @@ uint64_t shared_memory_control_publish_step(SharedMemoryControl *control) {
     uint64_t next = signal_load(&control->c_step) + 1;
 
     signal_store(&control->c_step, next);
+    signal_wake(&control->c_step);
 
     return next;
 
 }
 
-enum SharedMemoryWaitResult shared_memory_control_wait_for_python(const SharedMemoryControl *control, uint64_t step, unsigned int max_spins) {
+enum SharedMemoryWaitResult shared_memory_control_wait_for_python(SharedMemoryControl *control, uint64_t step, unsigned int timeout_ms) {
 
-    for (unsigned int spins = 0; spins < max_spins; spins++) {
+    for (unsigned int spins = 0; spins < SHORT_SPIN; spins++) {
 
-        if (signal_load(&control->py_step) == step) {
-            return SHARED_MEMORY_WAIT_OK;
-        }
-
-        if (signal_load(&control->py_shutdown) != 0) {
-            return SHARED_MEMORY_WAIT_SHUTDOWN;
-        }
-
-        if (spins < 1024) {
-            cpu_relax();
-        } else {
-            sched_yield();
-        }
+        if (signal_load(&control->py_step) == step) return SHARED_MEMORY_WAIT_OK;
+        cpu_relax();
 
     }
+
+    uint64_t seen = signal_load(&control->py_step);
+    if (seen == step) return SHARED_MEMORY_WAIT_OK;
+    if (signal_load(&control->py_shutdown) != 0) return SHARED_MEMORY_WAIT_SHUTDOWN;
+
+    signal_wait(&control->py_step, seen, timeout_ms);
+
+    if (signal_load(&control->py_step) == step) return SHARED_MEMORY_WAIT_OK;
+    if (signal_load(&control->py_shutdown) != 0) return SHARED_MEMORY_WAIT_SHUTDOWN;
 
     return SHARED_MEMORY_WAIT_TIMEOUT;
 
@@ -170,6 +187,7 @@ void shared_memory_control_shutdown(SharedMemoryControl *control) {
 
     signal_store(&control->battle_active, 0);
     signal_store(&control->c_shutdown, 1);
+    signal_wake(&control->c_step);
 
 }
 

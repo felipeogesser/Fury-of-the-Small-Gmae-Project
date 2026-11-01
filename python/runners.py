@@ -218,7 +218,7 @@ class Actor:
     def begin_episode(self, info):
         self.buffer.drop_pending()
         self.battle = Battle(info, self.cfg.decision_steps)
-        self.tracker = RewardTracker(self.cfg.rewards, info, self.cfg.decision_steps)
+        self.tracker = RewardTracker(self.cfg.rewards, info)
         roll = self.rng.random()
         opponents = self.cfg.opponents
         if roll < opponents.scripted:
@@ -239,7 +239,8 @@ class Actor:
     def on_step(self, client, result):
         battle = self.battle
         snapshots = read_snapshots(client, battle.info)
-        self.tracker.step(snapshots, shaping_scale(self.cfg.rewards, self.update_count))
+        if result != EpisodeResult.RUNNING or battle.decision_due():
+            self.tracker.step(snapshots, shaping_scale(self.cfg.rewards, self.update_count))
         if result != EpisodeResult.RUNNING:
             for side in self.learning_sides:
                 self.buffer.finalize(side, self.tracker.take(side, result), True)

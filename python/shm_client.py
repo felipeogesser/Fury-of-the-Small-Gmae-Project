@@ -1,6 +1,7 @@
 import ctypes
 import gc
 import os
+import platform
 import time
 from dataclasses import dataclass
 from multiprocessing import shared_memory
@@ -9,6 +10,23 @@ import numpy as np
 
 import shm_layout as layout
 from config import MAX_BATTALIONS
+
+
+_FUTEX_SYSCALL = {"x86_64": 202, "aarch64": 98}.get(platform.machine())
+_FUTEX_WAIT = 0
+_FUTEX_WAKE = 1
+_WAIT_TIMEOUT_NS = 50_000_000
+_libc = ctypes.CDLL(None, use_errno=True) if _FUTEX_SYSCALL is not None else None
+
+
+class _Timespec(ctypes.Structure):
+    _fields_ = [("tv_sec", ctypes.c_long), ("tv_nsec", ctypes.c_long)]
+
+
+def _futex(address, operation, value, timeout=None):
+    """Same futex as shared_memory_control.c: sleeps on the low 32 bits of a signal line."""
+    return _libc.syscall(ctypes.c_long(_FUTEX_SYSCALL), ctypes.c_void_p(address), ctypes.c_int(operation),
+                         ctypes.c_uint32(value & 0xFFFFFFFF), timeout, None, ctypes.c_int(0))
 
 
 def open_shared_memory(name):
@@ -58,6 +76,9 @@ class SharedMemoryClient:
         self.static = [None, None]
         self.dynamic = [None, None]
         self._span_bytes = None
+        self._c_step_address = ctypes.addressof(self.control.c_step)
+        self._py_step_address = ctypes.addressof(self.control.py_step)
+        self._timeout = _Timespec(0, _WAIT_TIMEOUT_NS)
 
     def _wait_for_layout(self, timeout):
         deadline = time.monotonic() + timeout
@@ -158,7 +179,7 @@ class SharedMemoryClient:
             return layout.EpisodeResult.DRAW
 
     def wait_for_step(self, should_stop):
-        spins = 0
+        waits = 0
         while True:
             if self.control.c_shutdown.value != 0 or should_stop():
                 return None
@@ -167,15 +188,21 @@ class SharedMemoryClient:
                 return step
             if self.control.battle_active.value == 0:
                 return None
-            spins += 1
-            if spins < 2000:
-                continue
-            if spins % 2000 == 0 and not self.c_alive():
+            waits += 1
+            if waits % 20 == 0 and not self.c_alive():
                 return None
-            time.sleep(0.0001)
+            if _libc is None:
+                time.sleep(0.0001)
+                continue
+            _futex(self._c_step_address, _FUTEX_WAIT, step, ctypes.byref(self._timeout))
 
     def set_py_step(self, step):
         self.control.py_step.value = step
+        self._wake_c()
+
+    def _wake_c(self):
+        if _libc is not None:
+            _futex(self._py_step_address, _FUTEX_WAKE, 0x7FFFFFFF)
 
     def set_ready(self):
         self.control.py_pid.value = os.getpid()
@@ -184,6 +211,7 @@ class SharedMemoryClient:
     def set_shutdown(self):
         if self.control is not None:
             self.control.py_shutdown.value = 1
+            self._wake_c()
 
     def close(self):
         self.static = [None, None]

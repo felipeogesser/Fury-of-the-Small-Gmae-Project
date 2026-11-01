@@ -10,7 +10,7 @@ void battle_step_reset(void) {
 
 }
 
-enum BattleStepResult battle_step_sync(SharedMemoryControl *control, unsigned int ticks_per_decision, unsigned int max_spins) {
+enum BattleStepResult battle_step_sync(SharedMemoryControl *control, unsigned int ticks_per_decision, unsigned int timeout_ms) {
 
     _Bool is_running = shared_memory_control_episode_result(control) == EPISODE_RUNNING;
 
@@ -23,7 +23,7 @@ enum BattleStepResult battle_step_sync(SharedMemoryControl *control, unsigned in
         pending_step = shared_memory_control_publish_step(control);
     }
 
-    enum SharedMemoryWaitResult wait_result = shared_memory_control_wait_for_python(control, pending_step, max_spins);
+    enum SharedMemoryWaitResult wait_result = shared_memory_control_wait_for_python(control, pending_step, timeout_ms);
 
     if (wait_result == SHARED_MEMORY_WAIT_SHUTDOWN) return BATTLE_STEP_SHUTDOWN;
     if (wait_result == SHARED_MEMORY_WAIT_TIMEOUT) return BATTLE_STEP_WAITING;

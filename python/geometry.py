@@ -6,23 +6,35 @@ QUARTER = np.pi / 2.0
 
 
 def facing_vectors(facing):
-    angle = np.nan_to_num(facing) * QUARTER
+    angle = facing * QUARTER
     return np.cos(angle), np.sin(angle)
 
 
 def mirror_facing(facing):
-    return np.mod(2.0 - np.nan_to_num(facing), 4.0)
+    return np.mod(2.0 - facing, 4.0)
 
 
 def left_of(forward_x, forward_y):
     return forward_y, -forward_x
 
 
+def _cached(snapshot, key, compute):
+    """Derived arrays are worked out once per snapshot; read-only, since every caller shares them."""
+    value = snapshot.get(key)
+    if value is None:
+        value = compute()
+        for array in value:
+            array.setflags(write=False)
+        snapshot[key] = value
+    return value
+
+
 def footprint(snapshot):
-    half_depth = 0.5 * RANK_SPACING * np.maximum(np.nan_to_num(snapshot["formation_x"]), 1.0)
-    half_width = 0.5 * FILE_SPACING * np.maximum(np.nan_to_num(snapshot["formation_y"]), 1.0)
-    radius = np.sqrt(half_depth * half_width)
-    return half_width, half_depth, radius
+    def compute():
+        half_depth = 0.5 * RANK_SPACING * np.maximum(snapshot["formation_x"], 1.0)
+        half_width = 0.5 * FILE_SPACING * np.maximum(snapshot["formation_y"], 1.0)
+        return half_width, half_depth, np.sqrt(half_depth * half_width)
+    return _cached(snapshot, "_footprint", compute)
 
 
 def sector(px, py, tx, ty, facing, half_width, half_depth):
@@ -64,12 +76,13 @@ def nearest_distance(x, y, other_x, other_y, other_present, exclude_self=False):
 
 
 def finite_positions(snapshot, info):
-    center_x = (info.left + info.right) / 2.0
-    center_y = (info.top + info.bottom) / 2.0
-    x = np.where(np.isfinite(snapshot["x"]), snapshot["x"], center_x)
-    y = np.where(np.isfinite(snapshot["y"]), snapshot["y"], center_y)
-    return x, y
+    """Positions with the missing ones (NaN or inf in the C table) moved to the map centre."""
+    def compute():
+        center_x = (info.left + info.right) / 2.0
+        center_y = (info.top + info.bottom) / 2.0
+        return np.where(snapshot["x_valid"], snapshot["x"], center_x), np.where(snapshot["y_valid"], snapshot["y"], center_y)
+    return _cached(snapshot, "_positions", compute)
 
 
 def present_of(snapshot, count):
-    return (snapshot["is_present"] > 0.5) & (np.arange(MAX_BATTALIONS) < count)
+    return _cached(snapshot, "_present", lambda: ((snapshot["is_present"] > 0.5) & (np.arange(MAX_BATTALIONS) < count),))[0]
