@@ -11,6 +11,7 @@
 #include "scenes.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include <time.h>
 
 void game_loop(void) {
 
@@ -25,7 +26,9 @@ void game_loop(void) {
     }
 
     game_clock_start();
-
+    uint64_t perf_ticks = 0;
+    struct timespec perf_start;
+    clock_gettime(CLOCK_MONOTONIC, &perf_start);
     while (*window_running && !engine_cleanup_shutdown_requested()) {
 
         float dt = game_clock_advance();
@@ -79,7 +82,16 @@ void game_loop(void) {
                 }
 
                 scene_update(game->delta);
-
+                perf_ticks++;
+                struct timespec perf_now;
+                clock_gettime(CLOCK_MONOTONIC, &perf_now);
+                double perf_elapsed = (double)(perf_now.tv_sec - perf_start.tv_sec) + (double)(perf_now.tv_nsec - perf_start.tv_nsec) / 1e9;
+                if (perf_elapsed >= 10.0) {
+                    printf("C: %.0f ticks/s\n", (double)perf_ticks / perf_elapsed);
+                    fflush(stdout);
+                    perf_ticks = 0;
+                    perf_start = perf_now;
+                }
                 scene_render();
 
                 continue;
