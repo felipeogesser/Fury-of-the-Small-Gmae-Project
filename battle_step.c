@@ -2,11 +2,37 @@
 
 static uint64_t pending_step = 0;
 static unsigned int ticks_until_decision = 0;
+static float accumulated_time = 0.0f;
 
 void battle_step_reset(void) {
 
     pending_step = 0;
     ticks_until_decision = 0;
+    accumulated_time = 0.0f;
+
+}
+
+void battle_step_accumulate(float frame_time, _Bool is_real_time) {
+
+    if (!is_real_time) {
+        accumulated_time = BATTLE_TICK_DT;
+        return;
+    }
+
+    accumulated_time += frame_time;
+    if (accumulated_time > BATTLE_TICK_DT * BATTLE_MAX_CATCH_UP_TICKS) accumulated_time = BATTLE_TICK_DT * BATTLE_MAX_CATCH_UP_TICKS;
+
+}
+
+_Bool battle_step_tick_due(void) {
+
+    return accumulated_time >= BATTLE_TICK_DT;
+
+}
+
+void battle_step_consume_tick(void) {
+
+    accumulated_time -= BATTLE_TICK_DT;
 
 }
 

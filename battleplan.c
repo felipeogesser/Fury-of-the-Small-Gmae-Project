@@ -18,6 +18,7 @@
 #include "maps.h"
 #include "maps_internal.h" // dependency: engine.map->mapSizeX/Y
 #include "memory_arena.h"
+#include "rng.h"
 #include "scene_handler.h"
 #include "scenes.h"
 #include "sprites.h"
@@ -1324,7 +1325,7 @@ static void set_minimal_general_sprite_and_animation_data(General *general, unsi
         general[i].render = true;
         general[i].anim.animation = IDLE;
         general[i].anim.frames_count = engine.sprite_pack->sprite[general[i].sprite.type][IDLE].frames_count;
-        general[i].anim.current_frame = (unsigned char)(rand() % general[i].anim.frames_count);
+        general[i].anim.current_frame = (unsigned char)rng_below(RNG_COSMETIC, general[i].anim.frames_count);
 
     }
 

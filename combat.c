@@ -1,4 +1,5 @@
 #include "combat.h"
+#include "rng.h"
 #include <math.h>
 #include <stdlib.h>
 
@@ -33,7 +34,7 @@ float hit_chance(float melee_attack, float melee_defense) {
 
 _Bool roll_hit(float chance) {
     
-    float roll = (float)(rand() % 100 + 1);
+    float roll = (float)(rng_below(RNG_BATTLE, 100) + 1);
     return roll <= chance;
 
 }

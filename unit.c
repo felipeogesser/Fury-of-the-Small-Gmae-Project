@@ -8,6 +8,7 @@
 #include "game_state_internal.h"
 #include "general_internal.h"
 #include "maps_internal.h"
+#include "rng.h"
 #include "sprites_internal.h"
 #include <stddef.h>
 
@@ -155,7 +156,7 @@ static void set_units_sprite_and_animation(Unit *unit, General *general, unsigne
 
         unit[i].anim.animation = IDLE;
         unit[i].anim.frames_count = engine.sprite_pack->sprite[general->units_type][IDLE].frames_count;
-        unit[i].anim.current_frame = (unsigned char)(rand() % unit[i].anim.frames_count);
+        unit[i].anim.current_frame = (unsigned char)rng_below(RNG_COSMETIC, unit[i].anim.frames_count);
         unit[i].sprite.type = general->units_type;
         unit[i].sprite.w = engine.sprite_pack->sprite[general->units_type][IDLE].width / unit[i].anim.frames_count;
         unit[i].sprite.h = engine.sprite_pack->sprite[general->units_type][IDLE].height;

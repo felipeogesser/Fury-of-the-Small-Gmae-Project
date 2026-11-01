@@ -26,6 +26,7 @@
 #include "player_collision.h"
 #include "quadrant.h"
 #include "quadrant_internal.h"
+#include "rng.h"
 #include "scene_handler.h"
 #include "unit_collision.h"
 #include "unit.h"
@@ -134,6 +135,7 @@ void battlefield_init(void) {
     shared_memory_control_set_timing(shared_memory_control_base_ptr, BATTLE_TICK_DT, BATTLE_TICKS_PER_DECISION, BATTLE_MAX_TICKS);
     battle_step_reset();
     shared_memory_control_begin_battle(shared_memory_control_base_ptr, battalion_count);
+    rng_begin_battle(shared_memory_control_episode_index(shared_memory_control_base_ptr));
     
     mailbag_letters_destroy(&mailbag);
 
@@ -216,8 +218,10 @@ void debug_print_battalions(const Table *t, unsigned int battalion_count, const 
                (double)gd->x[i], (double)gd->y[i], (double)gd->vec_x[i], (double)gd->vec_y[i], (double)gd->order_x[i], (double)gd->order_y[i]);
     }
 }
-void battlefield_update(float dt) {
+void battlefield_update(float frame_dt) {
 
+    (void)frame_dt;
+    const float dt = BATTLE_TICK_DT;
     _Bool is_ai_bypass_disabled = engine.is_ai_bypass_disabled;
     unsigned int battalion_count = battlefield.battalion_count / 2; // battalion_count of each side, since both sides alwasy have same amount of battalions at start of battle
     unsigned int battalion_size = battlefield.battalion_size;

@@ -121,6 +121,7 @@ void shared_memory_control_set_episode_result(SharedMemoryControl *control, enum
 enum EpisodeResult shared_memory_control_episode_result(const SharedMemoryControl *control);
 void shared_memory_control_end_battle(SharedMemoryControl *control);
 _Bool shared_memory_control_is_battle_active(const SharedMemoryControl *control);
+uint64_t shared_memory_control_episode_index(const SharedMemoryControl *control);
 
 void shared_memory_control_shutdown(SharedMemoryControl *control);
 _Bool shared_memory_control_python_shutdown_requested(const SharedMemoryControl *control);

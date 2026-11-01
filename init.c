@@ -8,18 +8,18 @@
 #include "mailroom.h"
 #include "memory_arena.h"
 #include "python_process.h"
+#include "rng.h"
 #include "shared_memory_control.h"
 #include "window.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 void init(_Bool is_ai_bypass_disabled) {
 
     engine_init(is_ai_bypass_disabled);
     game_clock_init();
-    srand((unsigned int)time(NULL));
+    rng_init();
     memory_arena_init();
     engine_cleanup_install();
     data_baking_shared_memory();

@@ -80,6 +80,12 @@ uint64_t shared_memory_control_python_pid(const SharedMemoryControl *control) {
 
 }
 
+uint64_t shared_memory_control_episode_index(const SharedMemoryControl *control) {
+
+    return signal_load(&control->episode_index);
+
+}
+
 BattalionTableSpan *shared_memory_span_create(SharedMemoryControl *control) {
 
     BattalionTableSpan *spans = memory_arena_push(sizeof *spans, SHARED_MEMORY_CACHE_LINE);

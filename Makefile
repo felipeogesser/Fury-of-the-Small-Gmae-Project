@@ -80,6 +80,7 @@ SRC = \
 	projectile.c \
 	python_process.c \
 	quadrant.c \
+	rng.c \
 	scene_handler.c \
 	scene_registry.c \
 	shared_memory_control.c \

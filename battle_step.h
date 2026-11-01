@@ -5,6 +5,7 @@
 
 #define BATTLE_TICK_DT (1.0f / 60.0f)
 #define BATTLE_TICKS_PER_DECISION 15u
+#define BATTLE_MAX_CATCH_UP_TICKS 8u
 
 enum BattleStepResult {
     BATTLE_STEP_NEW_ORDERS = 0,
@@ -15,6 +16,9 @@ enum BattleStepResult {
 };
 
 void battle_step_reset(void);
+void battle_step_accumulate(float frame_time, _Bool is_real_time);
+_Bool battle_step_tick_due(void);
+void battle_step_consume_tick(void);
 enum BattleStepResult battle_step_sync(SharedMemoryControl *control, unsigned int ticks_per_decision, unsigned int timeout_ms);
 
 #endif

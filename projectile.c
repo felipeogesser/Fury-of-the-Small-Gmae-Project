@@ -1,5 +1,6 @@
 #include "projectile.h"
 #include "projectile_internal.h"
+#include "rng.h"
 #include "battalion_table_internal.h"
 #include "camera.h"
 #include "combat.h"
@@ -229,8 +230,8 @@ static void resolve_impact(const Projectile *projectile, Table *victims, unsigne
 // roughly bell shaped in -1..1, so most arrows land near the aim point
 static float random_spread(void) {
 
-    const float a = (float)rand() / (float)RAND_MAX;
-    const float b = (float)rand() / (float)RAND_MAX;
+    const float a = rng_unit(RNG_BATTLE);
+    const float b = rng_unit(RNG_BATTLE);
     return a + b - 1.0f;
 
 }

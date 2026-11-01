@@ -57,32 +57,41 @@ void game_loop(void) {
 
                 process_peripherals(window_running);
 
-                enum BattleStepResult step_result = battle_step_sync(shared_memory_control_base_ptr, BATTLE_TICKS_PER_DECISION, 10);
+                game->delta = BATTLE_TICK_DT;
+                battle_step_accumulate(dt, engine.is_ai_bypass_disabled);
 
-                if (step_result == BATTLE_STEP_SHUTDOWN) {
-                    *window_running = false;
-                    continue;
-                }
+                while (battle_step_tick_due() && game->scene_state.scene == BATTLEFIELD) {
 
-                if (step_result == BATTLE_STEP_WAITING) {
-                    if (!python_process_is_alive()) {
-                        fprintf(stderr, "python agent died\n");
+                    enum BattleStepResult step_result = battle_step_sync(shared_memory_control_base_ptr, BATTLE_TICKS_PER_DECISION, 10);
+
+                    if (step_result == BATTLE_STEP_SHUTDOWN) {
                         *window_running = false;
+                        break;
                     }
-                    continue;
+
+                    if (step_result == BATTLE_STEP_WAITING) {
+                        if (!python_process_is_alive()) {
+                            fprintf(stderr, "python agent died\n");
+                            *window_running = false;
+                        }
+                        break;
+                    }
+
+                    if (step_result == BATTLE_STEP_ENDED) {
+                        scene_switch(BATTLEPLAN);
+                        break;
+                    }
+
+                    if (step_result == BATTLE_STEP_NEW_ORDERS) {
+                        battlefield_apply_orders();
+                    }
+
+                    scene_update(BATTLE_TICK_DT);
+                    battle_step_consume_tick();
+                    perf_ticks++;
+
                 }
 
-                if (step_result == BATTLE_STEP_ENDED) {
-                    scene_switch(BATTLEPLAN);
-                    continue;
-                }
-
-                if (step_result == BATTLE_STEP_NEW_ORDERS) {
-                    battlefield_apply_orders();
-                }
-
-                scene_update(game->delta);
-                perf_ticks++;
                 struct timespec perf_now;
                 clock_gettime(CLOCK_MONOTONIC, &perf_now);
                 double perf_elapsed = (double)(perf_now.tv_sec - perf_start.tv_sec) + (double)(perf_now.tv_nsec - perf_start.tv_nsec) / 1e9;
@@ -92,7 +101,8 @@ void game_loop(void) {
                     perf_ticks = 0;
                     perf_start = perf_now;
                 }
-                scene_render();
+
+                if (game->scene_state.scene == BATTLEFIELD) scene_render();
 
                 continue;
 
