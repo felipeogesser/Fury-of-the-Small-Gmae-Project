@@ -5,6 +5,7 @@ import time
 import traceback
 
 from config import TrainConfig
+from seeding import battle_seed, run_seed
 from shm_client import SharedMemoryClient
 from shm_layout import EpisodeResult
 
@@ -40,7 +41,7 @@ def run(client, runner, rotation, stop):
             continue
         episode = client.episode_index()
         if episode != current_episode:
-            runner.begin_episode(client.refresh_battle())
+            runner.begin_episode(client.refresh_battle(), battle_seed(run_seed(), episode))
             current_episode = episode
         step = client.wait_for_step(lambda: stop.requested)
         if step is None:
@@ -66,7 +67,7 @@ def main():
             from stage_rotation import StageRotation
             config = TrainConfig()
             runner = actor_from_environment(config) or TrainRunner(arguments.checkpoint, config)
-            rotation = StageRotation(config.stage_path, config.battles_per_layout, config.stage_min_battalions, config.stage_max_battalions)
+            rotation = StageRotation(config.stage_path, config.battles_per_layout, config.stage_min_battalions, config.stage_max_battalions, seed=run_seed())
             rotation.new_layout()
         else:
             from runners import PlayRunner

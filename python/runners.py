@@ -23,6 +23,7 @@ from observation import (
 )
 from config import APPROACH_LEFT, APPROACH_RIGHT
 from ppo import DemoBuffer, RolloutBuffer, imitation_scale, ppo_update
+from seeding import seed_torch
 from rewards import RewardTracker, shaping_scale
 from shm_layout import EpisodeResult
 
@@ -168,7 +169,8 @@ class PlayRunner:
         self.battle = None
         print(f"playing with {checkpoint_path}", flush=True)
 
-    def begin_episode(self, info):
+    def begin_episode(self, info, seed=None):
+        seed_torch(seed)
         self.battle = Battle(info, self.cfg.decision_steps)
 
     def on_step(self, client, result):
@@ -215,7 +217,10 @@ class Actor:
         self.model.load_state_dict(state)
         self.update_count = update_count
 
-    def begin_episode(self, info):
+    def begin_episode(self, info, seed=None):
+        if seed is not None:
+            self.rng.seed(seed)
+        seed_torch(seed)
         self.buffer.drop_pending()
         self.battle = Battle(info, self.cfg.decision_steps)
         self.tracker = RewardTracker(self.cfg.rewards, info)
@@ -411,8 +416,8 @@ class TrainRunner:
         self.step_seconds = 0.0
         self.step_count = 0
 
-    def begin_episode(self, info):
-        self.actor.begin_episode(info)
+    def begin_episode(self, info, seed=None):
+        self.actor.begin_episode(info, seed)
 
     def on_step(self, client, result):
         started = time.monotonic()

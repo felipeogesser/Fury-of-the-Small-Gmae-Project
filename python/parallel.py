@@ -92,8 +92,8 @@ class ActorRunner:
         self._apply(self.connection.recv())
         self.chunk_version = self.version
 
-    def begin_episode(self, info):
-        self.actor.begin_episode(info)
+    def begin_episode(self, info, seed=None):
+        self.actor.begin_episode(info, seed)
 
     def on_step(self, client, result):
         self.actor.on_step(client, result)
@@ -265,6 +265,7 @@ class Workers:
             OMP_NUM_THREADS="1",
             MKL_NUM_THREADS="1",
         )
+        self.env.pop("CGAME_SEED", None)
         self.restarts = 0
 
     def start(self, index):
