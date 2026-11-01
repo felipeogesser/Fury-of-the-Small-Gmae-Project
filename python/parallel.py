@@ -161,7 +161,6 @@ class LearnerServer:
         return f"{host}:{port}"
 
     def _publish_weights(self):
-        # numpy, not tensors: torch pickles tensors as shared-memory handles only related processes can open
         weights = {key: value.numpy() for key, value in self.learner.weights().items()}
         with self.lock:
             self.weights = weights
