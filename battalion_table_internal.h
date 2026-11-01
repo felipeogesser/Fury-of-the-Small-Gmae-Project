@@ -4,6 +4,7 @@
 #include "battalion_table_types.h"
 #include "battalion_types.h"
 #include "fatigue_types.h"
+#include "flank_types.h"
 #include "morale_types.h"
 #include "threat_types.h"
 
@@ -49,6 +50,8 @@ typedef struct BattalionDynamicTable {
     enum BattalionLifecycle *lifecycle_state;
     enum BattalionMovementMode *movement_state;
     enum BattalionMovementPace *movement_pace;
+    enum FlankState *flank_exposure;
+    enum FlankState *flank_attack;
     unsigned int *target_battalion_idx;
     unsigned int *morale_modifiers;
     unsigned int *withdrawed_entity_count;
@@ -72,6 +75,7 @@ typedef struct BattalionDynamicTable {
     float *strength;
     float *rally_timer;
     float *charge_timer;
+    float *facing;
     
     _Bool *is_active;
     _Bool *is_rallying;

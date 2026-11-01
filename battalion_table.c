@@ -13,6 +13,7 @@
 #include "memory_arena.h"
 #include "morale.h"
 #include "morale_internal.h"
+#include "morale_policy.h"
 #include "spreadsheet_internal.h"
 #include "table_internal.h"
 #include "threat_types.h"
@@ -123,6 +124,8 @@ static const ComplexFieldEntry battalion_dynamic_table_field_table[] = {
     { "lifecycle_state",         OFFSET_OF(BattalionDynamicTable, lifecycle_state),         ELEMENT_SIZE_OF(BattalionDynamicTable, lifecycle_state),         S_INT, NULL },
     { "movement_state",          OFFSET_OF(BattalionDynamicTable, movement_state),          ELEMENT_SIZE_OF(BattalionDynamicTable, movement_state),          S_INT, NULL },
     { "movement_pace",           OFFSET_OF(BattalionDynamicTable, movement_pace),           ELEMENT_SIZE_OF(BattalionDynamicTable, movement_pace),           S_INT, NULL },
+    { "flank_exposure",          OFFSET_OF(BattalionDynamicTable, flank_exposure),          ELEMENT_SIZE_OF(BattalionDynamicTable, flank_exposure),          S_INT, NULL },
+    { "flank_attack",            OFFSET_OF(BattalionDynamicTable, flank_attack),            ELEMENT_SIZE_OF(BattalionDynamicTable, flank_attack),            S_INT, NULL },
     { "target_battalion_idx",    OFFSET_OF(BattalionDynamicTable, target_battalion_idx),    ELEMENT_SIZE_OF(BattalionDynamicTable, target_battalion_idx),    U_INT, NULL },
     { "morale_modifiers",        OFFSET_OF(BattalionDynamicTable, morale_modifiers),        ELEMENT_SIZE_OF(BattalionDynamicTable, morale_modifiers),        U_INT, NULL },
     { "withdrawed_entity_count", OFFSET_OF(BattalionDynamicTable, withdrawed_entity_count), ELEMENT_SIZE_OF(BattalionDynamicTable, withdrawed_entity_count), U_INT, NULL },
@@ -142,6 +145,7 @@ static const ComplexFieldEntry battalion_dynamic_table_field_table[] = {
     { "strength",                OFFSET_OF(BattalionDynamicTable, strength),                ELEMENT_SIZE_OF(BattalionDynamicTable, strength),                FLOAT, NULL },
     { "rally_timer",             OFFSET_OF(BattalionDynamicTable, rally_timer),             ELEMENT_SIZE_OF(BattalionDynamicTable, rally_timer),             FLOAT, NULL },
     { "charge_timer",            OFFSET_OF(BattalionDynamicTable, charge_timer),            ELEMENT_SIZE_OF(BattalionDynamicTable, charge_timer),            FLOAT, NULL },
+    { "facing",                  OFFSET_OF(BattalionDynamicTable, facing),                  ELEMENT_SIZE_OF(BattalionDynamicTable, facing),                  FLOAT, NULL },
     { "is_active",               OFFSET_OF(BattalionDynamicTable, is_active),               ELEMENT_SIZE_OF(BattalionDynamicTable, is_active),               BOOL,  NULL },
     { "is_rallying",             OFFSET_OF(BattalionDynamicTable, is_rallying),             ELEMENT_SIZE_OF(BattalionDynamicTable, is_rallying),             BOOL,  NULL },
     { "is_charging",             OFFSET_OF(BattalionDynamicTable, is_charging),             ELEMENT_SIZE_OF(BattalionDynamicTable, is_charging),             BOOL,  NULL },
@@ -320,7 +324,8 @@ void battalion_table_update(const Spreadsheet *spreadsheet, Table *tables, signe
             .state = tables->battalion_tables.friendly_dynamic.morale_state[i],
             .current = tables->battalion_tables.friendly_dynamic.morale[i],
             .base = spreadsheet->battalion_spreadsheet[battalion_type].morale,
-            .modifiers = tables->battalion_tables.friendly_dynamic.morale_modifiers[i]
+            .modifiers = evaluate_morale_flank_flags(tables->battalion_tables.friendly_dynamic.morale_modifiers[i],
+                                                     tables->battalion_tables.friendly_dynamic.flank_exposure[i])
         };
         const HealthPool health_pool = {
             .max_hp = tables->battalion_tables.friendly_static.max_hp[i],
@@ -733,6 +738,8 @@ static void battalion_dynamic_table_init(
 
         mock_dynamic_table->lifecycle_state[i] = NORMAL;
         mock_dynamic_table->morale_modifiers[i] = 0;
+        mock_dynamic_table->flank_exposure[i] = FLANK_NONE;
+        mock_dynamic_table->flank_attack[i] = FLANK_NONE;
     
     }
 

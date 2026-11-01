@@ -11,6 +11,7 @@
 #include "direction_types.h"
 #include "engine_internal.h"
 #include "field_entry.h"
+#include "flank.h"
 #include "formation.h"
 #include "maps_internal.h"
 #include "memory_arena.h"
@@ -38,6 +39,7 @@
 #define BATTALION_REACH 900.0f
 #define MEELE_SEARCH_RANGE 200.0f
 #define ARCHER_MELEE_RANGE 35.0f // an enemy this close gets a melee blow instead of an arrow
+#define MAX_FLANK_HIT_CHANCE 95.0f
 #define ARCHER_MELEE_SWING 1.0f  // seconds between an archer's melee blows; attack_speed is its reload
 
 #define DISTANCE 36.0f // DISTANCE_BETWEEN_GENERAL_AND_BATTALION_CENTROID
@@ -387,6 +389,16 @@ static void resolve_attack(Table *tables, unsigned int battalion_count, unsigned
         _Bool is_anti_large = tables->battalion_tables.friendly_static.is_anti_large[i / battalion_size];
         damage *= (is_target_large && is_anti_large) ? 1.5f : 1.0f;
         float chance = hit_chance(meele_attack, target_meele_defense);
+
+        // a battalion flanking its ordered target hits that target's soldiers harder
+        const unsigned int battalion_idx = i / battalion_size;
+        const unsigned int target_battalion_idx = (target_type == TARGET_UNIT) ? target_idx / battalion_size : target_idx;
+        const _Bool is_ordered_target = target_battalion_idx == tables->battalion_order.target[battalion_idx];
+        const enum FlankState flank = is_ordered_target ? tables->battalion_tables.friendly_dynamic.flank_attack[battalion_idx] : FLANK_NONE;
+        const _Bool is_cavalry = tables->battalion_tables.friendly_static.battalion_type[battalion_idx] == CAVALRY;
+        damage *= flank_damage_multiplier(flank, is_cavalry);
+        chance = fminf(chance + flank_hit_bonus(flank), MAX_FLANK_HIT_CHANCE);
+
         _Bool hit = roll_hit(chance);
 
         if (hit) *target_hp -= damage;

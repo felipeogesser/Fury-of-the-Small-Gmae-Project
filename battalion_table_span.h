@@ -35,6 +35,8 @@ typedef struct BattalionDynamicTableSpan {
     Span lifecycle_state;
     Span movement_state;
     Span movement_pace;
+    Span flank_exposure;
+    Span flank_attack;
     Span target_battalion_idx;
     Span morale_modifiers;
     Span withdrawed_entity_count;
@@ -54,6 +56,7 @@ typedef struct BattalionDynamicTableSpan {
     Span strength;
     Span rally_timer;
     Span charge_timer;
+    Span facing;
     Span is_active;
     Span is_rallying;
     Span is_charging;
@@ -74,8 +77,8 @@ typedef struct BattalionTableSpan {
 
 _Static_assert(sizeof(Span) == 16, "Span size changed");
 _Static_assert(sizeof(BattalionStaticTableSpan) == 14 * 16, "BattalionStaticTableSpan size changed");
-_Static_assert(sizeof(BattalionDynamicTableSpan) == 34 * 16, "BattalionDynamicTableSpan size changed");
-_Static_assert(sizeof(BattalionTableSpan) == (2 * 14 + 2 * 34) * 16, "BattalionTableSpan size changed");
+_Static_assert(sizeof(BattalionDynamicTableSpan) == 37 * 16, "BattalionDynamicTableSpan size changed");
+_Static_assert(sizeof(BattalionTableSpan) == (2 * 14 + 2 * 37) * 16, "BattalionTableSpan size changed");
 
 void set_table_shared_memory_span(BattalionTableSpan *spans, const Table *tables, size_t battalion_count);
 

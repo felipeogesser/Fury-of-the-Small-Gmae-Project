@@ -49,6 +49,7 @@
 #include "shared_memory_orders.h"
 #include "battle_outcome.h"
 #include "battle_step.h"
+#include "flank.h"
 #include "projectile.h"
 #include "spreadsheet.h"
 #include "sprites_internal.h"
@@ -239,6 +240,8 @@ void battlefield_update(float dt) {
 
     general_table_update(player_tables, engine.map, ARMY_SIDE_LEFT, battalion_count, battalion_size, dt);
     general_table_update(enemy_tables, engine.map, ARMY_SIDE_RIGHT, battalion_count, battalion_size, dt);
+
+    flank_update(player_tables, enemy_tables, battalion_count, battalion_size);
 
     unit_table_update(player_tables, engine.map, battalion_count, battalion_size, ARMY_SIDE_LEFT, dt);
     unit_table_update(enemy_tables, engine.map, battalion_count, battalion_size, ARMY_SIDE_RIGHT, dt);

@@ -47,6 +47,8 @@ static void battalion_dynamic_span_set(BattalionDynamicTableSpan *s, const Batta
     s->lifecycle_state = SPAN(base, t, lifecycle_state, n);
     s->movement_state = SPAN(base, t, movement_state, n);
     s->movement_pace = SPAN(base, t, movement_pace, n);
+    s->flank_exposure = SPAN(base, t, flank_exposure, n);
+    s->flank_attack = SPAN(base, t, flank_attack, n);
     s->target_battalion_idx = SPAN(base, t, target_battalion_idx, n);
     s->morale_modifiers = SPAN(base, t, morale_modifiers, n);
     s->withdrawed_entity_count = SPAN(base, t, withdrawed_entity_count, n);
@@ -66,6 +68,7 @@ static void battalion_dynamic_span_set(BattalionDynamicTableSpan *s, const Batta
     s->strength = SPAN(base, t, strength, n);
     s->rally_timer = SPAN(base, t, rally_timer, n);
     s->charge_timer = SPAN(base, t, charge_timer, n);
+    s->facing = SPAN(base, t, facing, n);
     s->is_active = SPAN(base, t, is_active, n);
     s->is_rallying = SPAN(base, t, is_rallying, n);
     s->is_charging = SPAN(base, t, is_charging, n);

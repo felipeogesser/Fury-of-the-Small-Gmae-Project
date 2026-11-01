@@ -2,7 +2,7 @@
 #include "direction_types.h"
 #include "table_internal.h"
 #include <math.h>
-
+#include <stdbool.h>
 #include <stdio.h>
 
 #define PI 3.14159274f
@@ -16,6 +16,7 @@
 #define FACING_MIN_STEP_FRACTION 0.3f
 #define SLOT_DEADBAND 3.0f
 #define FIGHTING_HOLD_RADIUS 48.0f
+#define ENGAGE_LEASH 24.0f
 
 // private prototypes
 static float wrap_direction(float dir);
@@ -44,6 +45,7 @@ static void steer_separation(const float *unit_x, const float *unit_y,
                     float force_x, float force_y, float max_speed);*/
 static void clamp_length(float *x, float *y, float max);
 static float turn_toward(float current, float desired, float max_turn);
+static _Bool unit_target_position(const Table *tables, unsigned int idx, float *target_x, float *target_y);
 
 void formation_update(Table *tables,
                 const unsigned int battalion_count, const unsigned int unit_count,
@@ -113,24 +115,33 @@ void formation_update(Table *tables,
         float max_step = speed[b] * catch_up;
 
         unsigned int iter = 0;   /* slot number within this battalion */
-
+        
         for (unsigned int i = b * battalion_size, k = 0; k < battalion_size && iter < to_place; k++) {
             unsigned int idx = i + k;
             if (idx >= unit_count) break;
             if (!is_unit_present[idx]) continue;
 
-            /* the unit keeps its slot number even while it is away fighting,
-               so the other units don't reshuffle */
             unsigned int slot = iter;
             iter++;
-
-            /* goes for its target instead: get_close_to_engaged_target moves it */
-            if (is_unit_going_for_target(tables, idx, battalion_size)) continue;
 
             float slot_x = 0.0f, slot_y = 0.0f;
             formation_slot(slot, to_place, files, center_x, center_y,
                            forward_x, forward_y, step_depth, step_side,
                            &slot_x, &slot_y);
+
+            if (is_unit_going_for_target(tables, idx, battalion_size)) {
+                float target_x = 0.0f, target_y = 0.0f;
+                if (unit_target_position(tables, idx, &target_x, &target_y)) {
+                    float leash_x = target_x - slot_x;
+                    float leash_y = target_y - slot_y;
+                    clamp_length(&leash_x, &leash_y, ENGAGE_LEASH);
+                    steer_arrive(unit_x[idx], unit_y[idx], slot_x + leash_x, slot_y + leash_y, max_step,
+                                 &unit_vx[idx], &unit_vy[idx]);
+                    steer_separation(unit_x, unit_y, is_unit_present, idx, battalion_size, unit_count,
+                                     sep_radius, &unit_vx[idx], &unit_vy[idx]);
+                    continue;
+                }
+            }
 
             if (movement_state[b] == FIGHTING) {
                 float hold_dx = slot_x - unit_x[idx];
@@ -153,6 +164,7 @@ void formation_update(Table *tables,
 _Bool is_unit_going_for_target(const Table *tables, unsigned int idx, unsigned int battalion_size) {
     unsigned int b = idx / battalion_size;
     if (!tables->unit_tables.friendly_dynamic.is_engaged[idx]) return 0;
+    if (tables->battalion_tables.friendly_static.is_ranged[b]) return 0; // archers shoot from their slots
 
     enum BattalionMovementMode movement_state = tables->battalion_tables.friendly_dynamic.movement_state[b];
     _Bool is_headless = tables->battalion_tables.friendly_dynamic.is_headless[b];
@@ -317,4 +329,20 @@ static float turn_toward(float current, float desired, float max_turn) {
     if (diff > max_turn) diff = max_turn;
     if (diff < -max_turn) diff = -max_turn;
     return wrap_direction(current + diff);
+}
+
+static _Bool unit_target_position(const Table *tables, unsigned int idx, float *target_x, float *target_y) {
+    unsigned int target_idx = tables->unit_tables.friendly_dynamic.target_idx[idx];
+    enum TargetType target_type = tables->unit_tables.friendly_dynamic.target_type[idx];
+    if (target_type == TARGET_UNIT) {
+        *target_x = tables->unit_tables.enemy_dynamic.x[target_idx];
+        *target_y = tables->unit_tables.enemy_dynamic.y[target_idx];
+        return true;
+    }
+    if (target_type == TARGET_GENERAL) {
+        *target_x = tables->general_tables.enemy_dynamic.x[target_idx];
+        *target_y = tables->general_tables.enemy_dynamic.y[target_idx];
+        return true;
+    }
+    return false;
 }

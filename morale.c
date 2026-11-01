@@ -49,7 +49,7 @@ void morale_update(Morale *morale, const HealthPool *health_pool, signed int bal
     morale->modifiers = modifiers;
 
     signed int modifier = 0;
-    if(0)modifier += evaluate_morale_static_modifiers(modifiers);
+    modifier += evaluate_morale_static_modifiers(modifiers);
     modifier += evaluate_morale_dynamic_modifiers(modifiers, max_hp, current_hp, balance_of_power);
     morale->current = morale->base + modifier;
 

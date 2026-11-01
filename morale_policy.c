@@ -25,6 +25,7 @@ signed int evaluate_morale_static_modifiers(unsigned int modifiers) {
     delta += (modifiers & FLAG_SORROUNDED)               ?   VALUE_SORROUNDED                : 0;
     delta += (modifiers & FLAG_GENERAL_WOUNDED)          ?   VALUE_GENERAL_WOUNDED           : 0;
     delta += (modifiers & FLAG_FLANKED)                  ?   VALUE_FLANKED                   : 0;
+    delta += (modifiers & FLAG_REAR_ATTACKED)            ?   VALUE_REAR_ATTACKED             : 0;
     delta += (modifiers & FLAG_STRONGER_ENEMIES_NEARBY)  ?   VALUE_STRONGER_ENEMIES_NEARBY   : 0;
     delta += (modifiers & FLAG_LOSING_CURRENT_COMBAT)    ?   VALUE_LOSING_CURRENT_COMBAT     : 0;
     delta += (modifiers & FLAG_BEING_CHARGED_AT)         ?   VALUE_BEING_CHARGED_AT          : 0;
@@ -66,6 +67,16 @@ static signed int damage_sustained(unsigned int max_hp, unsigned int current_hp)
     if (current_hp > max_hp) current_hp = max_hp;
     signed int lost_percent = (signed int)((max_hp - current_hp) * 100 / max_hp);
     return lost_percent * VALUE_DAMAGE_SUSTAINED;
+
+}
+
+// one flank flag at most: the worst exposure replaces the other, they never add up
+unsigned int evaluate_morale_flank_flags(unsigned int modifiers, enum FlankState flank_exposure) {
+
+    modifiers &= ~(unsigned int)(FLAG_FLANKED | FLAG_REAR_ATTACKED);
+    if (flank_exposure == FLANK_SIDE) modifiers |= FLAG_FLANKED;
+    if (flank_exposure == FLANK_REAR) modifiers |= FLAG_REAR_ATTACKED;
+    return modifiers;
 
 }
 
