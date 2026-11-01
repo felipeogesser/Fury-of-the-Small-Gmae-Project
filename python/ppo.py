@@ -44,7 +44,6 @@ class RolloutBuffer:
                     next_value = np.zeros_like(advantage)
                     alive = np.zeros_like(advantage)
                 else:
-                    # a battalion that is gone in the next window ends its own episode here
                     alive = following["obs"]["fmask"].astype(np.float32)
                     next_value = following["value"] * alive
                 delta = items[t]["reward"] + gamma * next_value - items[t]["value"]
@@ -58,6 +57,37 @@ class RolloutBuffer:
         return _collate(collected)
 
 
+class DemoBuffer:
+    """The teacher bot's decisions, as observation and order pairs in the network's own frame."""
+
+    def __init__(self, size):
+        self.size = size
+        self.items = []
+
+    def add(self, obs, actions):
+        self.items.append({"obs": obs, "actions": actions})
+        if len(self.items) > self.size:
+            self.items.pop(0)
+
+    def __len__(self):
+        return len(self.items)
+
+    def sample(self, count, rng, device):
+        picks = [self.items[k] for k in rng.integers(0, len(self.items), size=min(count, len(self.items)))]
+        obs = {}
+        for key in OBS_KEYS:
+            stacked = np.stack([item["obs"][key] for item in picks])
+            dtype = torch.bool if stacked.dtype == np.bool_ else torch.float32
+            obs[key] = torch.as_tensor(stacked, dtype=dtype, device=device)
+        actions = {key: torch.as_tensor(np.stack([item["actions"][key] for item in picks]).astype(np.int64), device=device) for key in ACTION_KEYS}
+        return obs, actions
+
+
+def imitation_scale(cfg, update_count):
+    progress = min(update_count / max(cfg.anneal_updates, 1), 1.0)
+    return cfg.coef + (cfg.floor - cfg.coef) * progress
+
+
 def _collate(items):
     batch = {}
     for key in OBS_KEYS:
@@ -69,7 +99,7 @@ def _collate(items):
     return batch
 
 
-def ppo_update(model, optimizer, batch, cfg, device):
+def ppo_update(model, optimizer, batch, cfg, device, demos=None, imitation=0.0):
     count = batch["value"].shape[0]
     control = batch["cmask"]
     advantage = batch["advantage"]
@@ -86,7 +116,9 @@ def ppo_update(model, optimizer, batch, cfg, device):
     old_log_prob = torch.as_tensor(batch["log_prob"], device=device)
     advantage_tensor = torch.as_tensor(advantage, dtype=torch.float32, device=device)
     returns = torch.as_tensor(batch["return"], device=device)
-    totals = {"policy_loss": 0.0, "value_loss": 0.0, "entropy": 0.0, "approx_kl": 0.0}
+    totals = {"policy_loss": 0.0, "value_loss": 0.0, "entropy": 0.0, "approx_kl": 0.0, "imitation": 0.0}
+    rng = np.random.default_rng()
+    imitating = demos is not None and len(demos) > 0 and imitation > 0.0
     batches = 0
     for _ in range(cfg.epochs):
         permutation = torch.randperm(count, device=device)
@@ -105,6 +137,13 @@ def ppo_update(model, optimizer, batch, cfg, device):
             value_mask = obs["fmask"].float()
             value_loss = (((value - returns[index]) ** 2) * value_mask).sum() / value_mask.sum().clamp(min=1.0)
             loss = policy_loss + cfg.value_coef * value_loss - cfg.entropy_coef * entropy_mean
+            if imitating:
+                demo_obs, demo_actions = demos.sample(cfg.imitation.minibatch_size, rng, device)
+                demo_log_prob, _, _ = evaluate_actions(model, demo_obs, demo_actions)
+                demo_mask = demo_obs["cmask"].float()
+                imitation_loss = -(demo_log_prob * demo_mask).sum() / demo_mask.sum().clamp(min=1.0)
+                loss = loss + imitation * imitation_loss
+                totals["imitation"] += imitation_loss.item()
             optimizer.zero_grad()
             loss.backward()
             nn.utils.clip_grad_norm_(model.parameters(), cfg.max_grad_norm)

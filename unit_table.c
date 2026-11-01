@@ -40,6 +40,7 @@
 #define MEELE_SEARCH_RANGE 200.0f
 #define ARCHER_MELEE_RANGE 35.0f // an enemy this close gets a melee blow instead of an arrow
 #define MAX_FLANK_HIT_CHANCE 95.0f
+#define GENERAL_SCREEN 60.0f
 #define ARCHER_MELEE_SWING 1.0f  // seconds between an archer's melee blows; attack_speed is its reload
 
 #define DISTANCE 36.0f // DISTANCE_BETWEEN_GENERAL_AND_BATTALION_CENTROID
@@ -930,6 +931,7 @@ static _Bool try_engage_enemy(float fx, float fy, float search_range, enum Targe
 
 static void search_enemy_battalion(float fx, float fy, const Table *tables, unsigned int battalion_size, unsigned int battalion_idx, float *best_dist, enum TargetType *best_type, unsigned int *best_idx) {
 
+    float nearest_guard = INFINITY;
     for (unsigned int k = 0; k < battalion_size; k++) {
 
         const unsigned int idx = battalion_idx * battalion_size + k;
@@ -942,6 +944,7 @@ static void search_enemy_battalion(float fx, float fy, const Table *tables, unsi
         const float dx = tx - fx;
         const float dy = ty - fy;
         const float dist = dx * dx + dy * dy;
+        if (dist < nearest_guard) nearest_guard = dist;
         if (dist <= *best_dist) {
             *best_dist = dist;
             *best_type = TARGET_UNIT;
@@ -955,7 +958,9 @@ static void search_enemy_battalion(float fx, float fy, const Table *tables, unsi
         const float dx = tables->general_tables.enemy_dynamic.x[battalion_idx] - fx;
         const float dy = tables->general_tables.enemy_dynamic.y[battalion_idx] - fy;
         const float dist = dx * dx + dy * dy;
-        if (dist <= *best_dist) {
+        // bodyguard rule, as for arrows: the general is only reached once he is clearly ahead of his men
+        const float screened = sqrtf(dist) + GENERAL_SCREEN;
+        if (dist <= *best_dist && screened * screened < nearest_guard) {
             *best_dist = dist;
             *best_type = TARGET_GENERAL;
             *best_idx = battalion_idx;

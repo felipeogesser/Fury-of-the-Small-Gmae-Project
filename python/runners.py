@@ -21,7 +21,8 @@ from observation import (
     build_observations,
     snapshot_army,
 )
-from ppo import RolloutBuffer, ppo_update
+from config import APPROACH_LEFT, APPROACH_RIGHT
+from ppo import DemoBuffer, RolloutBuffer, imitation_scale, ppo_update
 from rewards import RewardTracker, shaping_scale
 from shm_layout import EpisodeResult
 
@@ -65,6 +66,18 @@ def training_device():
 
 def control_mask(observation):
     return observation["cmask"]
+
+
+def to_network_frame(actions, mirror):
+    """Bot orders are in world coordinates; the network sees side 1 mirrored, so its left and right swap."""
+    converted = {key: np.array(value, dtype=np.int64) for key, value in actions.items()}
+    if mirror:
+        approach = converted["approach"]
+        left = approach == APPROACH_LEFT
+        right = approach == APPROACH_RIGHT
+        approach[left] = APPROACH_RIGHT
+        approach[right] = APPROACH_LEFT
+    return converted
 
 
 class Battle:
@@ -173,6 +186,7 @@ class TrainRunner:
         self.optimizer = torch.optim.Adam(self.learner.parameters(), lr=cfg.learning_rate)
         self.normalizer = RunningNorm(len(RAW_FIELDS))
         self.buffer = RolloutBuffer()
+        self.demos = DemoBuffer(cfg.imitation.buffer_size)
         self.rng = random.Random()
         self.update_count = 0
         self.episode_count = 0
@@ -211,7 +225,8 @@ class TrainRunner:
         roll = self.rng.random()
         opponents = self.cfg.opponents
         if roll < opponents.scripted:
-            self.opponent = self.rng.choice(BOTS)
+            weights = opponents.bot_weights
+            self.opponent = self.rng.choices(BOTS, weights=[weights.get(bot.name, 0.0) for bot in BOTS])[0]
             self.mode = self.opponent.name
         elif roll < opponents.scripted + opponents.pool and self.pool.snapshots:
             self.opponent = self.pool
@@ -221,6 +236,8 @@ class TrainRunner:
             self.opponent = None
             self.mode = "self"
         self.learning_sides = (0, 1) if self.opponent is None else (self.rng.randrange(2),)
+        teacher = next(bot for bot in BOTS if bot.name == self.cfg.imitation.teacher)
+        self.advisors = {side: type(teacher)() for side in self.learning_sides}
 
     def on_step(self, client, result):
         started = time.monotonic()
@@ -249,6 +266,10 @@ class TrainRunner:
         observations = battle.observe(snapshots, self.normalizer, True)
         learner_obs = [observations[side] for side in self.learning_sides]
         actions, log_probs, values = select_actions(self.actor, learner_obs, False)
+        if imitation_scale(self.cfg.imitation, self.update_count) > 0.0:
+            for side in self.learning_sides:
+                advice = self.advisors[side].act(snapshots[side], snapshots[1 - side], battle.info)
+                self.demos.add(observations[side], to_network_frame(advice, side == 1))
         for index, side in enumerate(self.learning_sides):
             battle.apply(side, actions[index], control_mask(observations[side]), side == 1)
             self.buffer.add_pending(side, {
@@ -265,6 +286,8 @@ class TrainRunner:
             else:
                 bot_actions = self.opponent.act(snapshots[side], snapshots[1 - side], battle.info)
                 battle.apply(side, bot_actions, control_mask(observations[side]), False)
+                if self.opponent.name == self.cfg.imitation.teacher and imitation_scale(self.cfg.imitation, self.update_count) > 0.0:
+                    self.demos.add(observations[side], to_network_frame(bot_actions, side == 1))
         if self.buffer.size() >= self.cfg.steps_per_update:
             self._update()
 
@@ -311,7 +334,8 @@ class TrainRunner:
             return
         update_started = time.monotonic()
         self.learner.train()
-        stats = ppo_update(self.learner, self.optimizer, batch, self.cfg, self.device)
+        imitation = imitation_scale(self.cfg.imitation, self.update_count)
+        stats = ppo_update(self.learner, self.optimizer, batch, self.cfg, self.device, self.demos, imitation)
         self.actor.load_state_dict({key: value.cpu() for key, value in self.learner.state_dict().items()})
         update_seconds = time.monotonic() - update_started
         self.update_count += 1
@@ -321,7 +345,8 @@ class TrainRunner:
             f"update {self.update_count} samples {batch['value'].shape[0]} "
             f"policy {stats['policy_loss']:.4f} value {stats['value_loss']:.4f} "
             f"entropy {stats['entropy']:.3f} kl {stats['approx_kl']:.4f} "
-            f"shaping {shaping_scale(self.cfg.rewards, self.update_count):.2f} | "
+            f"shaping {shaping_scale(self.cfg.rewards, self.update_count):.2f} "
+            f"imitation {stats['imitation']:.3f} x{imitation:.2f} ({len(self.demos)} demos) | "
             f"cycle {cycle_seconds:.1f}s update {update_seconds:.1f}s "
             f"python per step {1000.0 * self.step_seconds / max(self.step_count, 1):.1f}ms",
             flush=True,

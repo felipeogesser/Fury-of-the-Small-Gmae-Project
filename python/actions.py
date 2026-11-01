@@ -1,6 +1,7 @@
 import numpy as np
 
 from config import (
+    ACTION_ADVANCE,
     ACTION_ATTACK,
     ACTION_COUNT,
     ACTION_FORM_LINE,
@@ -31,6 +32,7 @@ ORDER_FEATURE_DIM = ACTION_COUNT + APPROACH_COUNT + 2
 
 ARRIVE_RADIUS = 50.0 # general this close to his destination has arrived
 LINE_GAP = 60.0 # space between neighbouring battalions in a line
+ADVANCE_STEP = 120.0 # an advancing battalion's slot sits this far ahead of where it stands
 LINE_SECOND_RANK_GAP = 80.0 # archers stand this far behind the line's back rank
 FLANK_MARGIN = 150.0 # how wide of the target a flanking battalion swings
 FLANK_GIVE_UP_STEPS = 160 # 40 s: a flank that has not got round attacks straight in
@@ -196,7 +198,7 @@ class OrderBook:
                 self.committed[i] = True
                 attack(i, j)
 
-            elif kind == ACTION_FORM_LINE and i in line:
+            elif kind in (ACTION_FORM_LINE, ACTION_ADVANCE) and i in line:
                 take_position(i, *line[i])
 
             elif kind == ACTION_SCREEN:
@@ -259,11 +261,11 @@ class OrderBook:
         return True
 
     def _line_slots(self, own, x, y, ex, ey, enemy_present, present, half_width, half_depth, count):
-        """Slots of one line, spaced by frontage, for every battalion on FORM_LINE.
+        """Slots of one line, spaced by frontage, for every battalion on FORM_LINE or ADVANCE.
 
         Infantry stands in the middle ordered as it already stands, cavalry on the wings and
         archers in a second rank behind, all facing the enemy's centre."""
-        members = [i for i in range(count) if present[i] and self.kind[i] == ACTION_FORM_LINE]
+        members = [i for i in range(count) if present[i] and self.kind[i] in (ACTION_FORM_LINE, ACTION_ADVANCE)]
         if not members:
             return {}
         cx = float(np.mean(x[members]))
@@ -301,7 +303,8 @@ class OrderBook:
             for i in rank:
                 along = cursor + half_width[i]
                 cursor += 2.0 * half_width[i] + LINE_GAP
-                slot_x = cx + lateral[0] * along - forward[0] * depth
-                slot_y = cy + lateral[1] * along - forward[1] * depth
+                ahead = ADVANCE_STEP if self.kind[i] == ACTION_ADVANCE else 0.0
+                slot_x = cx + lateral[0] * along + forward[0] * (ahead - depth)
+                slot_y = cy + lateral[1] * along + forward[1] * (ahead - depth)
                 slots[i] = (slot_x, slot_y, forward[0], forward[1])
         return slots

@@ -11,8 +11,9 @@ ACTION_MOVE = 2
 ACTION_ATTACK = 3
 ACTION_FORM_LINE = 4
 ACTION_SCREEN = 5
-ACTION_COUNT = 6
-ACTION_NAMES = ["keep", "hold", "move", "attack", "form_line", "screen"]
+ACTION_ADVANCE = 6
+ACTION_COUNT = 7
+ACTION_NAMES = ["keep", "hold", "move", "attack", "form_line", "screen", "advance"]
 
 # side of the target an attack goes for, in the target's own frame
 APPROACH_FRONT = 0
@@ -82,6 +83,19 @@ class OpponentConfig:
     scripted: float = 0.25
     pool_every_updates: int = 25
     pool_size: int = 12 # kept next to the checkpoint, in pool/
+    # how often each bot is picked when a scripted battle comes up
+    bot_weights: dict = field(default_factory=lambda: {"commander": 0.55, "flank": 0.2, "line": 0.1, "rush": 0.15})
+
+
+@dataclass
+class ImitationConfig:
+    # the network copies the teacher bot's orders, strongly at first and less as it learns to win on its own
+    teacher: str = "commander"
+    coef: float = 0.5
+    anneal_updates: int = 1500     # the imitation weight falls linearly to floor over this many updates
+    floor: float = 0.0
+    buffer_size: int = 20000       # teacher decisions kept, oldest dropped first
+    minibatch_size: int = 128
 
 
 @dataclass
@@ -108,3 +122,4 @@ class TrainConfig:
     log_every_episodes: int = 20
     rewards: RewardConfig = field(default_factory=RewardConfig)
     opponents: OpponentConfig = field(default_factory=OpponentConfig)
+    imitation: ImitationConfig = field(default_factory=ImitationConfig)

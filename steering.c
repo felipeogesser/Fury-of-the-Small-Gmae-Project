@@ -16,6 +16,7 @@
 #define COHESION_SPREAD    0.6f   /* loose radius = sqrt(units) * spacing * this        */
 #define ALIGN_WEIGHT       0.1f   /* how much units match neighbors' velocity (DRIFT)   */
 #define ALIGN_RADIUS       3.0f   /* alignment range, in unit spacings                  */
+#define ENGAGE_REACH       0.8f   /* engaged units close to this fraction of their melee range */
 
 // private prototypes
 static void clamp_length(float *x, float *y, float max);
@@ -40,6 +41,8 @@ static void steer_cohesion(float x, float y, float center_x, float center_y,
                     float radius, float *force_x, float *force_y);
 static void integrate_unit(float *x, float *y, float *vx, float *vy,
                     float force_x, float force_y, float max_speed);*/
+static void steer_to_target(const Table *tables, unsigned int idx, unsigned int b,
+                    float max_step, float *vec_x, float *vec_y);
 static float wrap_direction(float dir);
 static void direction_to_forward(float direction, float *forward_x, float *forward_y);
 static float centered_offset(unsigned int index, unsigned int count, float step);
@@ -71,8 +74,7 @@ static unsigned int count_in_formation(const _Bool *is_unit_present,
    HEADLESS_CHARGE  every unit rushes (target_x[b], target_y[b]).
    HEADLESS_DRIFT   loose boids group: cohesion + separation.
 
-   Units going for their own target are left alone
-   (get_close_to_engaged_target moves them) but keep their slot. */
+   Units going for their own target walk into reach of it but keep their slot. */
 void steer_headless_units(Table *tables, const unsigned int battalion_count,
                         const unsigned int unit_count, const unsigned int battalion_size,
                         const float unit_w, const float unit_h, const float padding_x, const float padding_y,
@@ -140,8 +142,12 @@ void steer_headless_units(Table *tables, const unsigned int battalion_count,
             unsigned int slot = iter;
             if (has_slot) iter++;
 
-            /* goes for its target instead: get_close_to_engaged_target moves it */
-            if (is_unit_going_for_target(tables, idx, battalion_size)) continue;
+            if (is_unit_going_for_target(tables, idx, battalion_size)) {
+                steer_to_target(tables, idx, b, max_step, &unit_vx[idx], &unit_vy[idx]);
+                steer_separation(unit_x, unit_y, is_unit_present, idx, battalion_size, unit_count,
+                                 sep_radius, &unit_vx[idx], &unit_vy[idx]);
+                continue;
+            }
 
             if (mode == HEADLESS_HOLD) {
                 if (has_slot) {
@@ -189,6 +195,31 @@ static void clamp_length(float *x, float *y, float max) {
 /* ---------------------------------------------------------------------- */
 /* Steering forces (each adds into *force_x, *force_y)                    */
 /* ---------------------------------------------------------------------- */
+
+// Step to the point just inside melee reach of the unit's own target.
+static void steer_to_target(const Table *tables, unsigned int idx, unsigned int b,
+                    float max_step, float *vec_x, float *vec_y) {
+    const unsigned int target_idx = tables->unit_tables.friendly_dynamic.target_idx[idx];
+    const enum TargetType target_type = tables->unit_tables.friendly_dynamic.target_type[idx];
+    float target_x = 0.0f, target_y = 0.0f;
+    if (target_type == TARGET_UNIT) {
+        target_x = tables->unit_tables.enemy_dynamic.x[target_idx];
+        target_y = tables->unit_tables.enemy_dynamic.y[target_idx];
+    } else if (target_type == TARGET_GENERAL) {
+        target_x = tables->general_tables.enemy_dynamic.x[target_idx];
+        target_y = tables->general_tables.enemy_dynamic.y[target_idx];
+    } else {
+        return;
+    }
+    const float x = tables->unit_tables.friendly_dynamic.x[idx];
+    const float y = tables->unit_tables.friendly_dynamic.y[idx];
+    const float dx = target_x - x;
+    const float dy = target_y - y;
+    const float len = sqrtf(dx * dx + dy * dy);
+    const float reach = tables->battalion_tables.friendly_static.range[b] * ENGAGE_REACH;
+    if (len <= reach) return;
+    steer_arrive(x, y, target_x - dx / len * reach, target_y - dy / len * reach, max_step, vec_x, vec_y);
+}
 
 /* Step toward a point, slowing down as it gets close. Used for slots.
    Adds the step straight into vec (vec is zero at the start of the tick). */

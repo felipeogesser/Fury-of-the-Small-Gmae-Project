@@ -4,6 +4,7 @@ import torch.nn as nn
 from torch.distributions import Categorical
 
 from config import (
+    ACTION_ADVANCE,
     ACTION_ATTACK,
     ACTION_COUNT,
     ACTION_FORM_LINE,
@@ -15,7 +16,7 @@ from config import (
 NEGATIVE = -1e9
 OBS_KEYS = ["friend", "enemy", "epair", "fpair", "glob", "fmask", "emask", "cmask"]
 ACTION_KEYS = ["type", "pace", "dest", "target", "approach", "screen"]
-MOVING_KINDS = (ACTION_MOVE, ACTION_ATTACK, ACTION_FORM_LINE, ACTION_SCREEN)
+MOVING_KINDS = (ACTION_MOVE, ACTION_ATTACK, ACTION_FORM_LINE, ACTION_SCREEN, ACTION_ADVANCE)
 
 
 def mlp(input_dim, hidden_dim, output_dim):
