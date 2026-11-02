@@ -4,6 +4,7 @@ from config import (
     ACTION_ADVANCE,
     ACTION_ATTACK,
     ACTION_FORM_LINE,
+    ACTION_HOLD,
     APPROACH_FRONT,
     APPROACH_LEFT,
     APPROACH_REAR,
@@ -129,6 +130,7 @@ ARCHER_ESCORT = 400.0       # enemy archers with infantry closer than this are e
 ARCHER_PATIENCE = 45        # 90 s: an army with more archers waits that long for the enemy to come
 STICKY = 1.5                # keep a target unless a new one is this much closer
 CHARGE_DISTANCE = 380.0     # infantry breaks into a run this close to its target, centre to centre
+ARCHER_RELEASE = 1.15
 
 
 class CommanderBot:
@@ -151,6 +153,7 @@ class CommanderBot:
         self.decisions = 0
         self.targets = {}
         self.approaches = {}
+        self.archers_holding = set()
 
     def act(self, own, opponent, info):
         if info.episode_index != self.episode:
@@ -217,10 +220,13 @@ class CommanderBot:
         # archers keep their place in the line and shoot whatever comes in range
         for i in np.where(present & ranged)[0]:
             row = np.where(enemy_present & ~enemy_routing, distance[i], np.inf)
-            if row.min() < own["range"][i]:
-                self._attack(actions, i, int(row.argmin()), PACE_WALK, APPROACH_FRONT)
+            reach = own["range"][i] * (ARCHER_RELEASE if i in self.archers_holding else 1.0)
+            if not deploying and row.min() < reach:
+                actions["type"][i] = ACTION_HOLD
+                self.archers_holding.add(i)
             else:
                 actions["type"][i] = line_kind
+                self.archers_holding.discard(i)
 
         for i in np.where(present & cavalry)[0]:
             self._cavalry(i, actions, x, y, ex, ey, ranged & present, distance, enemy_cavalry, enemy_ranged,
