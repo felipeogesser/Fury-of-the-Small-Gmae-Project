@@ -51,7 +51,8 @@
 #define CATCH_UP 1.5f // a unit moves at most battalion speed * CATCH_UP per tick, so it can catch up with its slot
 #define MIN_DIST 32.0f
 #define ENEMY_MIN_DIST 26.0f
-#define PASSES 6
+#define PASSES 3
+#define ENEMY_PASSES 2
 
 // private prototypes
 static void unit_dynamic_table_init(
@@ -640,7 +641,7 @@ static void update_position(Table *tables, const Map *map, unsigned int battalio
     move_units_by_vec(tables, unit_count, battalion_size, CATCH_UP);
 
     resolve_collisions_by_battalion(x, y, is_present, battalion_count, battalion_size, MIN_DIST, PASSES);
-    resolve_collisions_with_enemy(tables, battalion_count, battalion_size, ENEMY_MIN_DIST, PASSES);
+    resolve_collisions_with_enemy(tables, battalion_count, battalion_size, ENEMY_MIN_DIST, ENEMY_PASSES);
 
     apply_map_bounds(tables, map, unit_count, battalion_size, UNIT_WIDTH, UNIT_HEIGHT);
 
@@ -652,6 +653,7 @@ static void update_position(Table *tables, const Map *map, unsigned int battalio
     #undef CATCH_UP
     #undef MIN_DIST
     #undef PASSES
+    #undef ENEMY_PASSES
 
 }
 
@@ -751,6 +753,16 @@ static void resolve_collisions_with_enemy(Table *tables, unsigned int battalion_
     const BattalionDynamicTable *enemy_dynamic = &tables->battalion_tables.enemy_dynamic;
     const float reach2 = BATTALION_REACH * BATTALION_REACH;
     const float min_dist2 = min_dist * min_dist;
+    const unsigned int unit_count = battalion_count * battalion_size;
+
+    float own_mass[unit_count];
+    float enemy_mass[unit_count];
+    for (unsigned int i = 0; i < unit_count; i++) {
+
+        own_mass[i] = unit_mass(own, own_static, own_dynamic, i, battalion_size);
+        enemy_mass[i] = unit_mass(enemy, enemy_static, enemy_dynamic, i, battalion_size);
+
+    }
 
     float box[battalion_count][4];
     _Bool has_units[battalion_count];
@@ -794,8 +806,6 @@ static void resolve_collisions_with_enemy(Table *tables, unsigned int battalion_
                     if (own->x[i] < box[eb][0] - min_dist || own->x[i] > box[eb][1] + min_dist ||
                         own->y[i] < box[eb][2] - min_dist || own->y[i] > box[eb][3] + min_dist) continue;
 
-                    const float own_mass = unit_mass(own, own_static, own_dynamic, i, battalion_size);
-
                     for (unsigned int m = 0; m < battalion_size; m++) {
 
                         const unsigned int j = eb * battalion_size + m;
@@ -813,8 +823,7 @@ static void resolve_collisions_with_enemy(Table *tables, unsigned int battalion_
                             d = 1.0f;
                         }
 
-                        const float enemy_mass = unit_mass(enemy, enemy_static, enemy_dynamic, j, battalion_size);
-                        const float push = (min_dist - d) * (enemy_mass / (own_mass + enemy_mass));
+                        const float push = (min_dist - d) * (enemy_mass[j] / (own_mass[i] + enemy_mass[j]));
 
                         own->x[i] += dx / d * push;
                         own->y[i] += dy / d * push;
