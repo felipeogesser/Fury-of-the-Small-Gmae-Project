@@ -120,6 +120,7 @@ def ppo_update(model, optimizer, batch, cfg, device, demos=None, imitation=0.0):
     rng = np.random.default_rng()
     imitating = demos is not None and len(demos) > 0 and imitation > 0.0
     batches = 0
+    stopped = False
     for _ in range(cfg.epochs):
         permutation = torch.randperm(count, device=device)
         for start in range(0, count, cfg.minibatch_size):
@@ -130,6 +131,11 @@ def ppo_update(model, optimizer, batch, cfg, device, demos=None, imitation=0.0):
             mask = obs["cmask"].float()
             denominator = mask.sum().clamp(min=1.0)
             ratio = torch.exp((log_prob - old_log_prob[index]) * mask)
+            with torch.no_grad():
+                approx_kl = (((ratio - 1.0) - torch.log(ratio)) * mask).sum() / denominator
+            if batches > 0 and cfg.target_kl > 0.0 and approx_kl.item() > 1.5 * cfg.target_kl:
+                stopped = True
+                break
             minibatch_advantage = advantage_tensor[index]
             surrogate = torch.min(ratio * minibatch_advantage, torch.clamp(ratio, 1.0 - cfg.clip, 1.0 + cfg.clip) * minibatch_advantage)
             policy_loss = -(surrogate * mask).sum() / denominator
@@ -148,11 +154,13 @@ def ppo_update(model, optimizer, batch, cfg, device, demos=None, imitation=0.0):
             loss.backward()
             nn.utils.clip_grad_norm_(model.parameters(), cfg.max_grad_norm)
             optimizer.step()
-            with torch.no_grad():
-                approx_kl = (((ratio - 1.0) - torch.log(ratio)) * mask).sum() / denominator
             totals["policy_loss"] += policy_loss.item()
             totals["value_loss"] += value_loss.item()
             totals["entropy"] += entropy_mean.item()
             totals["approx_kl"] += approx_kl.item()
             batches += 1
-    return {key: value / max(batches, 1) for key, value in totals.items()}
+        if stopped:
+            break
+    stats = {key: value / max(batches, 1) for key, value in totals.items()}
+    stats["epochs"] = batches / -(-count // cfg.minibatch_size)
+    return stats

@@ -63,7 +63,7 @@ ROUTING_LIFECYCLE = 2
 @dataclass
 class RewardConfig:
     hp_trade: float = 1.0 # enemy hp fraction lost minus own hp fraction lost
-    rout: float = 0.05 # per enemy battalion that breaks, minus per own one
+    rout: float = 0.4
     win: float = 1.0
     timeout: float = -0.25
     # per battalion: these are what teach cohesion instead of blobbing
@@ -125,6 +125,7 @@ class TrainConfig:
     entropy_coef: float = 0.01
     max_grad_norm: float = 0.5
     epochs: int = 4
+    target_kl: float = 0.2
     minibatch_size: int = 128
     steps_per_update: int = 2048
     save_every_updates: int = 10

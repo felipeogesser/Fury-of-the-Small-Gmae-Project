@@ -57,7 +57,7 @@ class RewardTracker:
             enemy_loss = self.previous_fraction[other] - fraction[other]
             broke = float((routing[other] & ~self.previous_routing[other]).sum())
             lost = float((routing[side] & ~self.previous_routing[side]).sum())
-            team = cfg.hp_trade * (enemy_loss - own_loss) + cfg.rout * (broke - lost)
+            team = cfg.hp_trade * (enemy_loss - own_loss) + cfg.rout * (broke - lost) / count
             self.pending[side] += team + scale * self._individual(snapshots[side], side)
         self.previous_fraction = fraction
         self.previous_routing = routing

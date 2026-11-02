@@ -382,7 +382,7 @@ class Learner:
         print(
             f"update {self.update_count} samples {batch['value'].shape[0]} "
             f"policy {stats['policy_loss']:.4f} value {stats['value_loss']:.4f} "
-            f"entropy {stats['entropy']:.3f} kl {stats['approx_kl']:.4f} "
+            f"entropy {stats['entropy']:.3f} kl {stats['approx_kl']:.4f} epochs {stats['epochs']:.2f} "
             f"shaping {shaping_scale(self.cfg.rewards, self.update_count):.2f} "
             f"imitation {stats['imitation']:.3f} x{imitation:.2f} ({len(self.demos)} demos) | "
             f"cycle {cycle_seconds:.1f}s update {update_seconds:.1f}s {note}",
