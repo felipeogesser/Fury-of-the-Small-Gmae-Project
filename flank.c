@@ -19,8 +19,8 @@
 #define FLANK_SIDE_DAMAGE 1.25f
 #define FLANK_REAR_DAMAGE 1.5f
 #define CAVALRY_FLANK_DAMAGE 1.25f // on top of the above, so riders seek the flanks instead of the front
-#define FILE_SPACING 40.0f        // UNIT_WIDTH + PADDING_Y in unit_table.c
-#define RANK_SPACING 44.0f        // UNIT_HEIGHT + PADDING_X in unit_table.c
+#define FILE_SPACING 28.0f        // UNIT_WIDTH + PADDING_Y in unit_table.c
+#define RANK_SPACING 32.0f        // UNIT_HEIGHT + PADDING_X in unit_table.c
 
 // private prototypes
 static void copy_facing(Table *tables, unsigned int battalion_count);

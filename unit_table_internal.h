@@ -18,8 +18,12 @@ typedef struct UnitDynamicTable {
     float *hp;
     float *attack_timer;
     float *alpha;
+    float *last_step_x;
+    float *last_step_y;
+    float *engage_wait;
     enum Animation *animation;
     unsigned char *current_frame;
+    unsigned char *slot;
     _Bool *is_dead;
     _Bool *is_target_in_range;
     _Bool *is_engaged;

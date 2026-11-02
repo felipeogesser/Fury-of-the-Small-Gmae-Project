@@ -1,6 +1,7 @@
 #include "formation.h"
 #include "direction_types.h"
 #include "table_internal.h"
+#include <limits.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -13,10 +14,11 @@
 #define ARRIVE_WEIGHT      0.5f   /* how hard units steer toward slots / targets        */
 #define SEPARATION_WEIGHT  0.6f   /* push strength between units that are too close     */
 #define TURN_RATE 0.02f
+#define MELEE_TURN_RATE 0.002f
 #define FACING_MIN_STEP_FRACTION 0.3f
 #define SLOT_DEADBAND 3.0f
 #define FIGHTING_HOLD_RADIUS 48.0f
-#define ENGAGE_LEASH 72.0f   /* furthest an engaged unit may leave its slot to reach its target */
+#define ENGAGE_LEASH 40.0f   /* furthest an engaged unit may leave its slot to reach its target */
 #define ENGAGE_REACH 0.8f     /* engaged units close to this fraction of their melee range */
 #define HOLD_FACE_MIN_DIST 50.0f /* a hold destination closer than this keeps the current facing */
 
@@ -48,6 +50,8 @@ static void steer_separation(const float *unit_x, const float *unit_y,
 static void clamp_length(float *x, float *y, float max);
 static float turn_toward(float current, float desired, float max_turn);
 static _Bool unit_target_position(const Table *tables, unsigned int idx, float *target_x, float *target_y);
+static _Bool is_target_within_leash(const Table *tables, unsigned int b, float slot_x, float slot_y, float target_x, float target_y);
+static void fill_gaps_from_behind(unsigned char *unit_slot, const _Bool *is_unit_present, unsigned int b, unsigned int battalion_size, unsigned int unit_count, unsigned int files, unsigned int slot_count);
 
 void formation_update(Table *tables,
                 const unsigned int battalion_count, const unsigned int unit_count,
@@ -80,6 +84,8 @@ void formation_update(Table *tables,
        their slots feel no push */
     float sep_radius = unit_w < unit_h ? unit_w : unit_h;
 
+    unsigned char *unit_slot = tables->unit_tables.friendly_dynamic.slot;
+
     for (unsigned int b = 0; b < battalion_count; b++) {
         if (is_headless[b]) continue;   /* steer_headless_units handles those */
 
@@ -89,12 +95,23 @@ void formation_update(Table *tables,
             printf("err\n");
             continue;
         }
+
+        _Bool in_combat = (movement_state[b] == FIGHTING) | (movement_state[b] == CHARGING);
+        unsigned int highest_slot = 0;
+        for (unsigned int k = 0; k < battalion_size; k++) {
+            unsigned int idx = b * battalion_size + k;
+            if (idx >= unit_count) break;
+            if (!is_unit_present[idx]) continue;
+            if (tables->unit_tables.friendly_dynamic.is_engaged[idx] && tables->unit_tables.friendly_dynamic.is_target_in_range[idx]) in_combat = true;
+            if (unit_slot[idx] > highest_slot) highest_slot = unit_slot[idx];
+        }
+        const float turn_rate = in_combat ? MELEE_TURN_RATE : TURN_RATE;
         //float direction = direction_from_vec(general_vec_x[b], general_vec_y[b],
         //                             general_direction[b] == LEFT ? 2.0f : 0.0f);
         float general_step = sqrtf(general_vec_x[b] * general_vec_x[b] + general_vec_y[b] * general_vec_y[b]);
         if (general_step > speed[b] * FACING_MIN_STEP_FRACTION) {
             float desired = direction_from_vec(general_vec_x[b], general_vec_y[b], general_facing[b]);
-            general_facing[b] = turn_toward(general_facing[b], desired, TURN_RATE);
+            general_facing[b] = turn_toward(general_facing[b], desired, turn_rate);
         } else if (tables->battalion_order.type[b] == ORDER_HOLD &&
                    !tables->battalion_tables.friendly_dynamic.is_engaged[b]) {
             // a holding battalion turns to face its order destination, so a line can face the enemy
@@ -102,13 +119,17 @@ void formation_update(Table *tables,
             float face_y = tables->battalion_order.dest_y[b] - general_y[b];
             if (face_x * face_x + face_y * face_y > HOLD_FACE_MIN_DIST * HOLD_FACE_MIN_DIST) {
                 float desired = direction_from_vec(face_x, face_y, general_facing[b]);
-                general_facing[b] = turn_toward(general_facing[b], desired, TURN_RATE);
+                general_facing[b] = turn_toward(general_facing[b], desired, turn_rate);
             }
         }
         float direction = general_facing[b];
         unsigned int to_place = min_uint(count_in_formation(is_unit_present,
                                                             b, battalion_size, unit_count),
                                                             ranks * files);
+        if (in_combat) {
+            to_place = min_uint(ceil_div(highest_slot + 1, files) * files, ranks * files);
+            fill_gaps_from_behind(unit_slot, is_unit_present, b, battalion_size, unit_count, files, to_place);
+        }
         if (to_place == 0) continue;
 
         float forward_x = 0.0f, forward_y = 0.0f;
@@ -134,6 +155,12 @@ void formation_update(Table *tables,
 
             unsigned int slot = iter;
             iter++;
+            if (in_combat) {
+                slot = unit_slot[idx];
+                if (slot >= to_place) continue;
+            } else {
+                unit_slot[idx] = (unsigned char)slot;
+            }
 
             float slot_x = 0.0f, slot_y = 0.0f;
             formation_slot(slot, to_place, files, center_x, center_y,
@@ -142,7 +169,8 @@ void formation_update(Table *tables,
 
             if (is_unit_going_for_target(tables, idx, battalion_size)) {
                 float target_x = 0.0f, target_y = 0.0f;
-                if (unit_target_position(tables, idx, &target_x, &target_y)) {
+                if (unit_target_position(tables, idx, &target_x, &target_y) &&
+                    is_target_within_leash(tables, b, slot_x, slot_y, target_x, target_y)) {
                     // aim for the point just inside melee reach, so the unit can swing
                     // instead of stopping short where its slot ends
                     float reach = tables->battalion_tables.friendly_static.range[b] * ENGAGE_REACH;
@@ -369,4 +397,28 @@ static _Bool unit_target_position(const Table *tables, unsigned int idx, float *
         return true;
     }
     return false;
+}
+
+static _Bool is_target_within_leash(const Table *tables, unsigned int b, float slot_x, float slot_y, float target_x, float target_y) {
+    float reach = tables->battalion_tables.friendly_static.range[b] + ENGAGE_LEASH;
+    float dx = target_x - slot_x;
+    float dy = target_y - slot_y;
+    return dx * dx + dy * dy <= reach * reach;
+}
+
+static void fill_gaps_from_behind(unsigned char *unit_slot, const _Bool *is_unit_present, unsigned int b, unsigned int battalion_size, unsigned int unit_count, unsigned int files, unsigned int slot_count) {
+    unsigned char owner[slot_count];
+    for (unsigned int s = 0; s < slot_count; s++) owner[s] = UCHAR_MAX;
+    for (unsigned int k = 0; k < battalion_size; k++) {
+        unsigned int idx = b * battalion_size + k;
+        if (idx >= unit_count) break;
+        if (!is_unit_present[idx] || unit_slot[idx] >= slot_count) continue;
+        owner[unit_slot[idx]] = (unsigned char)k;
+    }
+    for (unsigned int s = files; s < slot_count; s++) {
+        if (owner[s] == UCHAR_MAX || owner[s - files] != UCHAR_MAX) continue;
+        unit_slot[b * battalion_size + owner[s]] = (unsigned char)(s - files);
+        owner[s - files] = owner[s];
+        owner[s] = UCHAR_MAX;
+    }
 }

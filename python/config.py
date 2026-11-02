@@ -38,8 +38,8 @@ TYPE_SWORDSMEN = 3
 TYPE_ARCHERS = 4
 
 # formation geometry, same as unit_table.c
-FILE_SPACING = 40.0
-RANK_SPACING = 44.0
+FILE_SPACING = 28.0
+RANK_SPACING = 32.0
 GENERAL_LEAD = 36.0
 
 FLANK_SIDE = 1

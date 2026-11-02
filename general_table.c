@@ -500,6 +500,15 @@ static void update_position(Table *tables, const Map *map, enum ArmyBattlefieldS
 
     }
 
+    #define MELEE_MOVE_FRACTION 0.25f
+    if (!is_routing && tables->battalion_order.type[i] == ORDER_MOVE && battalion_in_contact(tables, i, battalion_size)) {
+
+        vec_x *= MELEE_MOVE_FRACTION;
+        vec_y *= MELEE_MOVE_FRACTION;
+
+    }
+    #undef MELEE_MOVE_FRACTION
+
     x += vec_x;
     y += vec_y;
 
