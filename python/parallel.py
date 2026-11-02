@@ -13,6 +13,7 @@ import argparse
 import os
 import queue
 import secrets
+import shutil
 import signal
 import subprocess
 import sys
@@ -27,7 +28,7 @@ from config import TrainConfig
 from observation import RAW_FIELDS, RunningNorm
 from runners import Actor, Learner, OpponentPool
 
-LINKED = ("assets", ".venv", "python", "game", "battlefield_formation_layout.ini", "inventory.json", "tutorial.csv", "tutorial.json")
+LINKED = ("assets", ".venv", "python", "battlefield_formation_layout.ini", "inventory.json", "tutorial.csv", "tutorial.json")
 
 
 class TrackedNorm(RunningNorm):
@@ -246,6 +247,10 @@ def prepare_worker(root, index):
         link = os.path.join(directory, name)
         if not os.path.lexists(link):
             os.symlink(os.path.join(root, name), link)
+    binary = os.path.join(directory, "game")
+    if os.path.lexists(binary):
+        os.remove(binary)
+    shutil.copy2(os.path.join(root, "game"), binary)
     return directory
 
 
