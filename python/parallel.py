@@ -107,8 +107,8 @@ class ActorRunner:
             "norm": self.normalizer.take_delta(),
         })
         self.episodes.clear()
-        self.chunk_version = self.version
         self._apply(self.connection.recv())
+        self.chunk_version = self.version
 
     def _apply(self, reply):
         if reply.get("stop"):
