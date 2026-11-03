@@ -7,13 +7,18 @@ static void void_function(void);
 static void void_function(void) {
     return;
 }
+static void void_update(float dt);
+static void void_update(float dt) {
+    (void)dt;
+    void_function();
+}
 
 const SceneCallbacks scene_registry[SCENE_COUNT] = {
 
     {
         main_menu_init,
         main_menu_input,
-        (void(*)(float))void_function,
+        void_update,
         main_menu_render,
         main_menu_destroy
     },
