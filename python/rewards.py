@@ -16,8 +16,8 @@ def terminal_reward(result, side, cfg):
         return cfg.win if side == 0 else -cfg.win
     if result == EpisodeResult.ENEMY_WON:
         return -cfg.win if side == 0 else cfg.win
-    if result == EpisodeResult.TIMEOUT:
-        return cfg.timeout
+    if result in (EpisodeResult.DRAW, EpisodeResult.TIMEOUT):
+        return cfg.draw
     return 0.0
 
 
@@ -89,9 +89,9 @@ class RewardTracker:
             self.stats["samples"][side] += 1
         return reward
 
-    def take(self, side, result=None):
+    def take(self, side, result=None, elapsed=0.0):
         """Reward of the window that just ended for one army, plus the result once the battle is over."""
-        reward = self.pending[side] - self.cfg.time
+        reward = self.pending[side] - self.cfg.time * (1.0 + self.cfg.time_growth * elapsed)
         if result is not None and result != EpisodeResult.RUNNING:
             reward += terminal_reward(result, side, self.cfg)
         self.pending[side][:] = 0.0

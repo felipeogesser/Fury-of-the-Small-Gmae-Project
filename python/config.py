@@ -65,8 +65,9 @@ class RewardConfig:
     hp_trade: float = 1.0 # enemy hp fraction lost minus own hp fraction lost
     rout: float = 0.4
     win: float = 1.0
-    timeout: float = -0.25
+    draw: float = -1.0
     time: float = 0.002
+    time_growth: float = 3.0
     switch_cost: float = 0.01
     # per battalion: these are what teach cohesion instead of blobbing
     crowding: float = 0.012 # per decision, per unit of footprint overlap with a friendly battalion

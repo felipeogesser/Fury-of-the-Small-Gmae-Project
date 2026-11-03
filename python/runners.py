@@ -248,7 +248,7 @@ class Actor:
             self.tracker.step(snapshots, shaping_scale(self.cfg.rewards, self.update_count))
         if result != EpisodeResult.RUNNING:
             for side in self.learning_sides:
-                self.buffer.finalize(side, self.tracker.take(side, result), True)
+                self.buffer.finalize(side, self.tracker.take(side, result, tick_fraction(battle.info, battle.steps)), True)
             self._record_episode(result)
             return
         if battle.decision_due():
@@ -257,7 +257,7 @@ class Actor:
 
     def _decide(self, battle, snapshots):
         for side in (0, 1):
-            reward = self.tracker.take(side)
+            reward = self.tracker.take(side, None, tick_fraction(battle.info, battle.steps))
             if side in self.learning_sides:
                 self.buffer.finalize(side, reward, False)
         observations = battle.observe(snapshots, self.normalizer, True)
@@ -352,7 +352,7 @@ class Learner:
             entries = [entry for entry in self.window if entry["mode"] == mode]
             counts = {outcome: sum(1 for entry in entries if entry["outcome"] == outcome) for outcome in OUTCOMES}
             win_rate = counts["win"] / len(entries)
-            parts.append(f"{mode} {counts['win']}/{counts['loss']}/{counts['timeout']}")
+            parts.append(f"{mode} {counts['win']}/{counts['loss']}/{counts['draw'] + counts['timeout']}")
             rows.append((mode, len(entries), win_rate))
         crowding = np.mean([entry["crowding"] for entry in self.window])
         flank = np.mean([entry["flank"] for entry in self.window])
@@ -360,7 +360,7 @@ class Learner:
         switching = np.mean([entry["switching"] for entry in self.window])
         decisions = np.mean([entry["decisions"] for entry in self.window])
         print(
-            f"episodes {self.episode_count} updates {self.update_count} | win/loss/timeout {', '.join(parts)} | "
+            f"episodes {self.episode_count} updates {self.update_count} | win/loss/draw {', '.join(parts)} | "
             f"crowding {crowding:.3f} flanking {flank:.3f} flanked {exposed:.3f} switching {switching:.3f} decisions {decisions:.0f}",
             flush=True,
         )
