@@ -66,8 +66,9 @@ class RewardConfig:
     rout: float = 0.4
     win: float = 1.0
     timeout: float = -0.25
+    time: float = 0.002
     # per battalion: these are what teach cohesion instead of blobbing
-    crowding: float = 0.004 # per decision, per unit of footprint overlap with a friendly battalion
+    crowding: float = 0.012 # per decision, per unit of footprint overlap with a friendly battalion
     flank_attack: float = 0.003 # per decision spent hitting a side (x1) or the rear (x2)
     flank_exposed: float = 0.002 # per decision an own battalion is hit in a side (x1) or the rear (x2)
     isolation: float = 0.001 # per decision a non-cavalry battalion stands far from every friend

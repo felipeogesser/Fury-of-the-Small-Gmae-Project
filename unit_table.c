@@ -22,11 +22,13 @@
 #include "sprites_internal.h"
 #include "steering.h"
 #include "table_internal.h"
+#include "shared_memory_orders.h"
 #include <stdlib.h>
 #include <stddef.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <limits.h>
 
 #define PUSH_CHARGE_EQUAL 0.15f
 #define PUSH_LARGE 0.25f
@@ -37,6 +39,7 @@
 #define BATTALION_REACH 900.0f
 #define MEELE_SEARCH_RANGE 200.0f
 #define ENGAGE_WAIT 1.0f
+#define SEARCH_INTERVAL 4u
 #define ARCHER_MELEE_RANGE 35.0f // an enemy this close gets a melee blow instead of an arrow
 #define MAX_FLANK_HIT_CHANCE 95.0f
 #define GENERAL_SCREEN 60.0f
@@ -75,7 +78,7 @@ static void apply_map_bounds(Table *tables, const Map *map, unsigned int unit_co
 static void keep_inside_map(float *x, float *y, const Map *map, float w, float h);
 static void update_direction(Table *tables, unsigned int unit_count);
 static void animation_table_update(Table *tables, unsigned int unit_count, unsigned int battalion_size);
-static _Bool try_engage_enemy(float fx, float fy, float search_range, enum TargetType *target_type, unsigned int *target_idx, Table *tables, unsigned int battalion_count, unsigned int battalion_size, unsigned int engaged_battalion_idx);
+static _Bool try_engage_enemy(float fx, float fy, float search_range, enum TargetType *target_type, unsigned int *target_idx, Table *tables, unsigned int battalion_count, unsigned int battalion_size, unsigned int engaged_battalion_idx, unsigned int preferred_battalion_idx);
 static _Bool is_enemy_in_range(float fx, float fy, float range, float tx, float ty);
 static void get_close_to_engaged_target(Table *tables, unsigned int unit_count, unsigned int battalion_size, float catch_up);
 static void routing_units(Table *tables, unsigned int unit_count, unsigned int battalion_size, enum ArmyBattlefieldSide side);
@@ -85,8 +88,12 @@ static void update_alpha(Table *tables, unsigned int unit_count, unsigned int ba
 static void search_enemy_battalion(float fx, float fy, const Table *tables, unsigned int battalion_size, unsigned int battalion_idx, float *best_dist, enum TargetType *best_type, unsigned int *best_idx);
 static float push_power(const UnitDynamicTable *units, const BattalionStaticTable *battalion_static, const BattalionDynamicTable *battalion_dynamic, unsigned int i, unsigned int battalion_size, _Bool against_large);
 static void resolve_collisions_with_enemy(Table *tables, unsigned int battalion_count, unsigned int battalion_size, float min_dist, unsigned int passes);
+static void update_enemy_boxes(const Table *tables, unsigned int battalion_count, unsigned int battalion_size);
+static float box_distance2(unsigned int b, float x, float y);
 
 static void *unit_table_start_address_alloc = NULL;
+static float enemy_box[MAX_BATTALIONS][4];
+static _Bool enemy_box_valid[MAX_BATTALIONS];
 
 static const ComplexFieldEntry unit_dynamic_table_field_table[] = {
 
@@ -106,9 +113,11 @@ static const ComplexFieldEntry unit_dynamic_table_field_table[] = {
     { "last_step_x",    OFFSET_OF(UnitDynamicTable, last_step_x),    ELEMENT_SIZE_OF(UnitDynamicTable, last_step_x),    FLOAT,       NULL },
     { "last_step_y",    OFFSET_OF(UnitDynamicTable, last_step_y),    ELEMENT_SIZE_OF(UnitDynamicTable, last_step_y),    FLOAT,       NULL },
     { "engage_wait",    OFFSET_OF(UnitDynamicTable, engage_wait),    ELEMENT_SIZE_OF(UnitDynamicTable, engage_wait),    FLOAT,       NULL },
+    { "contact_idx",    OFFSET_OF(UnitDynamicTable, contact_idx),    ELEMENT_SIZE_OF(UnitDynamicTable, contact_idx),    U_INT,       NULL },
     { "animation",      OFFSET_OF(UnitDynamicTable, animation),      ELEMENT_SIZE_OF(UnitDynamicTable, animation),      S_INT,       NULL },
     { "current_frame",  OFFSET_OF(UnitDynamicTable, current_frame),  ELEMENT_SIZE_OF(UnitDynamicTable, current_frame),  U_CHAR,      NULL },
     { "slot",           OFFSET_OF(UnitDynamicTable, slot),           ELEMENT_SIZE_OF(UnitDynamicTable, slot),           U_CHAR,      NULL },
+    { "search_battalion", OFFSET_OF(UnitDynamicTable, search_battalion), ELEMENT_SIZE_OF(UnitDynamicTable, search_battalion), U_CHAR,  NULL },
     { "is_dead", OFFSET_OF(UnitDynamicTable, is_dead), ELEMENT_SIZE_OF(UnitDynamicTable, is_dead), BOOL,  NULL },
     { "is_target_in_range",        OFFSET_OF(UnitDynamicTable, is_target_in_range),        ELEMENT_SIZE_OF(UnitDynamicTable, is_target_in_range),        BOOL,        NULL },
     { "is_engaged",        OFFSET_OF(UnitDynamicTable, is_engaged),        ELEMENT_SIZE_OF(UnitDynamicTable, is_engaged),        BOOL,        NULL },
@@ -155,6 +164,9 @@ void unit_table_update(Table *tables, const Map *map, unsigned int battalion_cou
     GeneralTable *general_tables = &tables->general_tables;
     UnitTable *unit_tables = &tables->unit_tables;
     unsigned int unit_count = battalion_size * battalion_count;
+    update_enemy_boxes(tables, battalion_count, battalion_size);
+    static unsigned int search_ticks[2] = {0, 0};
+    const unsigned int search_tick = ++search_ticks[side == ARMY_SIDE_LEFT];
     for (unsigned int i = 0; i < unit_count; i++) {
         
         unsigned int battalion_idx = i / battalion_size;
@@ -176,17 +188,38 @@ void unit_table_update(Table *tables, const Map *map, unsigned int battalion_cou
                 unsigned int *target_idx = &unit_tables->friendly_dynamic.target_idx[friendly_idx];
                 float *engage_wait = &unit_tables->friendly_dynamic.engage_wait[friendly_idx];
 
+                unsigned char *search_battalion = &unit_tables->friendly_dynamic.search_battalion[friendly_idx];
+                const _Bool may_search = ((search_tick + friendly_idx) % SEARCH_INTERVAL) == 0;
+                const float reach = battalion_tables->friendly_static.range[battalion_idx];
+
                 if (is_ranged) {
 
-                    is_engaged = try_engage_enemy(fx, fy, battalion_tables->friendly_static.range[battalion_idx], target_type, target_idx,
-                                                  tables, battalion_count, battalion_size, engaged_battalion_idx);
+                    if (may_search) {
+                        is_engaged = try_engage_enemy(fx, fy, reach, target_type, target_idx,
+                                                      tables, battalion_count, battalion_size, engaged_battalion_idx, *search_battalion);
+                    }
 
                 } else {
 
                     enum TargetType near_type = UNKNOWN_TARGET;
                     unsigned int near_idx = -1U;
-                    if (try_engage_enemy(fx, fy, battalion_tables->friendly_static.range[battalion_idx], &near_type, &near_idx,
-                                         tables, battalion_count, battalion_size, engaged_battalion_idx)) {
+                    const unsigned int contact = unit_tables->friendly_dynamic.contact_idx[friendly_idx];
+                    _Bool found = false;
+                    if (contact != -1U && unit_tables->enemy_dynamic.is_present[contact] &&
+                        is_enemy_in_range(fx, fy, reach, unit_tables->enemy_dynamic.x[contact], unit_tables->enemy_dynamic.y[contact])) {
+
+                        near_type = TARGET_UNIT;
+                        near_idx = contact;
+                        found = true;
+
+                    } else if (may_search) {
+
+                        found = try_engage_enemy(fx, fy, reach, &near_type, &near_idx,
+                                                 tables, battalion_count, battalion_size, engaged_battalion_idx, *search_battalion);
+
+                    }
+
+                    if (found) {
 
                         *target_type = near_type;
                         *target_idx = near_idx;
@@ -200,13 +233,17 @@ void unit_table_update(Table *tables, const Map *map, unsigned int battalion_cou
                         *target_idx = -1U;
                         is_engaged = false;
 
-                    } else if (!is_engaged) {
+                    } else if (!is_engaged && may_search) {
 
                         is_engaged = try_engage_enemy(fx, fy, MEELE_SEARCH_RANGE, target_type, target_idx,
-                                                      tables, battalion_count, battalion_size, engaged_battalion_idx);
+                                                      tables, battalion_count, battalion_size, engaged_battalion_idx, *search_battalion);
 
                     }
 
+                }
+
+                if (is_engaged) {
+                    *search_battalion = (unsigned char)((*target_type == TARGET_UNIT) ? *target_idx / battalion_size : *target_idx);
                 }
 
                 unit_tables->friendly_dynamic.is_engaged[friendly_idx] = is_engaged;
@@ -451,7 +488,7 @@ static _Bool aim_ranged_attack(Table *tables, unsigned int i, unsigned int batta
     enum TargetType target_type = UNKNOWN_TARGET;
     unsigned int target_idx = -1U;
 
-    if (try_engage_enemy(x, y, ARCHER_MELEE_RANGE, &target_type, &target_idx, tables, battalion_count, battalion_size, ordered_battalion_idx)) {
+    if (try_engage_enemy(x, y, ARCHER_MELEE_RANGE, &target_type, &target_idx, tables, battalion_count, battalion_size, ordered_battalion_idx, -1U)) {
         tables->unit_tables.friendly_dynamic.target_type[i] = target_type;
         tables->unit_tables.friendly_dynamic.target_idx[i] = target_idx;
         return true;
@@ -459,7 +496,7 @@ static _Bool aim_ranged_attack(Table *tables, unsigned int i, unsigned int batta
 
     if (holds_fire) return false;
 
-    if (try_engage_enemy(x, y, range, &target_type, &target_idx, tables, battalion_count, battalion_size, ordered_battalion_idx)) {
+    if (try_engage_enemy(x, y, range, &target_type, &target_idx, tables, battalion_count, battalion_size, ordered_battalion_idx, -1U)) {
 
         // the general stands in front of his men, but archers loose at the ranks; he is
         // only aimed at once his battalion has nobody left
@@ -808,29 +845,10 @@ static void resolve_collisions_with_enemy(Table *tables, unsigned int battalion_
 
     }
 
-    float box[battalion_count][4];
-    _Bool has_units[battalion_count];
-    for (unsigned int eb = 0; eb < battalion_count; eb++) {
-
-        has_units[eb] = false;
-        for (unsigned int m = 0; m < battalion_size; m++) {
-
-            const unsigned int j = eb * battalion_size + m;
-            if (!enemy->is_present[j]) continue;
-            if (!has_units[eb]) {
-                box[eb][0] = box[eb][1] = enemy->x[j];
-                box[eb][2] = box[eb][3] = enemy->y[j];
-                has_units[eb] = true;
-                continue;
-            }
-            if (enemy->x[j] < box[eb][0]) box[eb][0] = enemy->x[j];
-            if (enemy->x[j] > box[eb][1]) box[eb][1] = enemy->x[j];
-            if (enemy->y[j] < box[eb][2]) box[eb][2] = enemy->y[j];
-            if (enemy->y[j] > box[eb][3]) box[eb][3] = enemy->y[j];
-
-        }
-
-    }
+    float (*box)[4] = enemy_box;
+    const _Bool *has_units = enemy_box_valid;
+    unsigned int *contact_idx = own->contact_idx;
+    for (unsigned int i = 0; i < unit_count; i++) contact_idx[i] = -1U;
 
     for (unsigned int pass = 0; pass < passes; pass++) {
 
@@ -860,6 +878,7 @@ static void resolve_collisions_with_enemy(Table *tables, unsigned int battalion_
                         float dy = own->y[i] - enemy->y[j];
                         const float d2 = dx * dx + dy * dy;
                         if (d2 >= min_dist2) continue;
+                        contact_idx[i] = j;
 
                         float d = sqrtf(d2);
                         if (d < 0.0001f) {
@@ -973,7 +992,7 @@ static float wrap_direction(float dir) {
 #undef PI
 #undef DIR_STEPS
 */
-static _Bool try_engage_enemy(float fx, float fy, float search_range, enum TargetType *target_type, unsigned int *target_idx, Table *tables, unsigned int battalion_count, unsigned int battalion_size, unsigned int engaged_battalion_idx) {
+static _Bool try_engage_enemy(float fx, float fy, float search_range, enum TargetType *target_type, unsigned int *target_idx, Table *tables, unsigned int battalion_count, unsigned int battalion_size, unsigned int engaged_battalion_idx, unsigned int preferred_battalion_idx) {
 
     #define BATTALION_SPREAD 400.0f
 
@@ -981,7 +1000,8 @@ static _Bool try_engage_enemy(float fx, float fy, float search_range, enum Targe
     enum TargetType best_type = UNKNOWN_TARGET;
     unsigned int best_idx = -1U;
 
-    if (engaged_battalion_idx < battalion_count && tables->battalion_tables.enemy_dynamic.is_present[engaged_battalion_idx]) {
+    if (engaged_battalion_idx < battalion_count && tables->battalion_tables.enemy_dynamic.is_present[engaged_battalion_idx] &&
+        box_distance2(engaged_battalion_idx, fx, fy) <= best_dist) {
         search_enemy_battalion(fx, fy, tables, battalion_size, engaged_battalion_idx, &best_dist, &best_type, &best_idx);
     }
 
@@ -989,14 +1009,21 @@ static _Bool try_engage_enemy(float fx, float fy, float search_range, enum Targe
 
         const float reach = search_range + BATTALION_SPREAD;
 
+        if (preferred_battalion_idx < battalion_count && preferred_battalion_idx != engaged_battalion_idx &&
+            tables->battalion_tables.enemy_dynamic.is_present[preferred_battalion_idx] &&
+            box_distance2(preferred_battalion_idx, fx, fy) <= best_dist) {
+            search_enemy_battalion(fx, fy, tables, battalion_size, preferred_battalion_idx, &best_dist, &best_type, &best_idx);
+        }
+
         for (unsigned int b = 0; b < battalion_count; b++) {
 
-            if (b == engaged_battalion_idx) continue;
+            if (b == engaged_battalion_idx || b == preferred_battalion_idx) continue;
             if (!tables->battalion_tables.enemy_dynamic.is_present[b]) continue;
 
             const float dx = tables->battalion_tables.enemy_dynamic.x[b] - fx;
             const float dy = tables->battalion_tables.enemy_dynamic.y[b] - fy;
             if (dx * dx + dy * dy > reach * reach) continue;
+            if (box_distance2(b, fx, fy) > best_dist) continue;
 
             search_enemy_battalion(fx, fy, tables, battalion_size, b, &best_dist, &best_type, &best_idx);
 
@@ -1114,6 +1141,8 @@ static void unit_dynamic_table_init(
         mock_dynamic_table->last_step_x[i] = 0.0f;
         mock_dynamic_table->last_step_y[i] = 0.0f;
         mock_dynamic_table->engage_wait[i] = 0.0f;
+        mock_dynamic_table->contact_idx[i] = -1U;
+        mock_dynamic_table->search_battalion[i] = UCHAR_MAX;
         mock_dynamic_table->direction[i] = dir;
         mock_dynamic_table->is_charging[i] = false;
 
@@ -1148,5 +1177,66 @@ static void allocate_mem_for_mock(unsigned int obj_count, const ComplexFieldEntr
         *dest = memory_arena_push(size_padded, alignment);
 
     }
+
+}
+
+static void update_enemy_boxes(const Table *tables, unsigned int battalion_count, unsigned int battalion_size) {
+
+    const UnitDynamicTable *enemy = &tables->unit_tables.enemy_dynamic;
+    const GeneralDynamicTable *general = &tables->general_tables.enemy_dynamic;
+
+    for (unsigned int b = 0; b < battalion_count; b++) {
+
+        _Bool any = false;
+        float *box = enemy_box[b];
+        for (unsigned int m = 0; m < battalion_size; m++) {
+
+            const unsigned int j = b * battalion_size + m;
+            if (!enemy->is_present[j]) continue;
+            if (!any) {
+                box[0] = box[1] = enemy->x[j];
+                box[2] = box[3] = enemy->y[j];
+                any = true;
+                continue;
+            }
+            if (enemy->x[j] < box[0]) box[0] = enemy->x[j];
+            if (enemy->x[j] > box[1]) box[1] = enemy->x[j];
+            if (enemy->y[j] < box[2]) box[2] = enemy->y[j];
+            if (enemy->y[j] > box[3]) box[3] = enemy->y[j];
+
+        }
+
+        if (general->is_present[b]) {
+            const float gx = general->x[b];
+            const float gy = general->y[b];
+            if (!any) {
+                box[0] = box[1] = gx;
+                box[2] = box[3] = gy;
+                any = true;
+            } else {
+                if (gx < box[0]) box[0] = gx;
+                if (gx > box[1]) box[1] = gx;
+                if (gy < box[2]) box[2] = gy;
+                if (gy > box[3]) box[3] = gy;
+            }
+        }
+
+        enemy_box_valid[b] = any;
+
+    }
+
+}
+
+static float box_distance2(unsigned int b, float x, float y) {
+
+    if (!enemy_box_valid[b]) return INFINITY;
+    const float *box = enemy_box[b];
+    float dx = 0.0f;
+    float dy = 0.0f;
+    if (x < box[0]) dx = box[0] - x;
+    else if (x > box[1]) dx = x - box[1];
+    if (y < box[2]) dy = box[2] - y;
+    else if (y > box[3]) dy = y - box[3];
+    return dx * dx + dy * dy;
 
 }

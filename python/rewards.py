@@ -91,7 +91,7 @@ class RewardTracker:
 
     def take(self, side, result=None):
         """Reward of the window that just ended for one army, plus the result once the battle is over."""
-        reward = self.pending[side].copy()
+        reward = self.pending[side] - self.cfg.time
         if result is not None and result != EpisodeResult.RUNNING:
             reward += terminal_reward(result, side, self.cfg)
         self.pending[side][:] = 0.0
