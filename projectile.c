@@ -24,6 +24,7 @@
 #define ARROW_HIT_RADIUS 18.0f     // an arrow hits the closest enemy within this distance of where it lands
 #define ARROW_SHIELD_BLOCK 50.0f   // percent of arrows a shield stops, only when the target faces the arrow
 #define BATTALION_SPREAD 400.0f
+#define ARROW_DAMAGE_MULTIPLIER 1.25f
 #define SPRITE_CENTER 50.0f        // entities are drawn from the top-left of a 100x100 frame
 
 // private prototypes
@@ -223,7 +224,7 @@ static void resolve_impact(const Projectile *projectile, Table *victims, unsigne
     if (is_shielded && faces_arrow && roll_hit(ARROW_SHIELD_BLOCK)) return;
 
     armor = (projectile->is_armor_piercing) ? armor / 2 : armor;
-    *hp -= apply_armor(projectile->damage, armor);
+    *hp -= apply_armor(projectile->damage * ARROW_DAMAGE_MULTIPLIER, armor);
 
 }
 

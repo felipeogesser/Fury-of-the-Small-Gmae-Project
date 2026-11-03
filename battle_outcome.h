@@ -6,7 +6,7 @@
 #include "shared_memory_control.h"
 #include "table_types.h"
 
-#define BATTLE_MAX_TICKS 36000u
+#define BATTLE_MAX_TICKS 14400u
 
 enum EpisodeResult battle_outcome_evaluate(const Table *player_tables, const Table *enemy_tables, unsigned int battalion_count, uint64_t tick);
 

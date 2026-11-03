@@ -40,6 +40,7 @@
 #define MEELE_SEARCH_RANGE 200.0f
 #define ENGAGE_WAIT 1.0f
 #define SEARCH_INTERVAL 4u
+#define MELEE_DAMAGE_MULTIPLIER 4.0f
 #define ARCHER_MELEE_RANGE 35.0f // an enemy this close gets a melee blow instead of an arrow
 #define MAX_FLANK_HIT_CHANCE 95.0f
 #define GENERAL_SCREEN 60.0f
@@ -466,6 +467,7 @@ static void resolve_attack(Table *tables, unsigned int battalion_count, unsigned
         const enum FlankState flank = is_ordered_target ? tables->battalion_tables.friendly_dynamic.flank_attack[battalion_idx] : FLANK_NONE;
         const _Bool is_cavalry = tables->battalion_tables.friendly_static.battalion_type[battalion_idx] == CAVALRY;
         damage *= flank_damage_multiplier(flank, is_cavalry);
+        if (!is_ranged) damage *= MELEE_DAMAGE_MULTIPLIER;
         chance = fminf(chance + flank_hit_bonus(flank), MAX_FLANK_HIT_CHANCE);
 
         _Bool hit = roll_hit(chance);
