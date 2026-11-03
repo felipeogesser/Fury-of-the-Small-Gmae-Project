@@ -17,7 +17,7 @@ enum EpisodeResult battle_outcome_evaluate(const Table *player_tables, const Tab
     if (player_present == 0 && enemy_present == 0) return EPISODE_DRAW;
     if (player_present == 0) return EPISODE_ENEMY_WON;
     if (enemy_present == 0) return EPISODE_PLAYER_WON;
-    if (tick >= BATTLE_MAX_TICKS) return EPISODE_TIMEOUT;
+    if (tick >= BATTLE_MAX_TICKS) return EPISODE_DRAW;
 
     return EPISODE_RUNNING;
 
