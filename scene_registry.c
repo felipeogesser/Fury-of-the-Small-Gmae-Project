@@ -13,7 +13,7 @@ const SceneCallbacks scene_registry[SCENE_COUNT] = {
     {
         main_menu_init,
         main_menu_input,
-        void_function,
+        (void(*)(float))void_function,
         main_menu_render,
         main_menu_destroy
     },
