@@ -30,7 +30,9 @@ from config import (
 from geometry import QUARTER, facing_vectors, finite_positions, footprint, present_of
 
 PACE_CHOICES = (PACE_WALK, PACE_RUN)
-ORDER_FEATURE_DIM = ACTION_COUNT + APPROACH_COUNT + 2
+ORDER_FEATURE_DIM = ACTION_COUNT + APPROACH_COUNT + 3
+SWITCH_REFILL = 0.05
+SWITCH_DRAIN = 0.25
 
 ARRIVE_RADIUS = 50.0 # general this close to his destination has arrived
 LINE_GAP = 60.0 # space between neighbouring battalions in a line
@@ -65,9 +67,12 @@ class OrderBook:
         self.dest_y = np.zeros(MAX_BATTALIONS, dtype=np.float64)
         self.age = np.zeros(MAX_BATTALIONS, dtype=np.int64)
         self.committed = np.zeros(MAX_BATTALIONS, dtype=bool)
+        self.bucket = np.ones(MAX_BATTALIONS, dtype=np.float64)
 
     def apply(self, actions, info, mirror, mask):
         """actions use the network's frame: mirrored x for side 1, so cells and left/right flip back here."""
+        np.minimum(self.bucket + SWITCH_REFILL, 1.0, out=self.bucket)
+        emptiness = np.zeros(MAX_BATTALIONS, dtype=np.float32)
         for i in range(info.battalion_count):
             kind = int(actions["type"][i])
             if not mask[i] or kind == ACTION_KEEP:
@@ -96,6 +101,9 @@ class OrderBook:
             self.dest_y[i] = dest_y
             self.age[i] = 0
             self.committed[i] = False
+            self.bucket[i] = max(self.bucket[i] - SWITCH_DRAIN, 0.0)
+            emptiness[i] = 1.0 - self.bucket[i]
+        return emptiness
 
     def _is_same_order(self, i, kind, actions, approach, dest_x, dest_y):
         if kind != self.kind[i]:
@@ -116,6 +124,7 @@ class OrderBook:
         out[rows, ACTION_COUNT + self.approach[:count]] = (self.kind[:count] == ACTION_ATTACK)
         out[rows, ACTION_COUNT + APPROACH_COUNT] = np.minimum(self.age[:count] / 240.0, 1.0)
         out[rows, ACTION_COUNT + APPROACH_COUNT + 1] = self.committed[:count]
+        out[rows, ACTION_COUNT + APPROACH_COUNT + 2] = self.bucket[:count]
         return out
 
     def step(self, views, own, opponent, info):

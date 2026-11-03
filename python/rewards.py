@@ -39,7 +39,7 @@ class RewardTracker:
         self.previous_fraction = None
         self.previous_routing = None
         self.pending = [np.zeros(MAX_BATTALIONS), np.zeros(MAX_BATTALIONS)]
-        self.stats = {"crowding": [0.0, 0.0], "flank": [0.0, 0.0], "exposed": [0.0, 0.0], "samples": [0, 0]}
+        self.stats = {"crowding": [0.0, 0.0], "flank": [0.0, 0.0], "exposed": [0.0, 0.0], "samples": [0, 0], "switches": [0.0, 0.0], "orders": [0, 0]}
 
     def step(self, snapshots, scale):
         count = self.count
@@ -97,6 +97,13 @@ class RewardTracker:
         self.pending[side][:] = 0.0
         return reward.astype(np.float32)
 
+    def charge_switches(self, side, emptiness, controllable):
+        self.pending[side] -= self.cfg.switch_cost * emptiness
+        self.stats["switches"][side] += float((emptiness > 0.0).sum())
+        self.stats["orders"][side] += int(controllable.sum())
+
     def summary(self, side):
         samples = max(self.stats["samples"][side], 1)
-        return {key: self.stats[key][side] / samples for key in ("crowding", "flank", "exposed")}
+        summary = {key: self.stats[key][side] / samples for key in ("crowding", "flank", "exposed")}
+        summary["switching"] = self.stats["switches"][side] / max(self.stats["orders"][side], 1)
+        return summary

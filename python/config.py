@@ -67,6 +67,7 @@ class RewardConfig:
     win: float = 1.0
     timeout: float = -0.25
     time: float = 0.002
+    switch_cost: float = 0.01
     # per battalion: these are what teach cohesion instead of blobbing
     crowding: float = 0.012 # per decision, per unit of footprint overlap with a friendly battalion
     flank_attack: float = 0.003 # per decision spent hitting a side (x1) or the rear (x2)

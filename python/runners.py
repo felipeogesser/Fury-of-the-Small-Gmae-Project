@@ -98,7 +98,7 @@ class Battle:
         return build_observations(snapshots, self.info, tick_fraction(self.info, self.steps), normalizer, update_stats, features)
 
     def apply(self, side, actions, mask, mirror):
-        self.books[side].apply(actions, self.info, mirror, mask)
+        return self.books[side].apply(actions, self.info, mirror, mask)
 
     def carry_out(self, client, snapshots):
         for side in (0, 1):
@@ -269,7 +269,8 @@ class Actor:
                 advice = self.advisors[side].act(snapshots[side], snapshots[1 - side], battle.info)
                 self.demos.add(observations[side], to_network_frame(advice, side == 1))
         for index, side in enumerate(self.learning_sides):
-            battle.apply(side, actions[index], control_mask(observations[side]), side == 1)
+            switched = battle.apply(side, actions[index], control_mask(observations[side]), side == 1)
+            self.tracker.charge_switches(side, switched, control_mask(observations[side]))
             self.buffer.add_pending(side, {
                 "obs": observations[side],
                 "actions": actions[index],
@@ -356,18 +357,19 @@ class Learner:
         crowding = np.mean([entry["crowding"] for entry in self.window])
         flank = np.mean([entry["flank"] for entry in self.window])
         exposed = np.mean([entry["exposed"] for entry in self.window])
+        switching = np.mean([entry["switching"] for entry in self.window])
         decisions = np.mean([entry["decisions"] for entry in self.window])
         print(
             f"episodes {self.episode_count} updates {self.update_count} | win/loss/timeout {', '.join(parts)} | "
-            f"crowding {crowding:.3f} flanking {flank:.3f} flanked {exposed:.3f} decisions {decisions:.0f}",
+            f"crowding {crowding:.3f} flanking {flank:.3f} flanked {exposed:.3f} switching {switching:.3f} decisions {decisions:.0f}",
             flush=True,
         )
         new_file = not os.path.exists(self.log_path)
         with open(self.log_path, "a") as log:
             if new_file:
-                log.write("episode,update,mode,battles,win_rate,crowding,flanking,flanked\n")
+                log.write("episode,update,mode,battles,win_rate,crowding,flanking,flanked,switching\n")
             for mode, battles, win_rate in rows:
-                log.write(f"{self.episode_count},{self.update_count},{mode},{battles},{win_rate:.3f},{crowding:.4f},{flank:.4f},{exposed:.4f}\n")
+                log.write(f"{self.episode_count},{self.update_count},{mode},{battles},{win_rate:.3f},{crowding:.4f},{flank:.4f},{exposed:.4f},{switching:.4f}\n")
         self.window.clear()
 
     def update(self, batch, note=""):
