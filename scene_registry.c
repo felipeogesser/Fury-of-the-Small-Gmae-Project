@@ -2,6 +2,7 @@
 #include "battlefield.h"
 #include "battleplan.h"
 #include "main_menu.h"
+#include "settings_menu.h"
 
 static void void_function(void);
 static void void_function(void) {
@@ -37,6 +38,14 @@ const SceneCallbacks scene_registry[SCENE_COUNT] = {
         battlefield_update,
         battlefield_render,
         battlefield_destroy
+    },
+
+    {
+        settings_menu_init,
+        settings_menu_input,
+        void_update,
+        settings_menu_render,
+        settings_menu_destroy
     }
 
 };

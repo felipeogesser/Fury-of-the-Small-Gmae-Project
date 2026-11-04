@@ -36,6 +36,7 @@ void game_loop(void) {
         switch(game->scene_state.scene) {
 
             case MAIN_MENU:
+            case SETTINGS:
 
                 process_peripherals(window_running);
 

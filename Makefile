@@ -87,10 +87,12 @@ SRC = \
 	shared_memory_orders.c \
 	spreadsheet.c \
 	sprites.c \
+	settings_menu.c \
 	steering.c \
 	table.c \
 	threat_policy.c \
 	type_tables.c \
+	ui.c \
 	unit.c \
 	unit_collision.c \
 	unit_table.c \

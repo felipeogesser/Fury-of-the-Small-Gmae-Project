@@ -1,6 +1,7 @@
 #include "peripherals.h"
 #include "engine_internal.h"
 #include "scene_handler.h"
+#include "game_state_internal.h"
 #include <stdbool.h>
 #include <SDL2/SDL.h>
 
@@ -18,7 +19,8 @@ void process_peripherals(_Bool *window_running) {
 
     while (queue_not_empty) {
         
-        if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
+        const _Bool quits_on_escape = engine.has_program_been_initialized_with_ai_bypass || engine.game->scene_state.scene == MAIN_MENU;
+        if (quits_on_escape && e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
             *window_running = false;
             break;
         }

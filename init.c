@@ -9,6 +9,7 @@
 #include "memory_arena.h"
 #include "python_process.h"
 #include "rng.h"
+#include "ui.h"
 #include "shared_memory_control.h"
 #include "window.h"
 #include <stdbool.h>
@@ -32,6 +33,7 @@ void init(_Bool is_ai_bypass_disabled) {
     };
     python_process_spawn(&python_config);
     create_window();
+    ui_init(engine.renderer);
     data_baking_assets();
     init_game_state();
     mailroom_init();
