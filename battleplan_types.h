@@ -11,4 +11,6 @@ typedef struct DrawerSlot DrawerSlot;
 
 typedef struct EnemyBoard EnemyBoard;
 
+typedef struct Board Board;
+
 #endif

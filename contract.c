@@ -45,7 +45,7 @@ _Bool check_contract(Contract *contract) {
     const enum Contracts *contract_list = contracts[engine.game->scene_state.scene];
     _Bool contract_match = false;
     unsigned int i = 0;
-    while (contract_list[i] != CONTRACT_UNKNOWN) {
+    while (contract_list[i] != CONTRACT_COUNT) {
 
         if (contract_list[i] == contract->title) {
 

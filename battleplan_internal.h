@@ -16,6 +16,7 @@ typedef struct Background {
 
 typedef struct Button {
 
+    const char *text;
     unsigned short x;
     unsigned short y;
     unsigned short w;
@@ -24,7 +25,6 @@ typedef struct Button {
     unsigned char g;
     unsigned char b;
     unsigned char a;
-    const char *text;
 
 } Button;
 
@@ -38,22 +38,42 @@ typedef struct DrawerSlot {
 
 } DrawerSlot;
 
-typedef struct EnemyBoard {
+/*typedef struct EnemyBoard {
 
     General *general;
     General *grid[GRID_DIMENSION_X][GRID_DIMENSION_Y];
     unsigned int general_count;
     _Bool occupied_grid_slot[GRID_DIMENSION_X * GRID_DIMENSION_Y];
 
-} EnemyBoard;
+} EnemyBoard;*/
 
-typedef struct Battleplan {
+typedef struct Board {
+
+    General *grid[GRID_DIMENSION_X][GRID_DIMENSION_Y];
+    unsigned int general_count;
+    
+} Board;
+
+/*typedef struct Battleplan {
 
     Background background;
     Button button_main_menu;
     Button button_init_battle;
     unsigned int general_in_grid_count;
     EnemyBoard enemy_board;
+
+} Battleplan;*/
+
+typedef struct Battleplan {
+
+    Background background;
+    Button button_main_menu;
+    Button button_init_battle;
+    //unsigned int general_in_grid_count;
+    Board player_board;
+    Board enemy_board;
+    General *player_inventory_general; // needs manual free();
+    General *stage_enemy_general; // needs manual free();
 
 } Battleplan;
 
