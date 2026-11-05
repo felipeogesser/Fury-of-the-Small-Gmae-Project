@@ -7,6 +7,7 @@
 #include "game_state_internal.h"
 #include "peripherals.h"
 #include "python_process.h"
+#include "run.h"
 #include "scene_handler.h"
 #include "scenes.h"
 #include <stdio.h>
@@ -45,6 +46,7 @@ void game_loop(void) {
                 continue;
 
             case BATTLEPLAN:
+            case STAGE_MAP:
 
                 process_peripherals(window_running);
 
@@ -79,7 +81,12 @@ void game_loop(void) {
                     }
 
                     if (step_result == BATTLE_STEP_ENDED) {
-                        scene_switch(BATTLEPLAN);
+                        if (is_ai_training) {
+                            scene_switch(BATTLEPLAN);
+                        } else {
+                            run_record_result(shared_memory_control_episode_result(shared_memory_control_base_ptr));
+                            scene_switch(STAGE_MAP);
+                        }
                         break;
                     }
 

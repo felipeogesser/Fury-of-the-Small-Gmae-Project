@@ -81,6 +81,7 @@ SRC = \
 	python_process.c \
 	quadrant.c \
 	rng.c \
+	run.c \
 	scene_handler.c \
 	scene_registry.c \
 	shared_memory_control.c \
@@ -88,6 +89,7 @@ SRC = \
 	spreadsheet.c \
 	sprites.c \
 	settings_menu.c \
+	stage_map.c \
 	steering.c \
 	table.c \
 	threat_policy.c \

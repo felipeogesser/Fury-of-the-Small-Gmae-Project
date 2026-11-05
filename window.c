@@ -43,6 +43,7 @@ static void create_SDL_window(void) {
     }
 
     SDL_SetRenderDrawBlendMode(ren, SDL_BLENDMODE_BLEND);
+    SDL_RenderSetLogicalSize(ren, (int)WINDOW_SIZE_X, (int)WINDOW_SIZE_Y);
 
     engine.window = win;
     engine.renderer = ren;

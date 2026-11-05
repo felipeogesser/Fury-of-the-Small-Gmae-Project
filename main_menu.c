@@ -1,6 +1,7 @@
 #include "main_menu.h"
 #include "main_menu_internal.h"
 #include "engine_internal.h"
+#include "run.h"
 #include "scene_handler.h"
 #include "scenes.h"
 #include "ui.h"
@@ -34,19 +35,20 @@ void main_menu_init(void) {
 
     }
 
-    main_menu.buttons[MAIN_MENU_CONTINUE].is_enabled = false;
+    main_menu.buttons[MAIN_MENU_CONTINUE].is_enabled = run_is_active() && !run_is_complete();
 
 }
 
 void main_menu_input(SDL_Event *e) {
 
     if (ui_button_event(&main_menu.buttons[MAIN_MENU_NEW_RUN], e)) {
-        scene_switch(BATTLEPLAN);
+        run_new();
+        scene_switch(STAGE_MAP);
         return;
     }
 
     if (ui_button_event(&main_menu.buttons[MAIN_MENU_CONTINUE], e)) {
-        scene_switch(BATTLEPLAN);
+        scene_switch(STAGE_MAP);
         return;
     }
 

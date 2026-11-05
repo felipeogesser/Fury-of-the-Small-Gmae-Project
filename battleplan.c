@@ -312,7 +312,7 @@ void battleplan_update(float dt) {
 
     if (button_main_menu_clicked) {
 
-        scene_switch(MAIN_MENU);
+        scene_switch(STAGE_MAP);
         return;
 
     }
@@ -329,8 +329,8 @@ void battleplan_update(float dt) {
     }
 
     if (button_main_menu_clicked) {
-        
-        scene_switch(MAIN_MENU);
+
+        scene_switch(STAGE_MAP);
         return;
         
     }
