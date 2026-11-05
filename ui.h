@@ -46,6 +46,7 @@ void ui_panel(SDL_Rect rect);
 void ui_text(enum UiFont font, const char *text, int x, int y, SDL_Color color, enum UiAlign align);
 int ui_text_width(enum UiFont font, const char *text);
 int ui_font_height(enum UiFont font);
+_Bool ui_mouse_over(SDL_Rect rect);
 
 UiButton ui_button(int center_x, int y, int width, int height, const char *label, _Bool is_enabled);
 _Bool ui_button_event(UiButton *button, const SDL_Event *event);

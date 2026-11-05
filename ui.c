@@ -142,6 +142,15 @@ int ui_font_height(enum UiFont font) {
 
 }
 
+_Bool ui_mouse_over(SDL_Rect rect) {
+
+    int mouse_x = 0;
+    int mouse_y = 0;
+    mouse_position(&mouse_x, &mouse_y);
+    return point_in_rect(mouse_x, mouse_y, rect);
+
+}
+
 UiButton ui_button(int center_x, int y, int width, int height, const char *label, _Bool is_enabled) {
 
     UiButton button = {
