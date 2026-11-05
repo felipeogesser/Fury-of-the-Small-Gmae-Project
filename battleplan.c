@@ -4,6 +4,7 @@
 #include "animation.h"
 #include "animation_internal.h"
 #include "baking.h"
+#include "battleplan_scenery.h"
 #include "contract.h"
 #include "contract_types.h"
 #include "deployment_loader.h"
@@ -23,6 +24,7 @@
 #include "scenes.h"
 #include "sprites.h"
 #include "sprites_internal.h"
+#include "ui.h"
 #include "window_settings.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -62,6 +64,8 @@ static void on_mouse_left_click(void);
 static void on_left_mouse_release(void);
 static void clear_payload(DragPayload *payload);
 static void battleplan_render_deployment_area(SDL_Renderer *renderer);
+static void render_board_grid(SDL_Rect area, SDL_Color ink);
+static void render_board_headers(void);
 static void battleplan_render_general_drawer(SDL_Renderer *renderer);
 static void render_drawer_generals(SDL_Renderer *renderer);
 static void render_grid_generals(SDL_Renderer *renderer);
@@ -117,13 +121,6 @@ static float mouse_dragging_origin_x = 0.0f;
 
 static float elapsed = 0.0f;
 static float duration = 1.5f;
-
-static SDL_Rect battleplan_grid = {
-    0,
-    0,
-    (signed int)WINDOW_SIZE_X,
-    (signed int)WINDOW_SIZE_Y
-};
 
 static signed int const window_edge_padding_x = 150;
 static signed int const window_edge_padding_y = 100;
@@ -228,6 +225,8 @@ void battleplan_init(void) {
 
         set_minimal_general_sprite_and_animation_data(battleplan.player_inventory_general, engine.inventory->general_count);
         set_minimal_general_sprite_and_animation_data(battleplan.stage_enemy_general, battleplan.enemy_board.general_count);
+
+        battleplan_scenery_init(renderer);
 
     } else {
 
@@ -413,17 +412,22 @@ void battleplan_render(void) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    SDL_Rect battleplan_background = {0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y};
-    SDL_SetRenderDrawColor(
-        renderer,
-        battleplan.background.r,
-        battleplan.background.g,
-        battleplan.background.b,
-        battleplan.background.a
-    );
-    SDL_RenderFillRect(renderer, &battleplan_background);
+    if (!battleplan_scenery_render(renderer)) {
+
+        SDL_Rect battleplan_background = {0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y};
+        SDL_SetRenderDrawColor(
+            renderer,
+            battleplan.background.r,
+            battleplan.background.g,
+            battleplan.background.b,
+            battleplan.background.a
+        );
+        SDL_RenderFillRect(renderer, &battleplan_background);
+
+    }
 
     battleplan_render_deployment_area(renderer);
+    render_board_headers();
     battleplan_render_general_drawer(renderer);
 
     SDL_Rect battleplan_button_main_menu = {
@@ -481,6 +485,8 @@ void battleplan_destroy(void) {
     }
 
     TTF_Quit();
+
+    battleplan_scenery_destroy();
 
     for (unsigned int i = 0; i < GRID_DIMENSION_X; i++) {
         
@@ -894,120 +900,67 @@ static void check_if_dragging_general_out_of_drawer(void) {
 
 static void battleplan_render_deployment_area(SDL_Renderer *renderer) {
 
-    SDL_SetRenderDrawColor(
-        renderer,
-        128,
-        128,
-        128,
-        255
-    );
-    SDL_RenderFillRect(renderer, &battleplan_grid);
-
-    SDL_SetRenderDrawColor(
-        renderer,
-        123,
-        123,
-        123,
-        255
-    );
-    SDL_RenderFillRect(renderer, &deployment_area);
-    
-    signed int grid_fishnet_line_width = 6;
-    signed int x = deployment_area.x - grid_fishnet_line_width / 2;
-    signed int offset_x = deployment_area.w / GRID_DIMENSION_X;
-    for (signed int i = 0; i < GRID_DIMENSION_X + 1; i++) {
-        
-        SDL_Rect grid_line_vertical = {
-            x + i * offset_x,
-            deployment_area.y - 25,
-            grid_fishnet_line_width,
-            deployment_area.h + 50
-        };
-        SDL_SetRenderDrawColor(
-            renderer,
-            0,
-            0,
-            0,
-            255
-        );
-        SDL_RenderFillRect(renderer, &grid_line_vertical);
-
-    }
-
-    signed int y = deployment_area.y - grid_fishnet_line_width / 2;
-    signed int offset_y = deployment_area.h / GRID_DIMENSION_Y;
-    for (signed int i = 0; i < GRID_DIMENSION_Y + 1; i++) {
-        
-        SDL_Rect grid_line_horizontal = {
-            deployment_area.x - 25,
-            y + i * offset_y,
-            deployment_area.w + 50,
-            grid_fishnet_line_width
-        };
-        SDL_SetRenderDrawColor(
-            renderer,
-            0,
-            0,
-            0,
-            255
-        );
-        SDL_RenderFillRect(renderer, &grid_line_horizontal);
-
-    }
-
-
-    // second area
-
-    SDL_SetRenderDrawColor(
-        renderer,
-        123,
-        123,
-        123,
-        255
-    );
-    SDL_RenderFillRect(renderer, &enemy_deployment_area);
-    
-    x = enemy_deployment_area.x - grid_fishnet_line_width / 2;
-    for (signed int i = 0; i < GRID_DIMENSION_X + 1; i++) {
-        
-        SDL_Rect grid_line_vertical = {
-            x + i * offset_x,
-            enemy_deployment_area.y - 25,
-            grid_fishnet_line_width,
-            enemy_deployment_area.h + 50
-        };
-        SDL_SetRenderDrawColor(
-            renderer,
-            0,
-            0,
-            0,
-            255
-        );
-        SDL_RenderFillRect(renderer, &grid_line_vertical);
-
-    }
-
-    for (signed int i = 0; i < GRID_DIMENSION_Y + 1; i++) {
-        
-        SDL_Rect grid_line_horizontal = {
-            enemy_deployment_area.x - 25,
-            y + i * offset_y,
-            enemy_deployment_area.w + 50,
-            grid_fishnet_line_width
-        };
-        SDL_SetRenderDrawColor(
-            renderer,
-            0,
-            0,
-            0,
-            255
-        );
-        SDL_RenderFillRect(renderer, &grid_line_horizontal);
-
-    }
+    render_board_grid(deployment_area, (SDL_Color){70, 52, 30, 255});
+    render_board_grid(enemy_deployment_area, (SDL_Color){110, 42, 32, 255});
 
     render_grid_generals(renderer);
     render_enemy_grid_generals(renderer);
+
+}
+
+static void render_board_grid(SDL_Rect area, SDL_Color ink) {
+
+    ui_fill(area, (SDL_Color){ink.r, ink.g, ink.b, 22});
+
+    const signed int cell_w = area.w / GRID_DIMENSION_X;
+    const signed int cell_h = area.h / GRID_DIMENSION_Y;
+    const SDL_Color line = {ink.r, ink.g, ink.b, 80};
+
+    for (signed int i = 1; i < GRID_DIMENSION_X; i++) {
+        ui_fill((SDL_Rect){area.x + i * cell_w - 1, area.y, 2, area.h}, line);
+    }
+
+    for (signed int j = 1; j < GRID_DIMENSION_Y; j++) {
+        ui_fill((SDL_Rect){area.x, area.y + j * cell_h - 1, area.w, 2}, line);
+    }
+
+    ui_frame((SDL_Rect){area.x - 2, area.y - 2, area.w + 4, area.h + 4}, (SDL_Color){ink.r, ink.g, ink.b, 150}, 3);
+
+}
+
+static void render_board_headers(void) {
+
+    const unsigned int deployed = battleplan.player_board.general_count;
+    const unsigned int required = battleplan.enemy_board.general_count;
+    const int header_y = deployment_area.y - 88;
+    const int header_h = 48;
+
+    const int player_center = deployment_area.x + deployment_area.w / 2;
+    const SDL_Rect player_plate = {player_center - 190, header_y, 380, header_h};
+    ui_panel(player_plate);
+
+    char count[32];
+    snprintf(count, sizeof(count), "%u / %u", deployed, required);
+    const SDL_Color count_color = deployed == required ? ui_color_success : (deployed > required ? ui_color_danger : ui_color_accent);
+    const int text_y = header_y + (header_h - ui_font_height(UI_FONT_BUTTON)) / 2;
+    ui_text(UI_FONT_BUTTON, "Generals", player_plate.x + 24, text_y, ui_color_text, UI_ALIGN_LEFT);
+    ui_text(UI_FONT_BUTTON, count, player_plate.x + player_plate.w - 24, text_y, count_color, UI_ALIGN_RIGHT);
+
+    char hint[48];
+    if (deployed < required) snprintf(hint, sizeof(hint), "Deploy %u more", required - deployed);
+    else if (deployed > required) snprintf(hint, sizeof(hint), "Remove %u", deployed - required);
+    else snprintf(hint, sizeof(hint), "Ready for battle");
+    const int hint_x = player_plate.x + player_plate.w / 2;
+    ui_text(UI_FONT_SMALL, hint, hint_x, header_y + header_h + 6, (SDL_Color){60, 44, 26, 255}, UI_ALIGN_CENTER);
+
+    const int enemy_center = enemy_deployment_area.x + enemy_deployment_area.w / 2;
+    const SDL_Rect enemy_plate = {enemy_center - 190, header_y, 380, header_h};
+    ui_panel(enemy_plate);
+
+    char enemy_count[32];
+    snprintf(enemy_count, sizeof(enemy_count), "%u", required);
+    ui_text(UI_FONT_BUTTON, "Enemy generals", enemy_plate.x + 24, text_y, ui_color_text, UI_ALIGN_LEFT);
+    ui_text(UI_FONT_BUTTON, enemy_count, enemy_plate.x + enemy_plate.w - 24, text_y, ui_color_danger, UI_ALIGN_RIGHT);
 
 }
 

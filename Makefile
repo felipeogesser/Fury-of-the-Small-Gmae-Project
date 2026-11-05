@@ -37,6 +37,7 @@ SRC = \
 	battlefield.c \
 	battlefield_grid.c \
 	battleplan.c \
+	battleplan_scenery.c \
 	battleplan_grid.c \
 	camera.c \
 	collision.c \
