@@ -2,6 +2,7 @@
 #include "battlefield_internal.h"
 #include "battlefield_grid.h"
 #include "battlefield_grid_internal.h"
+#include "battlefield_scenery.h"
 #include "animation.h"
 #include "armies_internal.h"
 #include "battalion.h"
@@ -279,14 +280,7 @@ void battlefield_render(void) {
     Player *player = engine.player;
     SDL_Renderer *renderer = engine.renderer;
 
-    SDL_Rect map_rect = {
-        (signed int)map->mapLeftLimit,
-        (signed int)map->mapTopLimit,
-        (signed int)map->mapSizeX,
-        (signed int)map->mapSizeY};
-    camera_world_to_screen(&map_rect);
-    SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
-    SDL_RenderFillRect(renderer, &map_rect);
+    battlefield_scenery_render_background(renderer, map);
 
     SDL_Rect player_render = {
         (signed int)player->playerPositionX,
@@ -311,6 +305,8 @@ void battlefield_render(void) {
         general_table_render(&battlefield.enemy_tables, i);
 
     }
+
+    battlefield_scenery_render_foreground(renderer);
 
     projectile_render();
 
@@ -386,6 +382,7 @@ void battlefield_render(void) {
 
 void battlefield_destroy(void) {
 
+    battlefield_scenery_destroy();
     memory_arena_reset_to_address(data_baking_end_pointer());
     
 }
