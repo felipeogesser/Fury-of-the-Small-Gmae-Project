@@ -66,6 +66,7 @@ static void clear_payload(DragPayload *payload);
 static void battleplan_render_deployment_area(SDL_Renderer *renderer);
 static void render_board_grid(SDL_Rect area, SDL_Color ink);
 static void render_board_headers(void);
+static void render_count_notice(void);
 static void battleplan_render_general_drawer(SDL_Renderer *renderer);
 static void render_drawer_generals(SDL_Renderer *renderer);
 static void render_grid_generals(SDL_Renderer *renderer);
@@ -121,6 +122,16 @@ static float mouse_dragging_origin_x = 0.0f;
 
 static float elapsed = 0.0f;
 static float duration = 1.5f;
+
+#define COUNT_SHAKE_DURATION 0.55f
+#define COUNT_SHAKE_AMPLITUDE 12.0f
+#define COUNT_SHAKE_FREQUENCY 55.0f
+#define COUNT_NOTICE_DURATION 2.4f
+#define COUNT_NOTICE_FADE_IN 0.15f
+#define COUNT_NOTICE_FADE_OUT 0.7f
+
+static float count_shake_time = 0.0f;
+static float count_notice_time = 0.0f;
 
 static signed int const window_edge_padding_x = 150;
 static signed int const window_edge_padding_y = 100;
@@ -325,45 +336,13 @@ void battleplan_update(float dt) {
             return;
         }
 
-    }
-
-    if (button_main_menu_clicked) {
-
-        scene_switch(STAGE_MAP);
-        return;
-        
-    }
-
-    if (button_init_battle_clicked) {
-        button_init_battle_clicked = false;
-        if (grid_is_empty() == false && grids_has_same_general_count() == true) {
-        
-            start_battle();
-            /*Padding padding = {
-                .left = 100,
-                .right = 100,
-                .top = 50,
-                .bottom = 50,
-                .in_between_armies = 1000
-            };
-            unsigned int dimension_x = GRID_DIMENSION_X;
-            unsigned int dimension_y = GRID_DIMENSION_Y;
-            unsigned int map_size_x = padding.left + 48 * 10 * dimension_x * 2 + padding.right;
-            unsigned int map_size_y = padding.top + 48 * 10 * dimension_y + padding.bottom;
-            engine.map = map_init(map_size_x, map_size_y, &padding);
-
-            GeneralPayload *general_payload = save_battleplan_placement(battleplan.player_board.grid, battleplan.player_board.general_count, false);
-            GeneralPayload *enemy_general_payload = save_battleplan_placement(battleplan.enemy_board.grid, battleplan.enemy_board.general_count, true);
-            send_battleplan_placement_to_battlefield(general_payload);
-            send_battleplan_placement_to_battlefield(enemy_general_payload);
-
-            scene_switch(BATTLEFIELD);*/
-
-            return;
-        
-        }
+        count_shake_time = COUNT_SHAKE_DURATION;
+        count_notice_time = COUNT_NOTICE_DURATION;
 
     }
+
+    if (count_shake_time > 0.0f) count_shake_time = fmaxf(count_shake_time - dt, 0.0f);
+    if (count_notice_time > 0.0f) count_notice_time = fmaxf(count_notice_time - dt, 0.0f);
 
     handle_mouse_left_button();
 
@@ -470,6 +449,8 @@ void battleplan_render(void) {
 
     SDL_RenderCopy(renderer, battleplan_message, NULL, &battleplan_button_init_battle);
 
+    render_count_notice();
+
     //SDL_RenderPresent(renderer);
 
 }
@@ -531,6 +512,8 @@ static void variables_init(void) {
     mouse_dragging_origin_x = 0.0f;
     elapsed = 0.0f;
     pan_offset = 0;
+    count_shake_time = 0.0f;
+    count_notice_time = 0.0f;
 
     DrawerSlot empty_drawer_slot = {
         NULL, 0, 0, 0, 0
@@ -941,17 +924,20 @@ static void render_board_headers(void) {
 
     char count[32];
     snprintf(count, sizeof(count), "%u / %u", deployed, required);
-    const SDL_Color count_color = deployed == required ? ui_color_success : (deployed > required ? ui_color_danger : ui_color_accent);
+    SDL_Color count_color = deployed == required ? ui_color_success : (deployed > required ? ui_color_danger : ui_color_accent);
     const int text_y = header_y + (header_h - ui_font_height(UI_FONT_BUTTON)) / 2;
     ui_text(UI_FONT_BUTTON, "Generals", player_plate.x + 24, text_y, ui_color_text, UI_ALIGN_LEFT);
-    ui_text(UI_FONT_BUTTON, count, player_plate.x + player_plate.w - 24, text_y, count_color, UI_ALIGN_RIGHT);
 
-    char hint[48];
-    if (deployed < required) snprintf(hint, sizeof(hint), "Deploy %u more", required - deployed);
-    else if (deployed > required) snprintf(hint, sizeof(hint), "Remove %u", deployed - required);
-    else snprintf(hint, sizeof(hint), "Ready for battle");
-    const int hint_x = player_plate.x + player_plate.w / 2;
-    ui_text(UI_FONT_SMALL, hint, hint_x, header_y + header_h + 6, (SDL_Color){60, 44, 26, 255}, UI_ALIGN_CENTER);
+    int shake_x = 0;
+    if (count_shake_time > 0.0f) {
+
+        const float remaining = count_shake_time / COUNT_SHAKE_DURATION;
+        const float t = COUNT_SHAKE_DURATION - count_shake_time;
+        shake_x = (int)lroundf(sinf(t * COUNT_SHAKE_FREQUENCY) * COUNT_SHAKE_AMPLITUDE * remaining);
+        count_color = ui_color_danger;
+
+    }
+    ui_text(UI_FONT_BUTTON, count, player_plate.x + player_plate.w - 24 + shake_x, text_y, count_color, UI_ALIGN_RIGHT);
 
     const int enemy_center = enemy_deployment_area.x + enemy_deployment_area.w / 2;
     const SDL_Rect enemy_plate = {enemy_center - 190, header_y, 380, header_h};
@@ -961,6 +947,45 @@ static void render_board_headers(void) {
     snprintf(enemy_count, sizeof(enemy_count), "%u", required);
     ui_text(UI_FONT_BUTTON, "Enemy generals", enemy_plate.x + 24, text_y, ui_color_text, UI_ALIGN_LEFT);
     ui_text(UI_FONT_BUTTON, enemy_count, enemy_plate.x + enemy_plate.w - 24, text_y, ui_color_danger, UI_ALIGN_RIGHT);
+
+}
+
+static void render_count_notice(void) {
+
+    if (count_notice_time <= 0.0f) return;
+
+    const float shown = COUNT_NOTICE_DURATION - count_notice_time;
+    float opacity = 1.0f;
+    if (shown < COUNT_NOTICE_FADE_IN) opacity = shown / COUNT_NOTICE_FADE_IN;
+    if (count_notice_time < COUNT_NOTICE_FADE_OUT) opacity = count_notice_time / COUNT_NOTICE_FADE_OUT;
+    const Uint8 alpha = (Uint8)lroundf(opacity * 255.0f);
+    const float rise = (1.0f - opacity) * 12.0f;
+
+    char title[64];
+    char detail[96];
+    snprintf(title, sizeof(title), "Deploy %u generals", battleplan.enemy_board.general_count);
+    snprintf(detail, sizeof(detail), "You need as many generals on the field as the enemy has (%u / %u)",
+        battleplan.player_board.general_count, battleplan.enemy_board.general_count);
+
+    const int title_h = ui_font_height(UI_FONT_HEADING);
+    const int detail_h = ui_font_height(UI_FONT_BODY);
+    const int width = (int)fmaxf((float)ui_text_width(UI_FONT_BODY, detail), (float)ui_text_width(UI_FONT_HEADING, title)) + 96;
+    const int height = 40 + title_h + 12 + detail_h + 40;
+    const SDL_Rect box = {
+        WINDOW_SIZE_X / 2 - width / 2,
+        WINDOW_SIZE_Y / 2 - height / 2 - (int)rise,
+        width,
+        height
+    };
+
+    ui_fill((SDL_Rect){box.x + 6, box.y + 8, box.w, box.h}, (SDL_Color){0, 0, 0, (Uint8)(90 * opacity)});
+    ui_fill(box, (SDL_Color){ui_color_panel.r, ui_color_panel.g, ui_color_panel.b, (Uint8)(ui_color_panel.a * opacity)});
+    ui_frame(box, (SDL_Color){ui_color_danger.r, ui_color_danger.g, ui_color_danger.b, alpha}, 2);
+    ui_fill((SDL_Rect){box.x, box.y, box.w, 4}, (SDL_Color){ui_color_danger.r, ui_color_danger.g, ui_color_danger.b, alpha});
+
+    const int center_x = box.x + box.w / 2;
+    ui_text(UI_FONT_HEADING, title, center_x, box.y + 40, (SDL_Color){ui_color_text.r, ui_color_text.g, ui_color_text.b, alpha}, UI_ALIGN_CENTER);
+    ui_text(UI_FONT_BODY, detail, center_x, box.y + 40 + title_h + 12, (SDL_Color){ui_color_muted.r, ui_color_muted.g, ui_color_muted.b, alpha}, UI_ALIGN_CENTER);
 
 }
 

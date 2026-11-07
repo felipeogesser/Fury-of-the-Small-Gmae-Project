@@ -118,12 +118,15 @@ void ui_panel(SDL_Rect rect) {
 
 void ui_text(enum UiFont font, const char *text, int x, int y, SDL_Color color, enum UiAlign align) {
 
-    UiCachedText *entry = cached_text(font, text, color);
+    if (color.a == 0) return;
+
+    UiCachedText *entry = cached_text(font, text, (SDL_Color){color.r, color.g, color.b, 255});
     if (!entry) return;
 
     SDL_Rect target = {x, y, entry->w, entry->h};
     if (align == UI_ALIGN_CENTER) target.x -= entry->w / 2;
     if (align == UI_ALIGN_RIGHT) target.x -= entry->w;
+    SDL_SetTextureAlphaMod(entry->texture, color.a);
     SDL_RenderCopy(ui_renderer, entry->texture, NULL, &target);
 
 }
