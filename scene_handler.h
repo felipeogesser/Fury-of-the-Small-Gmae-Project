@@ -8,7 +8,7 @@ void scene_init(enum Scene scene);
 
 void scene_input(SDL_Event *e);
 
-void scene_update(void);
+void scene_update(float dt);
 
 void scene_render(void);
 

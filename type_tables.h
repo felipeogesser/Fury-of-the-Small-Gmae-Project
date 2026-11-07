@@ -2,6 +2,7 @@
 #define TYPE_TABLES_H
 
 #include "animation_types.h"
+#include "battalion_types.h"
 #include "general_types.h"
 #include "json_parser_types.h"
 #include "sprites_types.h"

@@ -113,7 +113,7 @@ static void read_file_and_retrieve_data(
         signed int status = key_value_parser(i, memory_p, field_table, pp, const_keys, keys_count);
 
         if (status) {
-            printf("i = %d, obj_count = %ld\n", i, obj_count);
+            printf("i = %d, obj_count = %ld, key = %s\n", i, obj_count, keys[i]);
             fprintf(stderr, "was not able to retrieve all requested data\n");
             exit(EXIT_FAILURE);
         }

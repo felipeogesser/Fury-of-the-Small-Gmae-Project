@@ -27,13 +27,13 @@ void scene_input(SDL_Event *e) {
 
 }
 
-void scene_update(void) {
+void scene_update(float dt) {
 
     if (engine.window_running) {
 
         enum Scene current_scene = engine.game->scene_state.scene;
 
-        scene_registry[current_scene].update();
+        scene_registry[current_scene].update(dt);
 
     }
 
@@ -41,11 +41,11 @@ void scene_update(void) {
 
 void scene_render(void) {
 
-    if (engine.window_running) {
+    SDL_Renderer *renderer = engine.renderer;
+
+    if (engine.window_running && engine.render == ENABLED) {
 
         enum Scene current_scene = engine.game->scene_state.scene;
-
-        SDL_Renderer *renderer = engine.renderer;
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
@@ -56,6 +56,8 @@ void scene_render(void) {
         SDL_RenderPresent(renderer);
 
     }
+
+//    SDL_RenderClear(renderer);
 
 }
 
@@ -79,7 +81,8 @@ void scene_switch(enum Scene next_scene) {
 
         scene_registry[next_scene].init();
 
-        scene_registry[next_scene].update();
+        float dt = engine.game->delta;
+        scene_registry[next_scene].update(dt);
 
     }
 

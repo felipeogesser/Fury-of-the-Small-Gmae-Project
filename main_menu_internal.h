@@ -2,33 +2,19 @@
 #define MAIN_MENU_INTERNAL_H
 
 #include "main_menu_types.h"
+#include "ui.h"
+
+enum MainMenuButton {
+    MAIN_MENU_NEW_RUN,
+    MAIN_MENU_CONTINUE,
+    MAIN_MENU_SETTINGS,
+    MAIN_MENU_QUIT,
+    MAIN_MENU_BUTTON_COUNT
+};
 
 typedef struct MainMenu {
 
-    unsigned char background_R_color;
-    unsigned char background_G_color;
-    unsigned char background_B_color;
-    unsigned char background_Alpha;
-
-    unsigned short button_battlefield_position_x;
-    unsigned short button_battlefield_position_y;
-    unsigned short button_battlefield_width_x;
-    unsigned short button_battlefield_width_y;
-    unsigned char button_battlefield_R_color;
-    unsigned char button_battlefield_G_color;
-    unsigned char button_battlefield_B_color;
-    unsigned char button_battlefield_Alpha;
-    const char *button_battlefield_text;
-
-    unsigned short button_battleplan_position_x;
-    unsigned short button_battleplan_position_y;
-    unsigned short button_battleplan_width_x;
-    unsigned short button_battleplan_width_y;
-    unsigned char button_battleplan_R_color;
-    unsigned char button_battleplan_G_color;
-    unsigned char button_battleplan_B_color;
-    unsigned char button_battleplan_Alpha;
-    const char *button_battleplan_text;
+    UiButton buttons[MAIN_MENU_BUTTON_COUNT];
 
 } MainMenu;
 

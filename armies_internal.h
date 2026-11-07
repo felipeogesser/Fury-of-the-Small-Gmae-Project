@@ -10,6 +10,7 @@ typedef struct Armies {
     unsigned int armies_count;
     unsigned int generals_screen_width;
     unsigned int generals_screen_height;
+    unsigned int total_battalion_count;
 } Armies;
 
 typedef struct Army {

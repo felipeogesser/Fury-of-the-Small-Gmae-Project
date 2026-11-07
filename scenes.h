@@ -7,6 +7,8 @@ enum Scene {
     MAIN_MENU,
     BATTLEPLAN,
     BATTLEFIELD,
+    SETTINGS,
+    STAGE_MAP,
     SCENE_COUNT
 
 };

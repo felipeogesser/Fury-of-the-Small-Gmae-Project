@@ -7,7 +7,7 @@ void battleplan_init(void);
 
 void battleplan_input(SDL_Event *e);
 
-void battleplan_update(void);
+void battleplan_update(float dt);
 
 void battleplan_render(void);
 
