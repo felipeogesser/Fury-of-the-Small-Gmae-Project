@@ -11,11 +11,16 @@
 #include "window_settings.h"
 #include <math.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #define HUD_MARGIN 20
 #define HUD_CARD_GAP 10
-#define HUD_CARD_MAX_W 132
+#define HUD_CARD_W 124
+#define HUD_TAB_W 190
+#define HUD_TAB_H 34
+#define HUD_TAB_GAP 18
+#define HUD_NO_CARD UINT32_MAX
 #define HUD_CARD_H 168
 #define HUD_PORTRAIT_H 80
 #define HUD_BAR_H 14
@@ -49,9 +54,15 @@ typedef struct HudStat {
 static const SDL_Rect portrait_crop = {32, 22, 38, 38};
 
 static unsigned int hud_battalion_count = 0;
+static enum HudSide shown_side = HUD_SIDE_PLAYER;
 static HudSelection selection = {0};
 
-static SDL_Rect card_rect(enum HudSide side, unsigned int index);
+static SDL_Rect card_rect(unsigned int index);
+static SDL_Rect tab_rect(enum HudSide side);
+static unsigned int card_at(int x, int y);
+static unsigned int hovered_card(void);
+static void show_side(enum HudSide side);
+static void render_tab(const Table *tables, enum HudSide side);
 static SDL_Rect detail_rect(SDL_Rect anchor);
 static _Bool point_in(SDL_Rect rect, int x, int y);
 static SDL_Color side_color(enum HudSide side);
@@ -65,7 +76,8 @@ static const char *morale_name(enum MoraleState state);
 static const char *fatigue_name(enum FatigueState state);
 static void render_bar(SDL_Rect rect, float ratio, SDL_Color fill);
 static void render_portrait(SDL_Rect box, enum BattalionType type, enum HudSide side);
-static void render_card(const Table *tables, enum HudSide side, unsigned int index);
+static int card_view_w(unsigned int index, _Bool is_on_top);
+static void render_card(const Table *tables, enum HudSide side, unsigned int index, _Bool is_hovered, int view_w);
 static void render_labeled_bar(int x, int y, int w, const char *label, const char *value, float ratio, SDL_Color fill);
 static void render_stat_column(const HudStat *stats, unsigned int count, int x, int y, int w);
 static int render_chip(int x, int y, int limit, const char *label, SDL_Color color);
@@ -74,6 +86,7 @@ static void render_detail(const Table *tables, enum HudSide side, unsigned int i
 void battlefield_hud_reset(unsigned int battalion_count) {
 
     hud_battalion_count = battalion_count;
+    shown_side = HUD_SIDE_PLAYER;
     selection = (HudSelection){0};
 
 }
@@ -85,27 +98,33 @@ _Bool battlefield_hud_input(const SDL_Event *e) {
         return true;
     }
 
+    if (e->type == SDL_KEYDOWN && e->key.keysym.sym == SDLK_TAB) {
+        show_side(shown_side == HUD_SIDE_PLAYER ? HUD_SIDE_ENEMY : HUD_SIDE_PLAYER);
+        return true;
+    }
+
     if (e->type != SDL_MOUSEBUTTONDOWN || e->button.button != SDL_BUTTON_LEFT) return false;
 
     const int x = e->button.x;
     const int y = e->button.y;
 
+    if (selection.is_open && point_in(detail_rect(card_rect(selection.index)), x, y)) return true;
+
     for (unsigned int side = 0; side < HUD_SIDE_COUNT; side++) {
-        for (unsigned int i = 0; i < hud_battalion_count; i++) {
-
-            if (!point_in(card_rect(side, i), x, y)) continue;
-
-            const _Bool is_same = selection.is_open && selection.side == side && selection.index == i;
-            selection = (HudSelection){!is_same, side, i};
+        if (point_in(tab_rect(side), x, y)) {
+            show_side(side);
             return true;
-
         }
     }
 
-    if (selection.is_open) {
-        if (point_in(detail_rect(card_rect(selection.side, selection.index)), x, y)) return true;
-        selection.is_open = false;
+    const unsigned int index = card_at(x, y);
+    if (index != HUD_NO_CARD) {
+        const _Bool is_same = selection.is_open && selection.index == index;
+        selection = (HudSelection){!is_same, shown_side, index};
+        return true;
     }
+
+    selection.is_open = false;
 
     return false;
 
@@ -115,32 +134,107 @@ void battlefield_hud_render(const Table *player_tables, const Table *enemy_table
 
     battlefield_power_bar_render(player_tables, enemy_tables, hud_battalion_count, side_color(HUD_SIDE_PLAYER), side_color(HUD_SIDE_ENEMY));
 
+    render_tab(player_tables, HUD_SIDE_PLAYER);
+    render_tab(enemy_tables, HUD_SIDE_ENEMY);
+
+    const Table *tables = shown_side == HUD_SIDE_PLAYER ? player_tables : enemy_tables;
+    const unsigned int selected = selection.is_open ? selection.index : HUD_NO_CARD;
+    const unsigned int hovered = hovered_card();
+
     for (unsigned int i = 0; i < hud_battalion_count; i++) {
-
-        render_card(player_tables, HUD_SIDE_PLAYER, i);
-        render_card(enemy_tables, HUD_SIDE_ENEMY, i);
-
+        if (i != selected && i != hovered) render_card(tables, shown_side, i, false, card_view_w(i, false));
     }
-
-    if (selection.is_open && selection.index < hud_battalion_count) {
-        const Table *tables = selection.side == HUD_SIDE_PLAYER ? player_tables : enemy_tables;
-        render_detail(tables, selection.side, selection.index);
+    if (hovered != HUD_NO_CARD && hovered != selected) render_card(tables, shown_side, hovered, true, card_view_w(hovered, true));
+    if (selected < hud_battalion_count) {
+        render_card(tables, shown_side, selected, selected == hovered, card_view_w(selected, true));
+        render_detail(tables, shown_side, selected);
     }
 
 }
 
-static SDL_Rect card_rect(enum HudSide side, unsigned int index) {
+static SDL_Rect card_rect(unsigned int index) {
 
-    const int count = (int)hud_battalion_count;
-    const int side_w = ((int)WINDOW_SIZE_X - 3 * HUD_MARGIN) / 2;
-    int card_w = count > 0 ? (side_w - (count - 1) * HUD_CARD_GAP) / count : HUD_CARD_MAX_W;
-    if (card_w > HUD_CARD_MAX_W) card_w = HUD_CARD_MAX_W;
+    const int count = hud_battalion_count > 0 ? (int)hud_battalion_count : 1;
+    const int available = (int)WINDOW_SIZE_X - 2 * HUD_MARGIN;
+    int step = HUD_CARD_W + HUD_CARD_GAP;
+    if (count > 1 && (count - 1) * step + HUD_CARD_W > available) step = (available - HUD_CARD_W) / (count - 1);
 
-    const int row_w = count * card_w + (count - 1) * HUD_CARD_GAP;
+    const int row_w = (count - 1) * step + HUD_CARD_W;
+    const int start_x = ((int)WINDOW_SIZE_X - row_w) / 2;
     const int y = (int)WINDOW_SIZE_Y - HUD_MARGIN - HUD_CARD_H;
-    const int start_x = side == HUD_SIDE_PLAYER ? HUD_MARGIN : (int)WINDOW_SIZE_X - HUD_MARGIN - row_w;
 
-    return (SDL_Rect){start_x + (int)index * (card_w + HUD_CARD_GAP), y, card_w, HUD_CARD_H};
+    return (SDL_Rect){start_x + (int)index * step, y, HUD_CARD_W, HUD_CARD_H};
+
+}
+
+static int card_view_w(unsigned int index, _Bool is_on_top) {
+
+    if (is_on_top || index + 1 >= hud_battalion_count) return HUD_CARD_W;
+    const int step = card_rect(index + 1).x - card_rect(index).x;
+    return step < HUD_CARD_W ? step : HUD_CARD_W;
+
+}
+
+static SDL_Rect tab_rect(enum HudSide side) {
+
+    const int y = (int)WINDOW_SIZE_Y - HUD_MARGIN - HUD_CARD_H - HUD_TAB_GAP - HUD_TAB_H;
+    const int x = (int)WINDOW_SIZE_X / 2 + (side == HUD_SIDE_PLAYER ? -HUD_TAB_W - 4 : 4);
+    return (SDL_Rect){x, y, HUD_TAB_W, HUD_TAB_H};
+
+}
+
+static unsigned int card_at(int x, int y) {
+
+    if (selection.is_open && selection.index < hud_battalion_count && point_in(card_rect(selection.index), x, y)) return selection.index;
+
+    for (unsigned int i = hud_battalion_count; i-- > 0;) {
+        if (point_in(card_rect(i), x, y)) return i;
+    }
+
+    return HUD_NO_CARD;
+
+}
+
+static unsigned int hovered_card(void) {
+
+    if (selection.is_open && selection.index < hud_battalion_count && ui_mouse_over(card_rect(selection.index))) return selection.index;
+
+    for (unsigned int i = hud_battalion_count; i-- > 0;) {
+        if (ui_mouse_over(card_rect(i))) return i;
+    }
+
+    return HUD_NO_CARD;
+
+}
+
+static void show_side(enum HudSide side) {
+
+    if (side == shown_side) return;
+    shown_side = side;
+    selection.is_open = false;
+
+}
+
+static void render_tab(const Table *tables, enum HudSide side) {
+
+    const BattalionDynamicTable *bd = &tables->battalion_tables.friendly_dynamic;
+    unsigned int present = 0;
+    for (unsigned int i = 0; i < hud_battalion_count; i++) present += bd->is_present[i];
+
+    const SDL_Rect tab = tab_rect(side);
+    const _Bool is_active = side == shown_side;
+    const _Bool is_hovered = ui_mouse_over(tab);
+    const SDL_Color team = side_color(side);
+
+    ui_fill((SDL_Rect){tab.x + 4, tab.y + 5, tab.w, tab.h}, (SDL_Color){0, 0, 0, 90});
+    ui_fill(tab, is_active ? (SDL_Color){44, 48, 60, 245} : (SDL_Color){30, 32, 40, 220});
+    if (is_active) ui_fill((SDL_Rect){tab.x, tab.y + tab.h - 4, tab.w, 4}, team);
+    ui_frame(tab, is_active || is_hovered ? with_alpha(team, 200) : ui_color_panel_edge, 1);
+
+    char label[48];
+    snprintf(label, sizeof(label), "%s  %u/%u", side == HUD_SIDE_PLAYER ? "Left army" : "Right army", present, hud_battalion_count);
+    const int text_y = tab.y + (tab.h - ui_font_height(UI_FONT_SMALL)) / 2 - 1;
+    ui_text(UI_FONT_SMALL, label, tab.x + tab.w / 2, text_y, is_active ? team : ui_color_muted, UI_ALIGN_CENTER);
 
 }
 
@@ -153,7 +247,7 @@ static SDL_Rect detail_rect(SDL_Rect anchor) {
     if (x < HUD_MARGIN) x = HUD_MARGIN;
     if (x + HUD_DETAIL_W > (int)WINDOW_SIZE_X - HUD_MARGIN) x = (int)WINDOW_SIZE_X - HUD_MARGIN - HUD_DETAIL_W;
 
-    return (SDL_Rect){x, anchor.y - HUD_DETAIL_GAP - h, HUD_DETAIL_W, h};
+    return (SDL_Rect){x, tab_rect(HUD_SIDE_PLAYER).y - HUD_DETAIL_GAP - h, HUD_DETAIL_W, h};
 
 }
 
@@ -284,13 +378,12 @@ static void render_portrait(SDL_Rect box, enum BattalionType type, enum HudSide 
 
 }
 
-static void render_card(const Table *tables, enum HudSide side, unsigned int index) {
+static void render_card(const Table *tables, enum HudSide side, unsigned int index, _Bool is_hovered, int view_w) {
 
     const BattalionStaticTable *bs = &tables->battalion_tables.friendly_static;
     const BattalionDynamicTable *bd = &tables->battalion_tables.friendly_dynamic;
-    const SDL_Rect card = card_rect(side, index);
+    const SDL_Rect card = card_rect(index);
     const _Bool is_selected = selection.is_open && selection.side == side && selection.index == index;
-    const _Bool is_hovered = ui_mouse_over(card);
     const _Bool is_present = bd->is_present[index];
     const enum BattalionLifecycle lifecycle = bd->lifecycle_state[index];
     const SDL_Color team = side_color(side);
@@ -301,29 +394,41 @@ static void render_card(const Table *tables, enum HudSide side, unsigned int ind
     ui_fill(body, ui_color_panel);
     ui_fill((SDL_Rect){body.x, body.y, body.w, 4}, team);
 
-    const SDL_Rect portrait = {body.x + 8, body.y + 12, body.w - 16, HUD_PORTRAIT_H};
+    SDL_Rect previous_clip;
+    SDL_RenderGetClipRect(engine.renderer, &previous_clip);
+    const _Bool had_clip = SDL_RenderIsClipEnabled(engine.renderer);
+    const SDL_Rect view = {body.x, body.y, view_w, body.h};
+    const SDL_Rect clip = {view.x + 3, view.y, view.w - 6, view.h};
+    SDL_RenderSetClipRect(engine.renderer, &clip);
+
+    const SDL_Rect portrait = {view.x + 8, view.y + 12, view.w - 16, HUD_PORTRAIT_H};
     render_portrait(portrait, bs->battalion_type[index], side);
 
     const int name_y = portrait.y + portrait.h + 6;
-    ui_text(UI_FONT_SMALL, type_name(bs->battalion_type[index]), body.x + body.w / 2, name_y, ui_color_text, UI_ALIGN_CENTER);
+    const char *name = type_name(bs->battalion_type[index]);
+    const int name_w = ui_text_width(UI_FONT_SMALL, name);
+    const int name_x = name_w <= view.w - 12 ? view.x + (view.w - name_w) / 2 : view.x + 6;
+    ui_text(UI_FONT_SMALL, name, name_x, name_y, ui_color_text, UI_ALIGN_LEFT);
 
     const float max_hp = bs->max_hp[index];
     const float hp = bd->hp[index] > 0.0f ? bd->hp[index] : 0.0f;
     const float ratio = max_hp > 0.0f ? hp / max_hp : 0.0f;
-    const SDL_Rect bar = {body.x + 8, name_y + ui_font_height(UI_FONT_SMALL) + 4, body.w - 16, HUD_BAR_H};
+    const SDL_Rect bar = {view.x + 8, name_y + ui_font_height(UI_FONT_SMALL) + 4, view.w - 16, HUD_BAR_H};
     render_bar(bar, ratio, health_color(ratio));
 
     char hp_text[32];
     snprintf(hp_text, sizeof(hp_text), "%d%%", (int)lroundf(ratio * 100.0f));
-    ui_text(UI_FONT_SMALL, hp_text, body.x + body.w / 2, bar.y + bar.h + 2, ui_color_muted, UI_ALIGN_CENTER);
+    ui_text(UI_FONT_SMALL, hp_text, view.x + view.w / 2, bar.y + bar.h + 2, ui_color_muted, UI_ALIGN_CENTER);
+
+    SDL_RenderSetClipRect(engine.renderer, had_clip ? &previous_clip : NULL);
 
     if (!is_present) {
         ui_fill(body, (SDL_Color){10, 10, 14, 170});
-        ui_text(UI_FONT_SMALL, lifecycle_name(lifecycle), body.x + body.w / 2, portrait.y + portrait.h / 2 - 10, ui_color_danger, UI_ALIGN_CENTER);
+        ui_text(UI_FONT_SMALL, lifecycle_name(lifecycle), view.x + view.w / 2, portrait.y + portrait.h / 2 - 10, ui_color_danger, UI_ALIGN_CENTER);
     } else if (lifecycle == ROUTING) {
         const SDL_Rect tag = {portrait.x, portrait.y + portrait.h - 22, portrait.w, 22};
         ui_fill(tag, (SDL_Color){0, 0, 0, 170});
-        ui_text(UI_FONT_SMALL, "Routing", body.x + body.w / 2, tag.y + 1, ui_color_accent, UI_ALIGN_CENTER);
+        ui_text(UI_FONT_SMALL, "Routing", view.x + view.w / 2, tag.y + 1, ui_color_accent, UI_ALIGN_CENTER);
     }
 
     if (is_selected) ui_frame(body, ui_color_accent, 3);
@@ -372,18 +477,13 @@ static void render_detail(const Table *tables, enum HudSide side, unsigned int i
     const enum BattalionType type = bs->battalion_type[index];
     const BattalionSpreadsheet sheet = get_battalion_spreadsheet(type);
     const SDL_Color team = side_color(side);
-    const SDL_Rect anchor = card_rect(side, index);
+    const SDL_Rect anchor = card_rect(index);
     const SDL_Rect panel = detail_rect(anchor);
 
     ui_fill((SDL_Rect){panel.x + 6, panel.y + 8, panel.w, panel.h}, (SDL_Color){0, 0, 0, 110});
     ui_fill(panel, (SDL_Color){ui_color_panel.r, ui_color_panel.g, ui_color_panel.b, 245});
     ui_fill((SDL_Rect){panel.x, panel.y, panel.w, 5}, team);
     ui_frame(panel, ui_color_panel_edge, 2);
-
-    const int pointer_x = anchor.x + anchor.w / 2;
-    for (int i = 0; i < 10; i++) {
-        ui_fill((SDL_Rect){pointer_x - 10 + i, panel.y + panel.h + i, 20 - 2 * i, 1}, ui_color_panel_edge);
-    }
 
     const int x = panel.x + HUD_DETAIL_PAD;
     const int w = panel.w - 2 * HUD_DETAIL_PAD;
