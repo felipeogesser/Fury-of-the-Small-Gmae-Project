@@ -1,6 +1,7 @@
 #include "battlefield_hud.h"
 #include "animation_types.h"
 #include "battalion_types.h"
+#include "battlefield_power_bar.h"
 #include "engine_internal.h"
 #include "fatigue_types.h"
 #include "morale_types.h"
@@ -111,6 +112,8 @@ _Bool battlefield_hud_input(const SDL_Event *e) {
 }
 
 void battlefield_hud_render(const Table *player_tables, const Table *enemy_tables) {
+
+    battlefield_power_bar_render(player_tables, enemy_tables, hud_battalion_count, side_color(HUD_SIDE_PLAYER), side_color(HUD_SIDE_ENEMY));
 
     for (unsigned int i = 0; i < hud_battalion_count; i++) {
 
