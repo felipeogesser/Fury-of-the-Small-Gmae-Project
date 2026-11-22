@@ -3,6 +3,7 @@
 #include "battlefield_grid.h"
 #include "battlefield_grid_internal.h"
 #include "battlefield_scenery.h"
+#include "battlefield_hud.h"
 #include "animation.h"
 #include "armies_internal.h"
 #include "battalion.h"
@@ -129,6 +130,7 @@ void battlefield_init(void) {
     unit_table_init(&battlefield.player_tables, &battlefield.enemy_tables, player_unit, enemy_unit, battalion_count, battalion_size);
 
     battlefield.tick = 0;
+    battlefield_hud_reset(battalion_count);
     projectile_reset();
 
     set_table_shared_memory_span(battalion_table_span_base_ptr, &battlefield.player_tables, battalion_count);
@@ -162,6 +164,8 @@ void battlefield_input(SDL_Event *e) {
     if (e->key.keysym.sym == SDLK_4) update_battalions_formation = true;*/
 
     if(0)debug_print_battalions(&battlefield.player_tables, 5, "playr");
+
+    if (battlefield_hud_input(e)) return;
 
     Player *player = engine.player;
         
@@ -309,6 +313,8 @@ void battlefield_render(void) {
     battlefield_scenery_render_foreground(renderer);
 
     projectile_render();
+
+    battlefield_hud_render(&battlefield.player_tables, &battlefield.enemy_tables);
 
     /*Battalion *battalions = armies->army->battalions;
     unsigned int unit_count = battalions->unit_count;

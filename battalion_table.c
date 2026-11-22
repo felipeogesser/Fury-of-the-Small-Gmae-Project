@@ -1,4 +1,6 @@
 #include "battalion_table.h"
+#include "charge_state.h"
+#include "headless_policy.h"
 #include "battalion_table_internal.h"
 #include "battalion_policy.h"
 #include "battalion_types.h"
@@ -31,10 +33,11 @@ static void update_counts(Table *tables, unsigned int i, unsigned int battalion_
 static enum BattalionLifecycle evaluate_battalion_lifecycle(Table *tables, unsigned int i);
 static _Bool check_if_battalion_is_controllable(enum BattalionLifecycle lifecycle_state, _Bool is_headless);
 static void send_order_to_general(Table *tables, _Bool is_controllable, unsigned int i);
-static enum BattalionMovementMode evaluate_battalion_movement(Table *tables, unsigned int i);
+static enum BattalionMovementMode evaluate_battalion_movement(Table *tables, unsigned int i, unsigned int battalion_size);
 static _Bool evaluate_charge_timer(float *charge_timer, float dt);
 static _Bool check_if_battalion_is_active(enum BattalionMovementMode movement_state);
 static _Bool check_if_battalion_is_in_melee(const Table *tables, unsigned int i, unsigned int battalion_size);
+static _Bool check_if_battalion_has_contact(const Table *tables, unsigned int i, unsigned int battalion_size);
 static void speed_update(float base_speed, float *speed, enum FatigueState state, enum BattalionMovementMode movement_state, float dt);
 static void hp_update(const Table *tables, float *hp, unsigned int i, unsigned int battalion_size);
 static void position_update(const Table *tables, float *x, float *y, unsigned int i, unsigned int battalion_size);
@@ -267,6 +270,7 @@ void battalion_table_update(const Spreadsheet *spreadsheet, Table *tables, signe
 
         _Bool is_headless = !tables->general_tables.friendly_dynamic.is_present[i];
         tables->battalion_tables.friendly_dynamic.is_headless[i] = is_headless;
+        if (is_headless) update_headless_mode(tables, i, battalion_count, battalion_size);
 
         _Bool is_controllable = check_if_battalion_is_controllable(lifecycle_state, is_headless);
         tables->battalion_tables.friendly_dynamic.is_controllable[i] = is_controllable;
@@ -277,10 +281,10 @@ void battalion_table_update(const Spreadsheet *spreadsheet, Table *tables, signe
         
         enum BattalionMovementMode movement_state = tables->battalion_tables.friendly_dynamic.movement_state[i];
         const enum OrderType order_type = tables->battalion_order.type[i];
-        const _Bool keeps_fighting = (movement_state == FIGHTING) & (order_type == ORDER_ATTACK);
+        const _Bool keeps_fighting = (movement_state == FIGHTING) & (order_type == ORDER_ATTACK) & check_if_battalion_has_contact(tables, i, battalion_size);
         if (movement_state == CHARGING) {
 
-            _Bool is_charging = evaluate_charge_timer(&tables->battalion_tables.friendly_dynamic.charge_timer[i], dt);
+            _Bool is_charging = evaluate_charge_timer(&tables->battalion_tables.friendly_dynamic.charge_timer[i], dt) & !is_charge_broken(tables, i, battalion_count);
             if (!is_charging) {
                 tables->battalion_tables.friendly_dynamic.charge_timer[i] = 0.0f;
                 tables->battalion_tables.friendly_dynamic.is_charging[i] = false;
@@ -291,7 +295,7 @@ void battalion_table_update(const Spreadsheet *spreadsheet, Table *tables, signe
 
         } else if (!keeps_fighting) {
 
-            movement_state = evaluate_battalion_movement(tables, i);
+            movement_state = evaluate_battalion_movement(tables, i, battalion_size);
             tables->battalion_tables.friendly_dynamic.movement_state[i] = movement_state;
             if (movement_state == CHARGING) set_battalion_charge(tables, i, battalion_size, true);
 
@@ -456,11 +460,10 @@ static void send_order_to_general(Table *tables, _Bool is_controllable, unsigned
 
 }
 
-// Archers told to attack walk until the ordered battalion is well inside bow range, so the back
-// ranks can shoot too, instead of stopping as soon as the front rank sees anything.
-_Bool is_ranged_battalion_in_position(const Table *tables, unsigned int i) {
+_Bool is_ranged_battalion_in_position(const Table *tables, unsigned int i, unsigned int battalion_size) {
 
     #define RANGED_STOP_FRACTION 0.75f
+    #define RANGED_HOLD_SHARE 0.5f
 
     if (!tables->battalion_tables.friendly_static.is_ranged[i]) return false;
     if (tables->battalion_order.type[i] != ORDER_ATTACK) return false;
@@ -469,19 +472,32 @@ _Bool is_ranged_battalion_in_position(const Table *tables, unsigned int i) {
     const float dx = tables->battalion_tables.enemy_dynamic.x[ordered_battalion_idx] - tables->battalion_tables.friendly_dynamic.x[i];
     const float dy = tables->battalion_tables.enemy_dynamic.y[ordered_battalion_idx] - tables->battalion_tables.friendly_dynamic.y[i];
     const float stop = tables->battalion_tables.friendly_static.range[i] * RANGED_STOP_FRACTION;
-    return dx * dx + dy * dy <= stop * stop;
+    if (dx * dx + dy * dy <= stop * stop) return true;
 
+    unsigned int present = 0;
+    unsigned int shooting = 0;
+    for (unsigned int k = 0; k < battalion_size; k++) {
+
+        const unsigned int idx = i * battalion_size + k;
+        if (!tables->unit_tables.friendly_dynamic.is_present[idx]) continue;
+        present++;
+        if (tables->unit_tables.friendly_dynamic.is_engaged[idx] && tables->unit_tables.friendly_dynamic.is_target_in_range[idx]) shooting++;
+
+    }
+    return present > 0 && (float)shooting >= (float)present * RANGED_HOLD_SHARE;
+
+    #undef RANGED_HOLD_SHARE
     #undef RANGED_STOP_FRACTION
 
 }
 
-static enum BattalionMovementMode evaluate_battalion_movement(Table *tables, unsigned int i) {
+static enum BattalionMovementMode evaluate_battalion_movement(Table *tables, unsigned int i, unsigned int battalion_size) {
 
     BattalionOrderTable order = tables->battalion_order;
     enum BattalionMovementMode movement_state = 0;
     if (order.type[i] == ORDER_HOLD) return STATIONARY;
     // archers that reached shooting distance stand still to shoot, resting instead of tiring
-    if (is_ranged_battalion_in_position(tables, i)) return STATIONARY;
+    if (is_ranged_battalion_in_position(tables, i, battalion_size)) return STATIONARY;
     if (order.type[i] == ORDER_MOVE || order.type[i] == ORDER_ATTACK) {
         if (order.pace[i] == PACE_WALK) movement_state = WALKING;
         if (order.pace[i] == PACE_RUN) movement_state = RUNNING;
@@ -512,6 +528,19 @@ static _Bool check_if_battalion_is_active(enum BattalionMovementMode movement_st
     if (movement_state == RUNNING || movement_state == CHARGING || movement_state == FIGHTING) return true;
     return false;
     
+}
+
+static _Bool check_if_battalion_has_contact(const Table *tables, unsigned int i, unsigned int battalion_size) {
+
+    for (unsigned int k = 0; k < battalion_size; k++) {
+
+        const unsigned int idx = i * battalion_size + k;
+        if (!tables->unit_tables.friendly_dynamic.is_present[idx]) continue;
+        if (tables->unit_tables.friendly_dynamic.is_engaged[idx] && tables->unit_tables.friendly_dynamic.is_target_in_range[idx]) return true;
+
+    }
+    return false;
+
 }
 
 static _Bool check_if_battalion_is_in_melee(const Table *tables, unsigned int i, unsigned int battalion_size) {

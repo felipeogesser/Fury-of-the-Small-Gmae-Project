@@ -1024,7 +1024,7 @@ static _Bool battalion_in_contact(const Table *tables, unsigned int i, unsigned 
     if (tables->general_tables.friendly_dynamic.is_engaged[i]) return true;
 
     if (tables->battalion_tables.friendly_static.is_ranged[i] & (tables->battalion_order.type[i] == ORDER_ATTACK)) {
-        return is_ranged_battalion_in_position(tables, i);
+        return is_ranged_battalion_in_position(tables, i, battalion_size);
     }
 
     // the battalion keeps pressing until half a rank is fighting, so a lone soldier in reach

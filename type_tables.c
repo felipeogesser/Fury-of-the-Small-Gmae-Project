@@ -23,7 +23,11 @@ const RarityEntry rarity_table[] = {
 const size_t rarity_table_count = (sizeof(rarity_table) / sizeof(rarity_table[0]));
 
 const GeneralTypeEntry general_type_table[] = {
-    { "general_guardsmen", GENERAL_GUARDSMEN }
+    { "general_guardsmen", GENERAL_GUARDSMEN },
+    { "general_swordsmen", GENERAL_SWORDSMEN },
+    { "general_templar", GENERAL_TEMPLAR },
+    { "general_cavalry", GENERAL_CAVALRY },
+    { "general_archers", GENERAL_ARCHERS }
 };
 const size_t general_type_table_count = (sizeof(general_type_table) / sizeof(general_type_table[0]));
 

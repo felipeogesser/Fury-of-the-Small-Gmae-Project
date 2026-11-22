@@ -13,6 +13,8 @@
 #include "field_entry.h"
 #include "flank.h"
 #include "formation.h"
+#include "cavalry_charge.h"
+#include "friend_steering.h"
 #include "maps_internal.h"
 #include "memory_arena.h"
 #include "projectile.h"
@@ -44,6 +46,7 @@
 #define ARCHER_MELEE_RANGE 35.0f // an enemy this close gets a melee blow instead of an arrow
 #define MAX_FLANK_HIT_CHANCE 95.0f
 #define GENERAL_SCREEN 60.0f
+#define ARCHER_MELEE_HOLD 1.5f
 #define ARCHER_MELEE_SWING 1.0f  // seconds between an archer's melee blows; attack_speed is its reload
 
 #define DISTANCE 36.0f // DISTANCE_BETWEEN_GENERAL_AND_BATTALION_CENTROID
@@ -388,6 +391,9 @@ void unit_table_destroy(void) {
 
 static void resolve_attack(Table *tables, unsigned int battalion_count, unsigned int battalion_size, enum ArmyBattlefieldSide side, float dt) {
 
+    static float archer_melee_timers[2][MAX_BATTALIONS];
+    float *melee_timer = archer_melee_timers[side == ARMY_SIDE_LEFT];
+    for (unsigned int b = 0; b < battalion_count; b++) melee_timer[b] = fmaxf(melee_timer[b] - dt, 0.0f);
     const unsigned int unit_count = battalion_count * battalion_size;
     for (unsigned int i = 0; i < unit_count; i++) {
 
@@ -407,8 +413,9 @@ static void resolve_attack(Table *tables, unsigned int battalion_count, unsigned
             // archers don't shoot on the march, nor while running away, but still defend themselves
             const _Bool is_moving = tables->battalion_order.type[i / battalion_size] == ORDER_MOVE;
             const _Bool is_routing = tables->battalion_tables.friendly_dynamic.lifecycle_state[i / battalion_size] == ROUTING;
-            const _Bool holds_fire = is_moving | is_routing;
+            const _Bool holds_fire = is_moving | is_routing | (melee_timer[i / battalion_size] > 0.0f);
             const _Bool is_melee = aim_ranged_attack(tables, i, battalion_count, battalion_size, holds_fire);
+            if (is_melee) melee_timer[i / battalion_size] = ARCHER_MELEE_HOLD;
             if (!is_melee) {
                 if (!holds_fire) fire_arrow(tables, i, battalion_size, side, dt);
                 continue;
@@ -709,9 +716,12 @@ static void update_position(Table *tables, const Map *map, unsigned int battalio
     steer_headless_units(
         tables, battalion_count, unit_count, battalion_size,
         UNIT_WIDTH, UNIT_HEIGHT, PADDING_X, PADDING_Y, CATCH_UP);
+    steer_collapsed_cavalry(tables, battalion_count, unit_count, battalion_size, UNIT_WIDTH, UNIT_HEIGHT, CATCH_UP);
     if(0)get_close_to_engaged_target(tables, unit_count, battalion_size, CATCH_UP);
 
     routing_units(tables, unit_count, battalion_size, side);
+
+    steer_around_friends(tables, battalion_count, battalion_size);
 
     move_units_by_vec(tables, unit_count, battalion_size, CATCH_UP);
 
