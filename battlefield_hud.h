@@ -4,7 +4,7 @@
 #include "table_internal.h"
 #include <SDL2/SDL.h>
 
-void battlefield_hud_reset(unsigned int battalion_count);
+void battlefield_hud_reset(unsigned int battalion_count, unsigned int battalion_size);
 
 _Bool battlefield_hud_input(const SDL_Event *e);
 

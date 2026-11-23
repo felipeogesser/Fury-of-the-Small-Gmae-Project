@@ -1,4 +1,5 @@
 #include "battlefield_power_bar.h"
+#include "army_health.h"
 #include "ui.h"
 #include "window_settings.h"
 #include <math.h>
@@ -10,24 +11,10 @@
 #define POWER_PAD 16
 #define POWER_BAR_H 22
 
-static float army_health(const Table *tables, unsigned int battalion_count) {
+void battlefield_power_bar_render(const Table *left_tables, const Table *right_tables, unsigned int battalion_count, unsigned int battalion_size, SDL_Color left_color, SDL_Color right_color) {
 
-    float total = 0.0f;
-    for (unsigned int i = 0; i < battalion_count; i++) {
-
-        const float hp = tables->battalion_tables.friendly_dynamic.hp[i];
-        if (hp > 0.0f) total += hp;
-
-    }
-
-    return total;
-
-}
-
-void battlefield_power_bar_render(const Table *left_tables, const Table *right_tables, unsigned int battalion_count, SDL_Color left_color, SDL_Color right_color) {
-
-    const float left_hp = army_health(left_tables, battalion_count);
-    const float right_hp = army_health(right_tables, battalion_count);
+    const float left_hp = army_health_on_field(left_tables, battalion_count, battalion_size);
+    const float right_hp = army_health_on_field(right_tables, battalion_count, battalion_size);
     const float total = left_hp + right_hp;
     const float left_share = total > 0.0f ? left_hp / total : 0.5f;
 

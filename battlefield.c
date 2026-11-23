@@ -4,6 +4,7 @@
 #include "battlefield_grid_internal.h"
 #include "battlefield_scenery.h"
 #include "battlefield_hud.h"
+#include "army_health.h"
 #include "animation.h"
 #include "armies_internal.h"
 #include "battalion.h"
@@ -62,7 +63,7 @@ static Armies *load_armies_onto_battlefield(GeneralPayload **general_payload, un
 //static void render_generals(void);
 //static void render_units(void);
 //static _Bool is_battle_over(Table *player_tables, Table *enemy_tables, unsigned int battalion_count);
-static void update_balance_of_power(Table *player_tables, Table *enemy_tables, unsigned int battalion_count, signed int *balance_of_power);
+static void update_balance_of_power(Table *player_tables, Table *enemy_tables, unsigned int battalion_count, unsigned int battalion_size, signed int *balance_of_power);
 static SDL_Texture *create_army_marker_texture(SDL_Renderer *renderer);
 static void render_army_markers(Table *tables, unsigned int battalion_size, unsigned int first_battalion, unsigned int last_battalion, Uint8 r, Uint8 g, Uint8 b);
 
@@ -130,7 +131,7 @@ void battlefield_init(void) {
     unit_table_init(&battlefield.player_tables, &battlefield.enemy_tables, player_unit, enemy_unit, battalion_count, battalion_size);
 
     battlefield.tick = 0;
-    battlefield_hud_reset(battalion_count);
+    battlefield_hud_reset(battalion_count, battalion_size);
     projectile_reset();
 
     set_table_shared_memory_span(battalion_table_span_base_ptr, &battlefield.player_tables, battalion_count);
@@ -242,7 +243,7 @@ void battlefield_update(float frame_dt) {
         
     }
 
-    update_balance_of_power(player_tables, enemy_tables, battalion_count, balance_of_power);
+    update_balance_of_power(player_tables, enemy_tables, battalion_count, battalion_size, balance_of_power);
 
     battalion_table_update(spreadsheet_ptr, player_tables, *balance_of_power, battalion_count, battalion_size, dt);
     battalion_table_update(spreadsheet_ptr, enemy_tables, -*balance_of_power, battalion_count, battalion_size, dt);
@@ -439,15 +440,10 @@ static Armies *load_armies_onto_battlefield(GeneralPayload **general_payload, un
 
 }*/
 
-static void update_balance_of_power(Table *player_tables, Table *enemy_tables, unsigned int battalion_count, signed int *balance_of_power) {
+static void update_balance_of_power(Table *player_tables, Table *enemy_tables, unsigned int battalion_count, unsigned int battalion_size, signed int *balance_of_power) {
 
-    float player_hp = 0.0f, enemy_hp = 0.0f;
-    for (unsigned int i = 0; i < battalion_count; i++) {
-
-        player_hp += player_tables->battalion_tables.friendly_dynamic.hp[i];
-        enemy_hp +=enemy_tables->battalion_tables.friendly_dynamic.hp[i];
-    
-    }
+    const float player_hp = army_health_on_field(player_tables, battalion_count, battalion_size);
+    const float enemy_hp = army_health_on_field(enemy_tables, battalion_count, battalion_size);
 
     float total_hp = player_hp + enemy_hp;
     float balance = 0.0f;

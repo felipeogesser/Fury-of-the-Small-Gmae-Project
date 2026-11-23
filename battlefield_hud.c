@@ -54,6 +54,7 @@ typedef struct HudStat {
 static const SDL_Rect portrait_crop = {32, 22, 38, 38};
 
 static unsigned int hud_battalion_count = 0;
+static unsigned int hud_battalion_size = 0;
 static enum HudSide shown_side = HUD_SIDE_PLAYER;
 static HudSelection selection = {0};
 
@@ -83,9 +84,10 @@ static void render_stat_column(const HudStat *stats, unsigned int count, int x, 
 static int render_chip(int x, int y, int limit, const char *label, SDL_Color color);
 static void render_detail(const Table *tables, enum HudSide side, unsigned int index);
 
-void battlefield_hud_reset(unsigned int battalion_count) {
+void battlefield_hud_reset(unsigned int battalion_count, unsigned int battalion_size) {
 
     hud_battalion_count = battalion_count;
+    hud_battalion_size = battalion_size;
     shown_side = HUD_SIDE_PLAYER;
     selection = (HudSelection){0};
 
@@ -132,7 +134,7 @@ _Bool battlefield_hud_input(const SDL_Event *e) {
 
 void battlefield_hud_render(const Table *player_tables, const Table *enemy_tables) {
 
-    battlefield_power_bar_render(player_tables, enemy_tables, hud_battalion_count, side_color(HUD_SIDE_PLAYER), side_color(HUD_SIDE_ENEMY));
+    battlefield_power_bar_render(player_tables, enemy_tables, hud_battalion_count, hud_battalion_size, side_color(HUD_SIDE_PLAYER), side_color(HUD_SIDE_ENEMY));
 
     render_tab(player_tables, HUD_SIDE_PLAYER);
     render_tab(enemy_tables, HUD_SIDE_ENEMY);
