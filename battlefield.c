@@ -64,15 +64,15 @@ static Armies *load_armies_onto_battlefield(GeneralPayload **general_payload, un
 //static _Bool is_battle_over(Table *player_tables, Table *enemy_tables, unsigned int battalion_count);
 static void update_balance_of_power(Table *player_tables, Table *enemy_tables, unsigned int battalion_count, signed int *balance_of_power);
 static SDL_Texture *create_army_marker_texture(SDL_Renderer *renderer);
-static void render_army_markers(Table *tables, unsigned int battalion_count, unsigned int battalion_size, Uint8 r, Uint8 g, Uint8 b);
+static void render_army_markers(Table *tables, unsigned int battalion_size, unsigned int first_battalion, unsigned int last_battalion, Uint8 r, Uint8 g, Uint8 b);
 
 static SDL_Texture *army_marker_texture = NULL;
 static _Bool show_army_markers = false;
 
 #define UNIT_MARKER_W 30
 #define UNIT_MARKER_H 12
-#define GENERAL_MARKER_W 44
-#define GENERAL_MARKER_H 18
+#define GENERAL_MARKER_W 60
+#define GENERAL_MARKER_H 24
 #define MARKER_FOOT_OFFSET 40
 #define MARKER_ALPHA 150
 
@@ -295,9 +295,14 @@ void battlefield_render(void) {
     SDL_SetRenderDrawColor(renderer, 255, 104, 230, 255);
     SDL_RenderFillRect(renderer, &player_render);
 
+    _Bool is_selected_enemy = false;
+    unsigned int selected_battalion = 0;
     if (show_army_markers && army_marker_texture != NULL) {
-        render_army_markers(&battlefield.player_tables, battlefield.battalion_count / 2, battlefield.battalion_size, 60, 200, 60);
-        render_army_markers(&battlefield.enemy_tables, battlefield.battalion_count / 2, battlefield.battalion_size, 220, 50, 50);
+        render_army_markers(&battlefield.player_tables, battlefield.battalion_size, 0, battlefield.battalion_count / 2, 60, 200, 60);
+        render_army_markers(&battlefield.enemy_tables, battlefield.battalion_size, 0, battlefield.battalion_count / 2, 220, 50, 50);
+    } else if (army_marker_texture != NULL && battlefield_hud_selected_battalion(&is_selected_enemy, &selected_battalion)) {
+        if (is_selected_enemy) render_army_markers(&battlefield.enemy_tables, battlefield.battalion_size, selected_battalion, selected_battalion + 1, 220, 50, 50);
+        else render_army_markers(&battlefield.player_tables, battlefield.battalion_size, selected_battalion, selected_battalion + 1, 60, 200, 60);
     }
 
     unit_table_render(&battlefield.player_tables, battlefield.battalion_count / 2, battlefield.battalion_size);
@@ -625,15 +630,14 @@ static SDL_Texture *create_army_marker_texture(SDL_Renderer *renderer) {
 
 }
 
-static void render_army_markers(Table *tables, unsigned int battalion_count, unsigned int battalion_size, Uint8 r, Uint8 g, Uint8 b) {
+static void render_army_markers(Table *tables, unsigned int battalion_size, unsigned int first_battalion, unsigned int last_battalion, Uint8 r, Uint8 g, Uint8 b) {
 
     SDL_Renderer *renderer = engine.renderer;
 
     SDL_SetTextureColorMod(army_marker_texture, r, g, b);
     SDL_SetTextureAlphaMod(army_marker_texture, MARKER_ALPHA);
 
-    unsigned int unit_count = battalion_count * battalion_size;
-    for (unsigned int i = 0; i < unit_count; i++) {
+    for (unsigned int i = first_battalion * battalion_size; i < last_battalion * battalion_size; i++) {
 
         if (!tables->unit_tables.friendly_dynamic.is_present[i]) continue;
 
@@ -659,7 +663,7 @@ static void render_army_markers(Table *tables, unsigned int battalion_count, uns
 
     }
 
-    for (unsigned int i = 0; i < battalion_count; i++) {
+    for (unsigned int i = first_battalion; i < last_battalion; i++) {
 
         if (!tables->general_tables.friendly_dynamic.is_present[i]) continue;
 

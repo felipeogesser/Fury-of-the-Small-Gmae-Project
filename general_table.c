@@ -65,6 +65,8 @@ static void *general_table_start_address_alloc = NULL;
 
 #define OFFSET_OF(type, member) offsetof(type, member)
 #define ELEMENT_SIZE_OF(type, member) (sizeof(*(((type *)0)->member)))
+#define GENERAL_RENDER_SCALE 2
+#define GENERAL_RENDER_FEET_OFFSET 40
 
 static const ComplexFieldEntry general_static_table_field_table[] = {
 
@@ -230,11 +232,12 @@ void general_table_render(Table *tables, unsigned int i) {
         sprite_frame_height
     };
 
+    const signed int feet_y = sprite_frame_height - GENERAL_RENDER_FEET_OFFSET;
     SDL_Rect sprite_position = {
-        (signed int)x,
-        (signed int)y,
-        (signed int)sprite_frame_width,
-        (signed int)sprite_frame_height
+        (signed int)x - (GENERAL_RENDER_SCALE - 1) * sprite_frame_width / 2,
+        (signed int)y - (GENERAL_RENDER_SCALE - 1) * feet_y,
+        (signed int)sprite_frame_width * GENERAL_RENDER_SCALE,
+        (signed int)sprite_frame_height * GENERAL_RENDER_SCALE
     };
     
     camera_world_to_screen(&sprite_position);

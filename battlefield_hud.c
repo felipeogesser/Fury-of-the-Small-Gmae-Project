@@ -152,6 +152,15 @@ void battlefield_hud_render(const Table *player_tables, const Table *enemy_table
 
 }
 
+_Bool battlefield_hud_selected_battalion(_Bool *is_enemy, unsigned int *index) {
+
+    if (!selection.is_open || selection.index >= hud_battalion_count) return false;
+    *is_enemy = selection.side == HUD_SIDE_ENEMY;
+    *index = selection.index;
+    return true;
+
+}
+
 static SDL_Rect card_rect(unsigned int index) {
 
     const int count = hud_battalion_count > 0 ? (int)hud_battalion_count : 1;
