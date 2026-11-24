@@ -40,6 +40,18 @@ typedef struct Tutorial {
 
 static Tutorial tutorial = {true, 0, TUTORIAL_OUTCOME_NONE, TUTORIAL_CHAPTER_NONE, 0, 0.0f, NULL, 0, false};
 
+_Bool tutorial_is_finished(void) {
+
+    return !tutorial.is_pending;
+
+}
+
+void tutorial_set_finished(_Bool is_finished) {
+
+    tutorial.is_pending = !is_finished;
+
+}
+
 static const TutorialStep *current_step(void) {
 
     const TutorialChapterScript *script = tutorial_chapter_script(tutorial.chapter);

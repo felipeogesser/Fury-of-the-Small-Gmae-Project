@@ -6,5 +6,6 @@
 void *inventory_init(void);
 
 void inventory_set_starting_army(enum StartingArmy army);
+enum StartingArmy inventory_starting_army(void);
 
 #endif

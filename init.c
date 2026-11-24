@@ -4,11 +4,13 @@
 #include "engine_cleanup.h"
 #include "engine_internal.h"
 #include "game_clock.h"
+#include "game_settings.h"
 #include "game_state.h"
 #include "mailroom.h"
 #include "memory_arena.h"
 #include "python_process.h"
 #include "rng.h"
+#include "save.h"
 #include "ui.h"
 #include "shared_memory_control.h"
 #include "window.h"
@@ -19,6 +21,8 @@
 void init(_Bool is_ai_bypass_disabled) {
 
     engine_init(is_ai_bypass_disabled);
+    save_load();
+    game_settings_load();
     game_clock_init();
     rng_init();
     memory_arena_init();
@@ -33,6 +37,7 @@ void init(_Bool is_ai_bypass_disabled) {
     };
     python_process_spawn(&python_config);
     create_window();
+    game_settings_apply_all();
     ui_init(engine.renderer);
     data_baking_assets();
     init_game_state();

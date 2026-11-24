@@ -1,5 +1,5 @@
 #include "settings_menu.h"
-#include "engine_internal.h"
+#include "game_settings.h"
 #include "keybindings.h"
 #include "scene_handler.h"
 #include "scenes.h"
@@ -25,7 +25,7 @@ static UiButton back_button = {0};
 
 static _Bool is_fullscreen(void) {
 
-    return (SDL_GetWindowFlags(engine.window) & SDL_WINDOW_FULLSCREEN_DESKTOP) != 0;
+    return game_settings_get(SETTING_FULLSCREEN) != 0;
 
 }
 
@@ -47,7 +47,7 @@ void settings_menu_input(SDL_Event *e) {
     }
 
     if (ui_button_event(&fullscreen_button, e)) {
-        SDL_SetWindowFullscreen(engine.window, is_fullscreen() ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
+        game_settings_toggle(SETTING_FULLSCREEN);
         return;
     }
 

@@ -16,6 +16,12 @@ void inventory_set_starting_army(enum StartingArmy army) {
 
 }
 
+enum StartingArmy inventory_starting_army(void) {
+
+    return starting_army;
+
+}
+
 void *inventory_init(void) {
 
     engine.inventory = &inventory;
