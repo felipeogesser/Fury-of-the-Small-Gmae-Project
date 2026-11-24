@@ -6,6 +6,7 @@
 #include "fatigue_types.h"
 #include "morale_types.h"
 #include "spreadsheet.h"
+#include "stat_sheet.h"
 #include "sprites_internal.h"
 #include "ui.h"
 #include "window_settings.h"
@@ -24,16 +25,9 @@
 #define HUD_CARD_H 168
 #define HUD_PORTRAIT_H 80
 #define HUD_BAR_H 14
-#define HUD_DETAIL_W 340
-#define HUD_DETAIL_PAD 18
 #define HUD_DETAIL_TOP 96
-#define HUD_DETAIL_HEADER_H 70
-#define HUD_DETAIL_BAR_STEP 42
-#define HUD_ROW_H 22
 #define HUD_STAT_ROWS 14
-#define HUD_CHIP_H 24
-#define HUD_CHIP_GAP 5
-#define HUD_CHIP_ROWS 4
+#define HUD_STAT_BARS 3
 
 enum HudSide {
     HUD_SIDE_PLAYER,
@@ -48,23 +42,6 @@ typedef struct HudSelection {
     unsigned int index;
 
 } HudSelection;
-
-typedef struct HudChipFlow {
-
-    int left;
-    int right;
-    int x;
-    int y;
-    unsigned int count;
-
-} HudChipFlow;
-
-typedef struct HudStat {
-
-    const char *label;
-    char value[48];
-
-} HudStat;
 
 static const SDL_Rect portrait_crop = {32, 22, 38, 38};
 
@@ -83,20 +60,14 @@ static SDL_Rect detail_rect(void);
 static _Bool point_in(SDL_Rect rect, int x, int y);
 static SDL_Color side_color(enum HudSide side);
 static SDL_Color with_alpha(SDL_Color color, Uint8 alpha);
-static SDL_Color health_color(float ratio);
-static float clamp01(float value);
 static const char *type_name(enum BattalionType type);
 static const char *lifecycle_name(enum BattalionLifecycle state);
 static const char *movement_name(enum BattalionMovementMode state);
 static const char *morale_name(enum MoraleState state);
 static const char *fatigue_name(enum FatigueState state);
-static void render_bar(SDL_Rect rect, float ratio, SDL_Color fill);
 static void render_portrait(SDL_Rect box, enum BattalionType type, enum HudSide side);
 static int card_view_w(unsigned int index, _Bool is_on_top);
 static void render_card(const Table *tables, enum HudSide side, unsigned int index, _Bool is_hovered, int view_w);
-static void render_labeled_bar(int x, int y, int w, const char *label, const char *value, float ratio, SDL_Color fill);
-static void render_stat_column(const HudStat *stats, unsigned int count, int x, int y, int w);
-static void render_chip(HudChipFlow *flow, const char *label, SDL_Color color);
 static void render_detail(const Table *tables, enum HudSide side, unsigned int index);
 
 void battlefield_hud_reset(unsigned int battalion_count, unsigned int battalion_size) {
@@ -266,8 +237,7 @@ static void render_tab(const Table *tables, enum HudSide side) {
 
 static SDL_Rect detail_rect(void) {
 
-    const int h = HUD_DETAIL_PAD + HUD_DETAIL_HEADER_H + 3 * HUD_DETAIL_BAR_STEP + 8 + HUD_STAT_ROWS * HUD_ROW_H + 12 + HUD_CHIP_ROWS * (HUD_CHIP_H + HUD_CHIP_GAP) + HUD_DETAIL_PAD;
-    return (SDL_Rect){HUD_MARGIN, HUD_DETAIL_TOP, HUD_DETAIL_W, h};
+    return stat_sheet_rect(HUD_MARGIN, HUD_DETAIL_TOP, HUD_STAT_BARS, HUD_STAT_ROWS);
 
 }
 
@@ -286,22 +256,6 @@ static SDL_Color side_color(enum HudSide side) {
 static SDL_Color with_alpha(SDL_Color color, Uint8 alpha) {
 
     return (SDL_Color){color.r, color.g, color.b, alpha};
-
-}
-
-static SDL_Color health_color(float ratio) {
-
-    if (ratio > 0.5f) return ui_color_success;
-    if (ratio > 0.25f) return ui_color_accent;
-    return ui_color_danger;
-
-}
-
-static float clamp01(float value) {
-
-    if (value < 0.0f) return 0.0f;
-    if (value > 1.0f) return 1.0f;
-    return value;
 
 }
 
@@ -369,18 +323,6 @@ static const char *fatigue_name(enum FatigueState state) {
 
 }
 
-static void render_bar(SDL_Rect rect, float ratio, SDL_Color fill) {
-
-    ui_fill(rect, (SDL_Color){12, 13, 16, 255});
-    const int fill_w = (int)lroundf((float)(rect.w - 4) * clamp01(ratio));
-    if (fill_w > 0) {
-        ui_fill((SDL_Rect){rect.x + 2, rect.y + 2, fill_w, rect.h - 4}, fill);
-        ui_fill((SDL_Rect){rect.x + 2, rect.y + 2, fill_w, (rect.h - 4) / 3}, (SDL_Color){255, 255, 255, 40});
-    }
-    ui_frame(rect, ui_color_panel_edge, 1);
-
-}
-
 static void render_portrait(SDL_Rect box, enum BattalionType type, enum HudSide side) {
 
     ui_fill(box, (SDL_Color){20, 22, 28, 255});
@@ -434,7 +376,7 @@ static void render_card(const Table *tables, enum HudSide side, unsigned int ind
     const float hp = bd->hp[index] > 0.0f ? bd->hp[index] : 0.0f;
     const float ratio = max_hp > 0.0f ? hp / max_hp : 0.0f;
     const SDL_Rect bar = {view.x + 8, name_y + ui_font_height(UI_FONT_SMALL) + 4, view.w - 16, HUD_BAR_H};
-    render_bar(bar, ratio, health_color(ratio));
+    stat_sheet_render_meter(bar, ratio, stat_sheet_health_color(ratio));
 
     char hp_text[32];
     snprintf(hp_text, sizeof(hp_text), "%d%%", (int)lroundf(ratio * 100.0f));
@@ -456,124 +398,93 @@ static void render_card(const Table *tables, enum HudSide side, unsigned int ind
 
 }
 
-static void render_labeled_bar(int x, int y, int w, const char *label, const char *value, float ratio, SDL_Color fill) {
-
-    ui_text(UI_FONT_SMALL, label, x, y, ui_color_muted, UI_ALIGN_LEFT);
-    ui_text(UI_FONT_SMALL, value, x + w, y, ui_color_text, UI_ALIGN_RIGHT);
-    render_bar((SDL_Rect){x, y + HUD_ROW_H, w, HUD_BAR_H}, ratio, fill);
-
-}
-
-static void render_stat_column(const HudStat *stats, unsigned int count, int x, int y, int w) {
-
-    for (unsigned int i = 0; i < count; i++) {
-
-        const int row_y = y + (int)i * HUD_ROW_H;
-        if (i % 2 == 0) ui_fill((SDL_Rect){x - 6, row_y, w + 12, HUD_ROW_H}, (SDL_Color){255, 255, 255, 8});
-        ui_text(UI_FONT_SMALL, stats[i].label, x, row_y, ui_color_muted, UI_ALIGN_LEFT);
-        ui_text(UI_FONT_SMALL, stats[i].value, x + w, row_y, ui_color_text, UI_ALIGN_RIGHT);
-
-    }
-
-}
-
-static void render_chip(HudChipFlow *flow, const char *label, SDL_Color color) {
-
-    const int w = ui_text_width(UI_FONT_SMALL, label) + 16;
-    if (flow->x > flow->left && flow->x + w > flow->right) {
-        flow->x = flow->left;
-        flow->y += HUD_CHIP_H + HUD_CHIP_GAP;
-    }
-
-    const SDL_Rect chip = {flow->x, flow->y, w, HUD_CHIP_H};
-    ui_fill(chip, with_alpha(color, 40));
-    ui_frame(chip, with_alpha(color, 200), 1);
-    ui_text(UI_FONT_SMALL, label, flow->x + 8, flow->y + (HUD_CHIP_H - ui_font_height(UI_FONT_SMALL)) / 2, color, UI_ALIGN_LEFT);
-    flow->x += w + HUD_CHIP_GAP;
-    flow->count++;
-
-}
-
 static void render_detail(const Table *tables, enum HudSide side, unsigned int index) {
 
     const BattalionStaticTable *bs = &tables->battalion_tables.friendly_static;
     const BattalionDynamicTable *bd = &tables->battalion_tables.friendly_dynamic;
     const GeneralDynamicTable *gd = &tables->general_tables.friendly_dynamic;
     const enum BattalionType type = bs->battalion_type[index];
-    const BattalionSpreadsheet sheet = get_battalion_spreadsheet(type);
-    const SDL_Color team = side_color(side);
-    const SDL_Rect panel = detail_rect();
+    const BattalionSpreadsheet spreadsheet = get_battalion_spreadsheet(type);
 
-    ui_fill((SDL_Rect){panel.x + 6, panel.y + 8, panel.w, panel.h}, (SDL_Color){0, 0, 0, 110});
-    ui_fill(panel, (SDL_Color){ui_color_panel.r, ui_color_panel.g, ui_color_panel.b, 245});
-    ui_fill((SDL_Rect){panel.x, panel.y, panel.w, 5}, team);
-    ui_frame(panel, ui_color_panel_edge, 2);
-
-    const int x = panel.x + HUD_DETAIL_PAD;
-    const int w = panel.w - 2 * HUD_DETAIL_PAD;
-    int y = panel.y + HUD_DETAIL_PAD;
-
-    ui_text(UI_FONT_BUTTON, type_name(type), x, y, ui_color_text, UI_ALIGN_LEFT);
-    char subtitle[48];
-    snprintf(subtitle, sizeof(subtitle), "%s  #%u", side == HUD_SIDE_PLAYER ? "Left army" : "Right army", index + 1);
-    ui_text(UI_FONT_SMALL, subtitle, x, y + ui_font_height(UI_FONT_BUTTON) + 2, team, UI_ALIGN_LEFT);
-    ui_fill((SDL_Rect){x, y + HUD_DETAIL_HEADER_H - 10, w, 1}, ui_color_panel_edge);
-    y += HUD_DETAIL_HEADER_H;
+    StatSheet sheet = {0};
+    sheet.title = type_name(type);
+    sheet.team = side_color(side);
+    snprintf(sheet.subtitle, sizeof(sheet.subtitle), "%s  #%u", side == HUD_SIDE_PLAYER ? "Left army" : "Right army", index + 1);
 
     const float max_hp = bs->max_hp[index];
     const float hp = bd->hp[index] > 0.0f ? bd->hp[index] : 0.0f;
     const float hp_ratio = max_hp > 0.0f ? hp / max_hp : 0.0f;
-    const float morale_ratio = sheet.morale > 0.0f ? bd->morale[index] / sheet.morale : 0.0f;
-    const float stamina_ratio = sheet.fatigue > 0.0f ? bd->fatigue[index] / sheet.fatigue : 0.0f;
+    const float morale_ratio = spreadsheet.morale > 0.0f ? bd->morale[index] / spreadsheet.morale : 0.0f;
+    float stamina_ratio = spreadsheet.fatigue > 0.0f ? bd->fatigue[index] / spreadsheet.fatigue : 0.0f;
+    if (stamina_ratio < 0.0f) stamina_ratio = 0.0f;
+    if (stamina_ratio > 1.0f) stamina_ratio = 1.0f;
 
-    char value[48];
-    snprintf(value, sizeof(value), "%d / %d", (int)lroundf(hp), (int)lroundf(max_hp));
-    render_labeled_bar(x, y, w, "Health", value, hp_ratio, health_color(hp_ratio));
-    y += HUD_DETAIL_BAR_STEP;
+    stat_sheet_bar(&sheet, "Health", hp_ratio, stat_sheet_health_color(hp_ratio), "%d / %d", (int)lroundf(hp), (int)lroundf(max_hp));
+    stat_sheet_bar(&sheet, "Morale", morale_ratio, ui_color_accent, "%s  %d", morale_name(bd->morale_state[index]), (int)lroundf(bd->morale[index]));
+    stat_sheet_bar(&sheet, "Stamina", stamina_ratio, (SDL_Color){110, 160, 200, 255}, "%s  %d%%", fatigue_name(bd->fatigue_state[index]), (int)lroundf(stamina_ratio * 100.0f));
 
-    snprintf(value, sizeof(value), "%s  %d", morale_name(bd->morale_state[index]), (int)lroundf(bd->morale[index]));
-    render_labeled_bar(x, y, w, "Morale", value, morale_ratio, ui_color_accent);
-    y += HUD_DETAIL_BAR_STEP;
+    stat_sheet_row(&sheet, "Men", "%u / %u", bd->alive_entity_count[index], bs->start_entity_count[index]);
+    stat_sheet_row(&sheet, "Fallen", "%u", bd->dead_entity_count[index]);
+    stat_sheet_row(&sheet, "Withdrawn", "%u", bd->withdrawed_entity_count[index]);
+    stat_sheet_row(&sheet, "Status", "%s", lifecycle_name(bd->lifecycle_state[index]));
+    stat_sheet_row(&sheet, "Movement", "%s", movement_name(bd->movement_state[index]));
+    stat_sheet_row(&sheet, "Melee attack", "%.0f", (double)bd->meele_attack[index]);
+    stat_sheet_row(&sheet, "Melee defense", "%.0f", (double)bd->meele_defense[index]);
+    stat_sheet_row(&sheet, "Strength", "%.0f", (double)bd->strength[index]);
+    stat_sheet_row(&sheet, "Armor", "%.0f", (double)bs->armor[index]);
+    stat_sheet_row(&sheet, "Speed", "%.0f", (double)bd->speed[index]);
+    stat_sheet_row(&sheet, "Range", "%.0f", (double)bs->range[index]);
+    stat_sheet_row(&sheet, "Charge bonus", "%.0f", (double)bs->charge_bonus[index]);
+    stat_sheet_row(&sheet, "Attack speed", "%.2f", (double)bs->attack_speed[index]);
+    if (gd->is_dead[index]) stat_sheet_row(&sheet, "General", "Fallen");
+    else if (!gd->is_present[index]) stat_sheet_row(&sheet, "General", "Withdrawn");
+    else stat_sheet_row(&sheet, "General", "%.0f hp", (double)gd->hp[index]);
 
-    snprintf(value, sizeof(value), "%s  %d%%", fatigue_name(bd->fatigue_state[index]), (int)lroundf(clamp01(stamina_ratio) * 100.0f));
-    render_labeled_bar(x, y, w, "Stamina", value, stamina_ratio, (SDL_Color){110, 160, 200, 255});
-    y += HUD_DETAIL_BAR_STEP + 8;
+    if (bs->is_shielded[index]) stat_sheet_chip(&sheet, "Shielded", ui_color_text);
+    if (bs->is_ranged[index]) stat_sheet_chip(&sheet, "Ranged", ui_color_text);
+    if (bs->is_large[index]) stat_sheet_chip(&sheet, "Large", ui_color_text);
+    if (bs->is_armor_piercing[index]) stat_sheet_chip(&sheet, "Armor piercing", ui_color_text);
+    if (bs->is_anti_large[index]) stat_sheet_chip(&sheet, "Anti large", ui_color_text);
+    if (bd->is_charging[index]) stat_sheet_chip(&sheet, "Charging", ui_color_accent);
+    if (bd->is_engaged[index]) stat_sheet_chip(&sheet, "Engaged", ui_color_danger);
+    if (bd->is_bracing[index]) stat_sheet_chip(&sheet, "Bracing", ui_color_accent);
+    if (bd->is_headless[index]) stat_sheet_chip(&sheet, "Leaderless", ui_color_danger);
 
-    HudStat stats[HUD_STAT_ROWS] = {
-        {"Men", ""}, {"Fallen", ""}, {"Withdrawn", ""}, {"Status", ""}, {"Movement", ""},
-        {"Melee attack", ""}, {"Melee defense", ""}, {"Strength", ""}, {"Armor", ""},
-        {"Speed", ""}, {"Range", ""}, {"Charge bonus", ""}, {"Attack speed", ""}, {"General", ""}
-    };
-    snprintf(stats[0].value, sizeof(stats[0].value), "%u / %u", bd->alive_entity_count[index], bs->start_entity_count[index]);
-    snprintf(stats[1].value, sizeof(stats[1].value), "%u", bd->dead_entity_count[index]);
-    snprintf(stats[2].value, sizeof(stats[2].value), "%u", bd->withdrawed_entity_count[index]);
-    snprintf(stats[3].value, sizeof(stats[3].value), "%s", lifecycle_name(bd->lifecycle_state[index]));
-    snprintf(stats[4].value, sizeof(stats[4].value), "%s", movement_name(bd->movement_state[index]));
-    snprintf(stats[5].value, sizeof(stats[5].value), "%.0f", (double)bd->meele_attack[index]);
-    snprintf(stats[6].value, sizeof(stats[6].value), "%.0f", (double)bd->meele_defense[index]);
-    snprintf(stats[7].value, sizeof(stats[7].value), "%.0f", (double)bd->strength[index]);
-    snprintf(stats[8].value, sizeof(stats[8].value), "%.0f", (double)bs->armor[index]);
-    snprintf(stats[9].value, sizeof(stats[9].value), "%.0f", (double)bd->speed[index]);
-    snprintf(stats[10].value, sizeof(stats[10].value), "%.0f", (double)bs->range[index]);
-    snprintf(stats[11].value, sizeof(stats[11].value), "%.0f", (double)bs->charge_bonus[index]);
-    snprintf(stats[12].value, sizeof(stats[12].value), "%.2f", (double)bs->attack_speed[index]);
-    if (gd->is_dead[index]) snprintf(stats[13].value, sizeof(stats[13].value), "Fallen");
-    else if (!gd->is_present[index]) snprintf(stats[13].value, sizeof(stats[13].value), "Withdrawn");
-    else snprintf(stats[13].value, sizeof(stats[13].value), "%.0f hp", (double)gd->hp[index]);
+    stat_sheet_render(&sheet, HUD_MARGIN, HUD_DETAIL_TOP);
 
-    render_stat_column(stats, HUD_STAT_ROWS, x, y, w);
-    y += HUD_STAT_ROWS * HUD_ROW_H + 12;
+}
 
-    HudChipFlow flow = {x, x + w, x, y, 0};
-    if (bs->is_shielded[index]) render_chip(&flow, "Shielded", ui_color_text);
-    if (bs->is_ranged[index]) render_chip(&flow, "Ranged", ui_color_text);
-    if (bs->is_large[index]) render_chip(&flow, "Large", ui_color_text);
-    if (bs->is_armor_piercing[index]) render_chip(&flow, "Armor piercing", ui_color_text);
-    if (bs->is_anti_large[index]) render_chip(&flow, "Anti large", ui_color_text);
-    if (bd->is_charging[index]) render_chip(&flow, "Charging", ui_color_accent);
-    if (bd->is_engaged[index]) render_chip(&flow, "Engaged", ui_color_danger);
-    if (bd->is_bracing[index]) render_chip(&flow, "Bracing", ui_color_accent);
-    if (bd->is_headless[index]) render_chip(&flow, "Leaderless", ui_color_danger);
-    if (flow.count == 0) ui_text(UI_FONT_SMALL, "No special traits", x, y + 2, ui_color_disabled, UI_ALIGN_LEFT);
+void battlefield_hud_select(_Bool is_enemy, unsigned int index) {
+
+    if (index >= hud_battalion_count) return;
+    shown_side = is_enemy ? HUD_SIDE_ENEMY : HUD_SIDE_PLAYER;
+    selection = (HudSelection){true, shown_side, index};
+
+}
+
+_Bool battlefield_hud_is_showing_enemy(void) {
+
+    return shown_side == HUD_SIDE_ENEMY;
+
+}
+
+SDL_Rect battlefield_hud_area(enum BattlefieldHudArea area) {
+
+    switch (area) {
+        case BATTLEFIELD_HUD_POWER_BAR: return battlefield_power_bar_rect();
+        case BATTLEFIELD_HUD_TABS: {
+            const SDL_Rect left = tab_rect(HUD_SIDE_PLAYER);
+            const SDL_Rect right = tab_rect(HUD_SIDE_ENEMY);
+            return (SDL_Rect){left.x, left.y, right.x + right.w - left.x, left.h};
+        }
+        case BATTLEFIELD_HUD_CARDS: {
+            const unsigned int last = hud_battalion_count > 0 ? hud_battalion_count - 1 : 0;
+            const SDL_Rect first_card = card_rect(0);
+            const SDL_Rect last_card = card_rect(last);
+            return (SDL_Rect){first_card.x, first_card.y - 8, last_card.x + last_card.w - first_card.x, first_card.h + 8};
+        }
+        case BATTLEFIELD_HUD_DETAIL: return detail_rect();
+        default: return (SDL_Rect){0, 0, 0, 0};
+    }
 
 }

@@ -13,4 +13,8 @@ void stage_map_render(void);
 
 void stage_map_destroy(void);
 
+SDL_Rect stage_map_current_rect(void);
+
+SDL_Rect stage_map_back_rect(void);
+
 #endif

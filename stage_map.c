@@ -2,6 +2,7 @@
 #include "run.h"
 #include "scene_handler.h"
 #include "scenes.h"
+#include "tutorial.h"
 #include "ui.h"
 #include "window_settings.h"
 #include <math.h>
@@ -190,7 +191,8 @@ void stage_map_render(void) {
     ui_fill((SDL_Rect){0, STAGE_TRACK_Y - 170, (int)WINDOW_SIZE_X, 340}, (SDL_Color){14, 15, 20, 170});
 
     char heading[32];
-    if (run_is_complete()) snprintf(heading, sizeof(heading), "Run complete");
+    if (tutorial_is_active()) snprintf(heading, sizeof(heading), "Training battle");
+    else if (run_is_complete()) snprintf(heading, sizeof(heading), "Run complete");
     else snprintf(heading, sizeof(heading), "Stage %u of %u", run_current_stage() + 1, RUN_STAGE_COUNT);
     ui_text(UI_FONT_HEADING, heading, center_x, 150, ui_color_accent, UI_ALIGN_CENTER);
 
@@ -201,6 +203,19 @@ void stage_map_render(void) {
     for (unsigned int stage = 0; stage < RUN_STAGE_COUNT; stage++) render_stage(stage);
 
     ui_button_render(&back_button);
+
+}
+
+SDL_Rect stage_map_current_rect(void) {
+
+    if (run_is_complete()) return (SDL_Rect){0, 0, 0, 0};
+    return stage_rect(run_current_stage());
+
+}
+
+SDL_Rect stage_map_back_rect(void) {
+
+    return back_button.rect;
 
 }
 

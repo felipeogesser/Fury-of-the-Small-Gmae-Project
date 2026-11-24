@@ -1,4 +1,5 @@
 #include "game_loop.h"
+#include "battle_controls.h"
 #include "battle_step.h"
 #include "battlefield.h"
 #include "engine_cleanup.h"
@@ -10,6 +11,7 @@
 #include "run.h"
 #include "scene_handler.h"
 #include "scenes.h"
+#include "tutorial.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <time.h>
@@ -61,7 +63,8 @@ void game_loop(void) {
                 process_peripherals(window_running);
 
                 game->delta = BATTLE_TICK_DT;
-                battle_step_accumulate(dt, engine.is_ai_bypass_disabled);
+                const float time_scale = tutorial_holds_battle() ? 0.0f : battle_controls_time_scale();
+                battle_step_accumulate(dt * time_scale, engine.is_ai_bypass_disabled);
 
                 while (battle_step_tick_due() && game->scene_state.scene == BATTLEFIELD) {
 
@@ -84,7 +87,8 @@ void game_loop(void) {
                         if (is_ai_training) {
                             scene_switch(BATTLEPLAN);
                         } else {
-                            run_record_result(shared_memory_control_episode_result(shared_memory_control_base_ptr));
+                            const enum EpisodeResult result = shared_memory_control_episode_result(shared_memory_control_base_ptr);
+                            if (!tutorial_record_battle(result)) run_record_result(result);
                             scene_switch(STAGE_MAP);
                         }
                         break;
@@ -108,6 +112,12 @@ void game_loop(void) {
                     fflush(stdout);
                     perf_ticks = 0;
                     perf_start = perf_now;
+                }
+
+                if (game->scene_state.scene == BATTLEFIELD && engine.is_ai_bypass_disabled) {
+                    game->delta = dt < 0.1f ? dt : 0.1f;
+                    battlefield_update_view();
+                    game->delta = BATTLE_TICK_DT;
                 }
 
                 if (game->scene_state.scene == BATTLEFIELD) scene_render();

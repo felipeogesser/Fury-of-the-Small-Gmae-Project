@@ -4,17 +4,27 @@
 #include "field_entry_types.h"
 #include "general_types.h"
 #include "json_parser.h"
+#include "starting_army.h"
 
 Inventory inventory = {0};
+
+static enum StartingArmy starting_army = STARTING_ARMY_TRAINING;
+
+void inventory_set_starting_army(enum StartingArmy army) {
+
+    starting_army = army;
+
+}
 
 void *inventory_init(void) {
 
     engine.inventory = &inventory;
 
-    inventory.general_count = 9;
+    const StartingArmyFile file = starting_army_file(starting_army);
+    inventory.general_count = (unsigned short)file.general_count;
 
     General *general = get_json_file_data(
-        "inventory.json",
+        file.path,
         inventory.general_count,
         "generals",
         sizeof_General,

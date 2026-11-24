@@ -11,6 +11,12 @@
 #define POWER_PAD 16
 #define POWER_BAR_H 22
 
+SDL_Rect battlefield_power_bar_rect(void) {
+
+    return (SDL_Rect){(int)WINDOW_SIZE_X / 2 - POWER_PLATE_W / 2, POWER_PLATE_Y, POWER_PLATE_W, POWER_PLATE_H};
+
+}
+
 void battlefield_power_bar_render(const Table *left_tables, const Table *right_tables, unsigned int battalion_count, unsigned int battalion_size, SDL_Color left_color, SDL_Color right_color) {
 
     const float left_hp = army_health_on_field(left_tables, battalion_count, battalion_size);
@@ -18,7 +24,7 @@ void battlefield_power_bar_render(const Table *left_tables, const Table *right_t
     const float total = left_hp + right_hp;
     const float left_share = total > 0.0f ? left_hp / total : 0.5f;
 
-    const SDL_Rect plate = {(int)WINDOW_SIZE_X / 2 - POWER_PLATE_W / 2, POWER_PLATE_Y, POWER_PLATE_W, POWER_PLATE_H};
+    const SDL_Rect plate = battlefield_power_bar_rect();
     ui_panel(plate);
 
     const int text_y = plate.y + 8;

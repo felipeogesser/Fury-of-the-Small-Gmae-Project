@@ -4,6 +4,7 @@
 #include "animation.h"
 #include "animation_internal.h"
 #include "baking.h"
+#include "battleplan_inspect.h"
 #include "battleplan_scenery.h"
 #include "contract.h"
 #include "contract_types.h"
@@ -113,6 +114,7 @@ static _Bool general_placement_valid = false;
 static _Bool button_main_menu_clicked = false;
 static _Bool button_init_battle_clicked = false;
 static _Bool auto_start_battle_pending = false;
+static _Bool is_exit_locked = false;
 
 static unsigned int mouse_left_button_holding_down_counter = 0;
 
@@ -170,6 +172,7 @@ void battleplan_init(void) {
     booleans_init();
     variables_init();
     animation_init();
+    battleplan_inspect_reset();
 
     signed int drawer_compartment_size = 200;
     drawer = (SDL_Rect){
@@ -281,6 +284,8 @@ void battleplan_init(void) {
 
 void battleplan_input(SDL_Event *e) {
 
+    if (battleplan_inspect_input(e)) return;
+
     if (e->button.x != 0 && e->button.y != 0) {
 
         mouse_x = e->button.x;
@@ -319,6 +324,8 @@ void battleplan_update(float dt) {
         exit(EXIT_FAILURE);
 
     }
+
+    if (button_main_menu_clicked && is_exit_locked) button_main_menu_clicked = false;
 
     if (button_main_menu_clicked) {
 
@@ -448,6 +455,8 @@ void battleplan_render(void) {
     }
 
     SDL_RenderCopy(renderer, battleplan_message, NULL, &battleplan_button_init_battle);
+
+    battleplan_inspect_render();
 
     render_count_notice();
 
@@ -1450,5 +1459,85 @@ static void send_battleplan_placement_to_battlefield(GeneralPayload *general_pay
     enum Scene to = BATTLEFIELD;
     Letter *letter = letter_write(from, to, contract);
     letter_send(letter);
+
+}
+
+SDL_Rect battleplan_area(enum BattleplanArea area) {
+
+    const int header_y = deployment_area.y - 88;
+    switch (area) {
+        case BATTLEPLAN_AREA_PLAYER_GRID: return deployment_area;
+        case BATTLEPLAN_AREA_ENEMY_GRID: return enemy_deployment_area;
+        case BATTLEPLAN_AREA_PLAYER_HEADER: return (SDL_Rect){deployment_area.x + deployment_area.w / 2 - 190, header_y, 380, 48};
+        case BATTLEPLAN_AREA_ENEMY_HEADER: return (SDL_Rect){enemy_deployment_area.x + enemy_deployment_area.w / 2 - 190, header_y, 380, 48};
+        case BATTLEPLAN_AREA_DRAWER_HANDLE: return drawer_handle;
+        case BATTLEPLAN_AREA_DRAWER: return (SDL_Rect){drawer.x, drawer_handle.y, drawer.w, (signed int)WINDOW_SIZE_Y - drawer_handle.y};
+        case BATTLEPLAN_AREA_START_BUTTON: return (SDL_Rect){battleplan.button_init_battle.x, battleplan.button_init_battle.y, battleplan.button_init_battle.w, battleplan.button_init_battle.h};
+        case BATTLEPLAN_AREA_BACK_BUTTON: return (SDL_Rect){battleplan.button_main_menu.x, battleplan.button_main_menu.y, battleplan.button_main_menu.w, battleplan.button_main_menu.h};
+        default: return (SDL_Rect){0, 0, 0, 0};
+    }
+
+}
+
+_Bool battleplan_is_drawer_open(void) {
+
+    return drawer_opened;
+
+}
+
+unsigned int battleplan_deployed_count(void) {
+
+    return battleplan.player_board.general_count;
+
+}
+
+unsigned int battleplan_required_count(void) {
+
+    return battleplan.enemy_board.general_count;
+
+}
+
+General *battleplan_general_at(int x, int y, _Bool *is_enemy) {
+
+    const signed int column = (signed int)floor((double)(x - deployment_area.x) / grid_cell_width_x);
+    const signed int row = (signed int)floor((double)(y - deployment_area.y) / grid_cell_width_y);
+    if (0 <= column && column < GRID_DIMENSION_X && 0 <= row && row < GRID_DIMENSION_Y && battleplan.player_board.grid[column][row] != NULL) {
+        *is_enemy = false;
+        return battleplan.player_board.grid[column][row];
+    }
+
+    const signed int enemy_column = (signed int)floor((double)(x - enemy_deployment_area.x) / grid_cell_width_x);
+    if (0 <= enemy_column && enemy_column < GRID_DIMENSION_X && 0 <= row && row < GRID_DIMENSION_Y && battleplan.enemy_board.grid[enemy_column][row] != NULL) {
+        *is_enemy = true;
+        return battleplan.enemy_board.grid[enemy_column][row];
+    }
+
+    if (drawer_closed || engine.inventory == NULL) return NULL;
+
+    signed int hidden = 0;
+    for (signed int i = 0; i < (signed int)engine.inventory->general_count; i++) {
+
+        if (drawer_slot[i].general == NULL) continue;
+        if (drawer_slot[i].general->render == false) {
+            hidden++;
+            continue;
+        }
+
+        const signed int slot_x = (i - hidden) * padding_between_generals_x + padding_between_generals_x - pan_offset;
+        const signed int slot_y = drawer_padding_y + drawer.y;
+        if (x >= slot_x && x < slot_x + GENERAL_SCREEN_WIDTH && y >= slot_y && y < slot_y + drawer.h) {
+            *is_enemy = false;
+            return drawer_slot[i].general;
+        }
+
+    }
+
+    return NULL;
+
+}
+
+void battleplan_lock_exit(_Bool is_locked) {
+
+    is_exit_locked = is_locked;
 
 }

@@ -4,6 +4,8 @@
 #include "battlefield_grid_internal.h"
 #include "battlefield_scenery.h"
 #include "battlefield_hud.h"
+#include "battlefield_pick.h"
+#include "battle_controls.h"
 #include "army_health.h"
 #include "animation.h"
 #include "armies_internal.h"
@@ -132,6 +134,7 @@ void battlefield_init(void) {
 
     battlefield.tick = 0;
     battlefield_hud_reset(battalion_count, battalion_size);
+    battle_controls_reset();
     projectile_reset();
 
     set_table_shared_memory_span(battalion_table_span_base_ptr, &battlefield.player_tables, battalion_count);
@@ -166,7 +169,16 @@ void battlefield_input(SDL_Event *e) {
 
     if(0)debug_print_battalions(&battlefield.player_tables, 5, "playr");
 
+    if (battle_controls_input(e)) return;
     if (battlefield_hud_input(e)) return;
+
+    _Bool is_picked_enemy = false;
+    unsigned int picked_battalion = 0;
+    if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT &&
+        battlefield_pick_battalion(&battlefield.player_tables, &battlefield.enemy_tables, battlefield.battalion_count / 2, battlefield.battalion_size, e->button.x, e->button.y, &is_picked_enemy, &picked_battalion)) {
+        battlefield_hud_select(is_picked_enemy, picked_battalion);
+        return;
+    }
 
     Player *player = engine.player;
         
@@ -228,20 +240,11 @@ void battlefield_update(float frame_dt) {
 
     (void)frame_dt;
     const float dt = BATTLE_TICK_DT;
-    _Bool is_ai_bypass_disabled = engine.is_ai_bypass_disabled;
     unsigned int battalion_count = battlefield.battalion_count / 2; // battalion_count of each side, since both sides alwasy have same amount of battalions at start of battle
     unsigned int battalion_size = battlefield.battalion_size;
     Table *player_tables = &battlefield.player_tables;
     Table *enemy_tables = &battlefield.enemy_tables;
     signed int *balance_of_power = &battlefield.balance_of_power;
-
-    if (is_ai_bypass_disabled) {
-
-        calculate_player_movement(engine.game);
-        player_map_edge_collision(engine.game, engine.map, engine.player);
-        update_player(engine.game);
-        
-    }
 
     update_balance_of_power(player_tables, enemy_tables, battalion_count, battalion_size, balance_of_power);
 
@@ -258,13 +261,6 @@ void battlefield_update(float frame_dt) {
 
     projectile_update(player_tables, enemy_tables, battalion_count, battalion_size, dt);
 
-    if (is_ai_bypass_disabled) {
-
-        camera_update();
-        update_game_state();
-
-    }
-
     battlefield.tick++;
 
     if (shared_memory_control_episode_result(shared_memory_control_base_ptr) == EPISODE_RUNNING) {
@@ -275,6 +271,16 @@ void battlefield_update(float frame_dt) {
         }
 
     }
+
+}
+
+void battlefield_update_view(void) {
+
+    calculate_player_movement(engine.game);
+    player_map_edge_collision(engine.game, engine.map, engine.player);
+    update_player(engine.game);
+    camera_update();
+    update_game_state();
 
 }
 
@@ -321,6 +327,7 @@ void battlefield_render(void) {
     projectile_render();
 
     battlefield_hud_render(&battlefield.player_tables, &battlefield.enemy_tables);
+    battle_controls_render();
 
     /*Battalion *battalions = armies->army->battalions;
     unsigned int unit_count = battalions->unit_count;
