@@ -2,6 +2,7 @@
 #include "main_menu_internal.h"
 #include "engine_internal.h"
 #include "run.h"
+#include "save.h"
 #include "scene_handler.h"
 #include "scenes.h"
 #include "ui.h"
@@ -23,6 +24,7 @@ void main_menu_init(void) {
     static const char *labels[MAIN_MENU_BUTTON_COUNT] = {
         [MAIN_MENU_NEW_RUN] = "New run",
         [MAIN_MENU_CONTINUE] = "Continue",
+        [MAIN_MENU_LOAD] = "Load game",
         [MAIN_MENU_SETTINGS] = "Settings",
         [MAIN_MENU_QUIT] = "Quit"
     };
@@ -35,7 +37,9 @@ void main_menu_init(void) {
 
     }
 
-    main_menu.buttons[MAIN_MENU_CONTINUE].is_enabled = run_is_active() && !run_is_complete();
+    const _Bool has_saves = save_has_any();
+    main_menu.buttons[MAIN_MENU_CONTINUE].is_enabled = has_saves;
+    main_menu.buttons[MAIN_MENU_LOAD].is_enabled = has_saves;
 
 }
 
@@ -48,7 +52,13 @@ void main_menu_input(SDL_Event *e) {
     }
 
     if (ui_button_event(&main_menu.buttons[MAIN_MENU_CONTINUE], e)) {
-        scene_switch(STAGE_MAP);
+        const enum Scene scene = save_open_latest();
+        if (scene != SCENE_NONE) scene_switch(scene);
+        return;
+    }
+
+    if (ui_button_event(&main_menu.buttons[MAIN_MENU_LOAD], e)) {
+        scene_switch(LOAD_MENU);
         return;
     }
 

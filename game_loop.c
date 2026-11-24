@@ -40,6 +40,7 @@ void game_loop(void) {
 
             case MAIN_MENU:
             case SETTINGS:
+            case LOAD_MENU:
 
                 process_peripherals(window_running);
 

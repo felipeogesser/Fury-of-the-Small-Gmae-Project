@@ -9,6 +9,7 @@ enum Scene {
     BATTLEFIELD,
     SETTINGS,
     STAGE_MAP,
+    LOAD_MENU,
     SCENE_COUNT
 
 };

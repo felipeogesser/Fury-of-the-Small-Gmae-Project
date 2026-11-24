@@ -1,4 +1,5 @@
 #include "run.h"
+#include "save.h"
 #include <stdbool.h>
 
 typedef struct Run {
@@ -15,6 +16,15 @@ void run_new(void) {
 
     run.is_active = true;
     run.current_stage = 0;
+    run.has_advanced = false;
+    save_begin_run();
+
+}
+
+void run_restore(_Bool is_active, unsigned int current_stage) {
+
+    run.is_active = is_active;
+    run.current_stage = current_stage > RUN_STAGE_COUNT ? RUN_STAGE_COUNT : current_stage;
     run.has_advanced = false;
 
 }
@@ -44,6 +54,7 @@ void run_record_result(enum EpisodeResult result) {
     if (result == EPISODE_PLAYER_WON) {
         run.current_stage++;
         run.has_advanced = true;
+        save_write();
     }
 
 }
