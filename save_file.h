@@ -29,6 +29,6 @@ _Bool save_file_path(const char *relative, char *out, size_t out_size);
 _Bool save_file_ensure_dir(const char *relative);
 
 _Bool save_file_write(const char *path, const char magic[4], uint32_t version, const SaveBuffer *payload);
-_Bool save_file_read(const char *path, const char magic[4], uint32_t version, SaveBuffer *payload);
+_Bool save_file_read(const char *path, const char magic[4], uint32_t max_version, SaveBuffer *payload, uint32_t *version);
 
 #endif

@@ -51,6 +51,28 @@ static void write_profile(void) {
 
 }
 
+static void capture_run(SaveRun *run) {
+
+    run->stage = run_current_stage();
+    run->seed = run_seed();
+    run->general_count = inventory_count();
+    for (uint32_t i = 0; i < run->general_count; i++) run->generals[i] = (uint8_t)inventory_type_at(i);
+
+}
+
+static void restore_inventory(const SaveRun *run) {
+
+    if (run->general_count == 0) {
+        inventory_reset();
+        return;
+    }
+
+    enum GeneralType types[INVENTORY_CAPACITY];
+    for (uint32_t i = 0; i < run->general_count; i++) types[i] = (enum GeneralType)run->generals[i];
+    inventory_restore(types, run->general_count);
+
+}
+
 void save_load(void) {
 
     if (is_save_disabled()) return;
@@ -59,7 +81,8 @@ void save_load(void) {
 
     char path[SAVE_FILE_PATH_SIZE];
     if (!save_file_path(SAVE_PROFILE_FILE, path, sizeof(path))) return;
-    if (!save_file_read(path, SAVE_PROFILE_MAGIC, SAVE_PROFILE_VERSION, &profile_buffer)) return;
+    uint32_t version = 0;
+    if (!save_file_read(path, SAVE_PROFILE_MAGIC, SAVE_PROFILE_VERSION, &profile_buffer, &version)) return;
 
     const uint8_t is_tutorial_finished = save_buffer_get_u8(&profile_buffer);
     if (!save_buffer_is_consumed(&profile_buffer)) {
@@ -82,9 +105,9 @@ void save_begin_run(void) {
         .id = save_slots_next_id(),
         .created_at = now,
         .last_played_at = now,
-        .stage = run_current_stage(),
         .starting_army = (uint8_t)inventory_starting_army()
     };
+    capture_run(&session.current);
     session.has_current = save_slots_write(&session.current);
 
 }
@@ -93,7 +116,7 @@ void save_write(void) {
 
     if (is_save_disabled() || !session.has_current) return;
 
-    session.current.stage = run_current_stage();
+    capture_run(&session.current);
     session.current.last_played_at = now_ms();
     save_slots_write(&session.current);
 
@@ -120,13 +143,10 @@ enum Scene save_open_slot(uint32_t id) {
     session.has_current = true;
 
     inventory_set_starting_army((enum StartingArmy)run.starting_army);
+    restore_inventory(&run);
+    run_restore(true, run.stage, run.seed != 0 ? run.seed : run.created_at);
 
-    if (run.stage >= RUN_STAGE_COUNT) {
-        run_restore(true, RUN_STAGE_COUNT - 1);
-        return BATTLEPLAN;
-    }
-    run_restore(true, run.stage);
-    return STAGE_MAP;
+    return run.stage >= RUN_STAGE_COUNT ? BATTLEPLAN : STAGE_MAP;
 
 }
 
@@ -144,7 +164,7 @@ _Bool save_delete_slot(uint32_t id) {
 
     if (session.has_current && session.current.id == id) {
         session.has_current = false;
-        run_restore(false, 0);
+        run_restore(false, 0, 0);
     }
     return true;
 

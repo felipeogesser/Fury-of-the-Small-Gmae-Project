@@ -1,4 +1,6 @@
 #include "stage_map.h"
+#include "inventory_panel.h"
+#include "loot_reveal.h"
 #include "run.h"
 #include "scene_handler.h"
 #include "scenes.h"
@@ -68,10 +70,15 @@ void stage_map_init(void) {
 
     is_current_pressed = false;
     back_button = ui_button(170, (int)WINDOW_SIZE_Y - 110, 240, 60, "Back", true);
+    inventory_panel_reset();
+    loot_reveal_reset();
 
 }
 
 void stage_map_input(SDL_Event *e) {
+
+    if (loot_reveal_input(e)) return;
+    if (inventory_panel_input(e)) return;
 
     if (e->type == SDL_KEYDOWN && e->key.keysym.sym == SDLK_ESCAPE) {
         scene_switch(MAIN_MENU);
@@ -203,6 +210,8 @@ void stage_map_render(void) {
     for (unsigned int stage = 0; stage < RUN_STAGE_COUNT; stage++) render_stage(stage);
 
     ui_button_render(&back_button);
+    inventory_panel_render();
+    loot_reveal_render();
 
 }
 

@@ -25,6 +25,7 @@
 #include "scenes.h"
 #include "sprites.h"
 #include "sprites_internal.h"
+#include "stage_enemy.h"
 #include "ui.h"
 #include "window_settings.h"
 #include <SDL2/SDL.h>
@@ -154,7 +155,7 @@ static SDL_Rect enemy_deployment_area = {
     grid_cell_width_y * GRID_DIMENSION_Y
 };
 
-static DrawerSlot drawer_slot[10]; // size needs to be established by general count in inventory
+static DrawerSlot drawer_slot[INVENTORY_CAPACITY];
 
 #define DRAWER_HANDLE_THICKNESS 40
 
@@ -235,7 +236,7 @@ void battleplan_init(void) {
         battleplan.player_inventory_general = inventory_init();
         set_drawer_slot_generals_index(battleplan.player_inventory_general);
 
-        load_generals_from_csv_deployment_layout_to_enemy_board(&battleplan, "tutorial.csv");
+        stage_enemy_load(&battleplan);
 
         set_minimal_general_sprite_and_animation_data(battleplan.player_inventory_general, engine.inventory->general_count);
         set_minimal_general_sprite_and_animation_data(battleplan.stage_enemy_general, battleplan.enemy_board.general_count);
@@ -527,7 +528,7 @@ static void variables_init(void) {
     DrawerSlot empty_drawer_slot = {
         NULL, 0, 0, 0, 0
     };
-    for (unsigned int i = 0; i < 10; i++) {
+    for (unsigned int i = 0; i < INVENTORY_CAPACITY; i++) {
         drawer_slot[i] = empty_drawer_slot;
     }
 

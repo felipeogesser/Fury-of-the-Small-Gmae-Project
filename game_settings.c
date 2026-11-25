@@ -99,7 +99,8 @@ void game_settings_load(void) {
 
     char path[SAVE_FILE_PATH_SIZE];
     if (!save_file_path(SETTINGS_FILE, path, sizeof(path))) return;
-    if (!save_file_read(path, SETTINGS_MAGIC, SETTINGS_VERSION, &buffer)) return;
+    uint32_t version = 0;
+    if (!save_file_read(path, SETTINGS_MAGIC, SETTINGS_VERSION, &buffer, &version)) return;
 
     int32_t loaded[SETTING_COUNT];
     for (unsigned int i = 0; i < SETTING_COUNT; i++) loaded[i] = values[i];

@@ -2,6 +2,8 @@
 #define SAVE_SLOTS_H
 
 #include <stddef.h>
+#include "general_types.h"
+#include "inventory.h"
 #include <stdint.h>
 
 typedef struct SaveRun {
@@ -11,6 +13,9 @@ typedef struct SaveRun {
     uint64_t last_played_at;
     uint32_t stage;
     uint8_t starting_army;
+    uint64_t seed;
+    uint32_t general_count;
+    uint8_t generals[INVENTORY_CAPACITY];
 
 } SaveRun;
 

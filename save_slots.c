@@ -10,7 +10,7 @@
 
 #define SAVE_SLOTS_DIR "saves"
 #define SAVE_SLOT_MAGIC "CGRN"
-#define SAVE_SLOT_VERSION 1u
+#define SAVE_SLOT_VERSION 2u
 
 typedef void (*SlotVisitor)(uint32_t id, void *context);
 
@@ -67,15 +67,28 @@ _Bool save_slots_read(uint32_t id, SaveRun *run) {
 
     char path[SAVE_FILE_PATH_SIZE];
     if (!slot_path(id, path, sizeof(path))) return false;
-    if (!save_file_read(path, SAVE_SLOT_MAGIC, SAVE_SLOT_VERSION, &buffer)) return false;
+    uint32_t version = 0;
+    if (!save_file_read(path, SAVE_SLOT_MAGIC, SAVE_SLOT_VERSION, &buffer, &version)) return false;
 
+    *run = (SaveRun){0};
     run->id = id;
     run->created_at = save_buffer_get_u64(&buffer);
     run->last_played_at = save_buffer_get_u64(&buffer);
     run->stage = save_buffer_get_u32(&buffer);
     run->starting_army = save_buffer_get_u8(&buffer);
 
-    const _Bool is_valid = save_buffer_is_consumed(&buffer) && run->stage <= RUN_STAGE_COUNT && run->starting_army < STARTING_ARMY_COUNT;
+    _Bool are_generals_valid = true;
+    if (version >= 2) {
+        run->seed = save_buffer_get_u64(&buffer);
+        run->general_count = save_buffer_get_u32(&buffer);
+        are_generals_valid = run->general_count <= INVENTORY_CAPACITY;
+        for (uint32_t i = 0; are_generals_valid && i < run->general_count; i++) {
+            run->generals[i] = save_buffer_get_u8(&buffer);
+            are_generals_valid = run->generals[i] > GENERAL_PADDING_FOR_ZERO && run->generals[i] < GENERAL_UNIQUE;
+        }
+    }
+
+    const _Bool is_valid = are_generals_valid && save_buffer_is_consumed(&buffer) && run->stage <= RUN_STAGE_COUNT && run->starting_army < STARTING_ARMY_COUNT;
     if (!is_valid) fprintf(stderr, "save: %s has invalid contents\n", path);
     return is_valid;
 
@@ -91,6 +104,9 @@ _Bool save_slots_write(const SaveRun *run) {
     save_buffer_put_u64(&buffer, run->last_played_at);
     save_buffer_put_u32(&buffer, run->stage);
     save_buffer_put_u8(&buffer, run->starting_army);
+    save_buffer_put_u64(&buffer, run->seed);
+    save_buffer_put_u32(&buffer, run->general_count);
+    for (uint32_t i = 0; i < run->general_count && i < INVENTORY_CAPACITY; i++) save_buffer_put_u8(&buffer, run->generals[i]);
     return save_file_write(path, SAVE_SLOT_MAGIC, SAVE_SLOT_VERSION, &buffer);
 
 }

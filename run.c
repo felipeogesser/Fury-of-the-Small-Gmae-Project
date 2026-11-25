@@ -1,4 +1,7 @@
 #include "run.h"
+#include "inventory.h"
+#include "loot.h"
+#include "rng.h"
 #include "save.h"
 #include <stdbool.h>
 
@@ -7,25 +10,42 @@ typedef struct Run {
     _Bool is_active;
     unsigned int current_stage;
     _Bool has_advanced;
+    _Bool is_replay;
+    uint64_t seed;
 
 } Run;
 
 static Run run = {0};
+
+static uint64_t new_seed(void) {
+
+    const uint64_t high = rng_next(RNG_COSMETIC);
+    const uint64_t low = rng_next(RNG_COSMETIC);
+    return (high << 32) | low;
+
+}
 
 void run_new(void) {
 
     run.is_active = true;
     run.current_stage = 0;
     run.has_advanced = false;
+    run.is_replay = false;
+    run.seed = new_seed();
+    loot_dismiss_reveal();
+    inventory_reset();
     save_begin_run();
 
 }
 
-void run_restore(_Bool is_active, unsigned int current_stage) {
+void run_restore(_Bool is_active, unsigned int current_stage, uint64_t seed) {
 
     run.is_active = is_active;
-    run.current_stage = current_stage > RUN_STAGE_COUNT ? RUN_STAGE_COUNT : current_stage;
+    run.is_replay = current_stage >= RUN_STAGE_COUNT;
+    run.current_stage = run.is_replay ? RUN_STAGE_COUNT - 1 : current_stage;
     run.has_advanced = false;
+    run.seed = seed;
+    loot_dismiss_reveal();
 
 }
 
@@ -41,6 +61,12 @@ unsigned int run_current_stage(void) {
 
 }
 
+uint64_t run_seed(void) {
+
+    return run.seed;
+
+}
+
 _Bool run_is_complete(void) {
 
     return run.current_stage >= RUN_STAGE_COUNT;
@@ -52,8 +78,10 @@ void run_record_result(enum EpisodeResult result) {
     if (!run.is_active || run_is_complete()) return;
 
     if (result == EPISODE_PLAYER_WON) {
+        const unsigned int stage_won = run.current_stage;
         run.current_stage++;
         run.has_advanced = true;
+        if (!run.is_replay) loot_grant(stage_won);
         save_write();
     }
 

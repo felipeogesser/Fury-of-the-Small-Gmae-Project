@@ -178,7 +178,7 @@ static _Bool read_raw(const char *path) {
 
 }
 
-_Bool save_file_read(const char *path, const char magic[4], uint32_t version, SaveBuffer *payload) {
+_Bool save_file_read(const char *path, const char magic[4], uint32_t max_version, SaveBuffer *payload, uint32_t *version) {
 
     save_buffer_reset(payload);
     if (!read_raw(path)) return false;
@@ -187,7 +187,8 @@ _Bool save_file_read(const char *path, const char magic[4], uint32_t version, Sa
         fprintf(stderr, "save: %s is not a save file\n", path);
         return false;
     }
-    if (get_raw_u32(raw.bytes + SAVE_MAGIC_SIZE) != version) {
+    *version = get_raw_u32(raw.bytes + SAVE_MAGIC_SIZE);
+    if (*version == 0 || *version > max_version) {
         fprintf(stderr, "save: %s has an unsupported version\n", path);
         return false;
     }

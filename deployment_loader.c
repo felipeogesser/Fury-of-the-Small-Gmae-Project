@@ -10,7 +10,6 @@
 static void load_deployment_layout_with_csv_data(unsigned int *deployment_layout, const char *csv_buffer);
 static void load_generals_from_player_deployment_layout(Battleplan *battleplan, unsigned int (*deployment_layout)[GRID_DIMENSION_Y]);
 static void load_generals_from_enemy_deployment_layout(Battleplan *battleplan, unsigned int (*deployment_layout)[GRID_DIMENSION_Y]);
-static General convert_spreadsheet_general_to_general(enum GeneralType general_type);
 static void flip_deployment_on_x_axis(unsigned int (*deployment_layout)[GRID_DIMENSION_Y]);
 
 void load_generals_from_csv_deployment_layout_to_player_board(Battleplan *battleplan, const char *file_name) {
@@ -42,6 +41,19 @@ void load_generals_from_csv_deployment_layout_to_enemy_board(Battleplan *battlep
 
     load_generals_from_enemy_deployment_layout(battleplan, deployment_layout);
 
+
+}
+
+void load_generals_from_layout_to_enemy_board(Battleplan *battleplan, unsigned int (*layout)[GRID_DIMENSION_Y]) {
+
+    unsigned int deployment_layout[GRID_DIMENSION_X][GRID_DIMENSION_Y] = {0};
+    for (unsigned int x = 0; x < GRID_DIMENSION_X; x++) {
+        for (unsigned int y = 0; y < GRID_DIMENSION_Y; y++) deployment_layout[x][y] = layout[x][y];
+    }
+
+    flip_deployment_on_x_axis(deployment_layout);
+
+    load_generals_from_enemy_deployment_layout(battleplan, deployment_layout);
 
 }
 
@@ -132,7 +144,7 @@ static void load_generals_from_enemy_deployment_layout(Battleplan *battleplan, u
 
 }
 
-static General convert_spreadsheet_general_to_general(enum GeneralType general_type) {
+General convert_spreadsheet_general_to_general(enum GeneralType general_type) {
 
     return (General){
         .sprite.type = spreadsheet_ptr->general_spreadsheet[general_type].sprite_type,
