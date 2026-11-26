@@ -1,6 +1,6 @@
 CC = gcc
 
-CFLAGS_RELEASE = -O0
+CFLAGS_RELEASE = -O2 -march=native
 
 CFLAGS_DEBUG = -g3 -O0 \
 -Wall -Wextra -Wpedantic \
@@ -24,22 +24,41 @@ CFLAGS_DEBUG = -g3 -O0 \
 SDLFLAGS = $(shell pkg-config --cflags --libs sdl2 SDL2_ttf SDL2_image)
 
 SRC = \
+	ai_order.c \
 	animation.c \
+	aos_soa_transformer.c \
 	baking.c \
 	battalion.c \
+	battalion_policy.c \
+	battalion_table.c \
+	battalion_table_span.c \
+	battle_outcome.c \
+	battle_step.c \
 	battlefield.c \
 	battlefield_grid.c \
 	battleplan.c \
+	battleplan_scenery.c \
 	battleplan_grid.c \
 	camera.c \
+	collision.c \
+	combat.c \
 	contract.c \
+	deployment_loader.c \
 	engine.c \
+	engine_cleanup.c \
+	fatigue.c \
+	fatigue_policy.c \
 	field_entry.c \
 	file_io.c \
+	flank.c \
+	formation.c \
+	game_clock.c \
 	game_loop.c \
 	game_shutdown.c \
 	game_state.c \
 	general.c \
+	general_table.c \
+	health_pool.c \
 	ini_parser.c \
 	init.c \
 	inventory.c \
@@ -53,16 +72,33 @@ SRC = \
 	main_menu.c \
 	maps.c \
 	memory_arena.c \
+	morale.c \
+	morale_policy.c \
 	peripherals.c \
 	player.c \
 	player_collision.c \
+	position.c \
+	projectile.c \
+	python_process.c \
 	quadrant.c \
+	rng.c \
+	run.c \
 	scene_handler.c \
 	scene_registry.c \
+	shared_memory_control.c \
+	shared_memory_orders.c \
+	spreadsheet.c \
 	sprites.c \
+	settings_menu.c \
+	stage_map.c \
+	steering.c \
+	table.c \
+	threat_policy.c \
 	type_tables.c \
+	ui.c \
 	unit.c \
 	unit_collision.c \
+	unit_table.c \
 	window.c \
 
 OBJ = $(SRC:.c=.o)

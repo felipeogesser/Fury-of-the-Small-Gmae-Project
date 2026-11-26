@@ -15,7 +15,7 @@ Camera camera = {0};
 void camera_init(void) {
 
     engine.camera = &camera;
-    camera.zoom = 1.0f;
+    camera.zoom =  MIN_ZOOM + 2.0f;
 
 }
 

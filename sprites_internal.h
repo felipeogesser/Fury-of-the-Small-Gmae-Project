@@ -20,6 +20,7 @@ typedef struct SpriteInfo {
 
 typedef struct SpritePack {
     Sprite sprite[SPRITES_COUNT][ANIMATION_COUNT];
+    Sprite projectile[PROJECTILES_COUNT];
     unsigned int sprite_count;
 } SpritePack;
 

@@ -12,4 +12,14 @@ typedef struct FieldEntry {
 
 } FieldEntry;
 
+typedef struct ComplexFieldEntry {
+
+    const char *key;
+    const size_t offset;
+    const size_t size;
+    const enum Type type;
+    const ComplexFieldEntry *struct_field_table;
+    
+} ComplexFieldEntry;
+
 #endif

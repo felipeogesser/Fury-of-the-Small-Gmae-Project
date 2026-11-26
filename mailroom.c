@@ -34,7 +34,7 @@ Mailbag mailroom_fetch_new_letters(void) {
 
     Letter *letters = mailbox_fetch_new_letters(mailbox);
     Mailbag mailbag = {letters, mailbox->new_letter_count};
-
+    mailbox->new_letter_count = 0;
     return mailbag;
 
 }

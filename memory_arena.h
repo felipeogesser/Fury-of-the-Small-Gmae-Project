@@ -5,9 +5,17 @@
 
 void memory_arena_init(void);
 
+const char *memory_arena_shared_name(void);
+
+void memory_arena_unlink_name(void);
+
 void memory_arena_reset(void);
 
+void memory_arena_reset_to_address(void *p);
+
 void memory_arena_free(void);
+
+char *memory_arena_base(void);
 
 char *memory_arena_current_pointer(void);
 
