@@ -7,9 +7,10 @@
 
 #define STAGE_ARMY_BASE_SIZE 7u
 #define STAGE_ARMY_MAX_SIZE 20u
+#define STAGE_ARMY_LOOT_CHOICES 3u
 
 unsigned int stage_army_size(unsigned int stage);
 void stage_army_layout(unsigned int stage, uint64_t seed, unsigned int (*layout)[GRID_DIMENSION_Y]);
-enum GeneralType stage_army_loot(unsigned int stage, uint64_t seed);
+void stage_army_loot_choices(unsigned int stage, uint64_t seed, enum GeneralType *choices);
 
 #endif

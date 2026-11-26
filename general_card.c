@@ -1,10 +1,14 @@
 #include "general_card.h"
+#include "general_internal.h"
 #include "animation_types.h"
+#include "deployment_loader.h"
 #include "engine_internal.h"
 #include "general_sheet.h"
 #include "spreadsheet_internal.h"
 #include "sprites_internal.h"
+#include "stat_sheet.h"
 #include "ui.h"
+#include <stdio.h>
 
 #define CARD_FRAME_MS 140
 #define CARD_NAME_GAP 8
@@ -60,5 +64,26 @@ void general_card_render(enum GeneralType type, SDL_Rect rect, _Bool is_selected
     if (is_hovered) edge = (SDL_Color){ui_color_accent.r, ui_color_accent.g, ui_color_accent.b, 160};
     if (is_selected) edge = ui_color_accent;
     ui_frame(rect, edge, is_selected ? 3 : 1);
+
+}
+
+SDL_Rect general_card_sheet_rect(int x, int y) {
+
+    return stat_sheet_rect(x, y, 0, GENERAL_SHEET_ROWS);
+
+}
+
+void general_card_render_sheet(enum GeneralType type, int x, int y, const char *subtitle) {
+
+    if (!is_known(type)) return;
+
+    General general = convert_spreadsheet_general_to_general(type);
+    general.rarity = COMMON;
+
+    StatSheet sheet = {0};
+    general_sheet_fill(&sheet, &general);
+    sheet.team = (SDL_Color){92, 150, 214, 255};
+    snprintf(sheet.subtitle, sizeof(sheet.subtitle), "%s  %s", subtitle, general_sheet_rarity_name(general.rarity));
+    stat_sheet_render(&sheet, x, y);
 
 }

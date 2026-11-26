@@ -1,9 +1,6 @@
 #include "inventory_panel.h"
-#include "deployment_loader.h"
 #include "engine_internal.h"
 #include "general_card.h"
-#include "general_internal.h"
-#include "general_sheet.h"
 #include "inventory.h"
 #include "stat_sheet.h"
 #include "ui.h"
@@ -62,7 +59,7 @@ static SDL_Rect grid_rect(void) {
 static SDL_Rect sheet_rect(void) {
 
     const SDL_Rect outer = panel_rect();
-    return stat_sheet_rect(outer.x - SHEET_GAP - STAT_SHEET_W, SHEET_TOP, 0, GENERAL_SHEET_ROWS);
+    return general_card_sheet_rect(outer.x - SHEET_GAP - STAT_SHEET_W, SHEET_TOP);
 
 }
 
@@ -210,18 +207,8 @@ _Bool inventory_panel_input(const SDL_Event *e) {
 static void render_sheet(void) {
 
     if (panel.selected == NO_CARD) return;
-
-    const enum GeneralType type = inventory_type_at(panel.order[panel.selected]);
-    General general = convert_spreadsheet_general_to_general(type);
-    general.rarity = COMMON;
-
-    StatSheet sheet = {0};
-    general_sheet_fill(&sheet, &general);
-    sheet.team = (SDL_Color){92, 150, 214, 255};
-    snprintf(sheet.subtitle, sizeof(sheet.subtitle), "Your general  %s", general_sheet_rarity_name(general.rarity));
-
     const SDL_Rect rect = sheet_rect();
-    stat_sheet_render(&sheet, rect.x, rect.y);
+    general_card_render_sheet(inventory_type_at(panel.order[panel.selected]), rect.x, rect.y, "Your general");
 
 }
 

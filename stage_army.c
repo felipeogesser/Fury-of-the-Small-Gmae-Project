@@ -178,9 +178,20 @@ void stage_army_layout(unsigned int stage, uint64_t seed, unsigned int (*layout)
 
 }
 
-enum GeneralType stage_army_loot(unsigned int stage, uint64_t seed) {
+void stage_army_loot_choices(unsigned int stage, uint64_t seed, enum GeneralType *choices) {
+
+    StageWeight pool[sizeof(loot_table) / sizeof(loot_table[0])];
+    unsigned int count = sizeof(loot_table) / sizeof(loot_table[0]);
+    for (unsigned int i = 0; i < count; i++) pool[i] = loot_table[i];
 
     StageRng rng = stage_rng(seed, stage, STAGE_ARMY_SALT_LOOT);
-    return pick_weighted(&rng, loot_table, sizeof(loot_table) / sizeof(loot_table[0]));
+    for (unsigned int i = 0; i < STAGE_ARMY_LOOT_CHOICES; i++) {
+        choices[i] = pick_weighted(&rng, pool, count);
+        for (unsigned int j = 0; j < count; j++) {
+            if (pool[j].type != choices[i]) continue;
+            pool[j] = pool[--count];
+            break;
+        }
+    }
 
 }

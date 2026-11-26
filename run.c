@@ -2,6 +2,7 @@
 #include "inventory.h"
 #include "loot.h"
 #include "rng.h"
+#include "run_stats.h"
 #include "save.h"
 #include <stdbool.h>
 
@@ -32,7 +33,8 @@ void run_new(void) {
     run.has_advanced = false;
     run.is_replay = false;
     run.seed = new_seed();
-    loot_dismiss_reveal();
+    loot_clear();
+    run_stats_reset();
     inventory_reset();
     save_begin_run();
 
@@ -45,7 +47,8 @@ void run_restore(_Bool is_active, unsigned int current_stage, uint64_t seed) {
     run.current_stage = run.is_replay ? RUN_STAGE_COUNT - 1 : current_stage;
     run.has_advanced = false;
     run.seed = seed;
-    loot_dismiss_reveal();
+    loot_clear();
+    run_stats_reset();
 
 }
 
@@ -83,7 +86,11 @@ void run_record_result(enum EpisodeResult result) {
         run.has_advanced = true;
         if (!run.is_replay) loot_grant(stage_won);
         save_write();
+        return;
     }
+
+    run_stats_record_loss();
+    save_write();
 
 }
 

@@ -10,11 +10,17 @@
 
 #define SAVE_SLOTS_DIR "saves"
 #define SAVE_SLOT_MAGIC "CGRN"
-#define SAVE_SLOT_VERSION 2u
+#define SAVE_SLOT_VERSION 3u
 
 typedef void (*SlotVisitor)(uint32_t id, void *context);
 
 static SaveBuffer buffer;
+
+static _Bool is_general_type(uint8_t type) {
+
+    return type > GENERAL_PADDING_FOR_ZERO && type < GENERAL_UNIQUE;
+
+}
 
 static _Bool slot_path(uint32_t id, char *out, size_t out_size) {
 
@@ -84,7 +90,17 @@ _Bool save_slots_read(uint32_t id, SaveRun *run) {
         are_generals_valid = run->general_count <= INVENTORY_CAPACITY;
         for (uint32_t i = 0; are_generals_valid && i < run->general_count; i++) {
             run->generals[i] = save_buffer_get_u8(&buffer);
-            are_generals_valid = run->generals[i] > GENERAL_PADDING_FOR_ZERO && run->generals[i] < GENERAL_UNIQUE;
+            are_generals_valid = is_general_type(run->generals[i]);
+        }
+    }
+
+    if (version >= 3) {
+        run->losses = save_buffer_get_u32(&buffer);
+        run->pending_loot = save_buffer_get_u8(&buffer);
+        are_generals_valid = are_generals_valid && run->pending_loot <= RUN_STAGE_COUNT;
+        for (uint32_t i = 0; i < RUN_STAGE_COUNT; i++) {
+            run->picks[i] = save_buffer_get_u8(&buffer);
+            are_generals_valid = are_generals_valid && (run->picks[i] == GENERAL_PADDING_FOR_ZERO || is_general_type(run->picks[i]));
         }
     }
 
@@ -107,6 +123,9 @@ _Bool save_slots_write(const SaveRun *run) {
     save_buffer_put_u64(&buffer, run->seed);
     save_buffer_put_u32(&buffer, run->general_count);
     for (uint32_t i = 0; i < run->general_count && i < INVENTORY_CAPACITY; i++) save_buffer_put_u8(&buffer, run->generals[i]);
+    save_buffer_put_u32(&buffer, run->losses);
+    save_buffer_put_u8(&buffer, run->pending_loot);
+    for (uint32_t i = 0; i < RUN_STAGE_COUNT; i++) save_buffer_put_u8(&buffer, run->picks[i]);
     return save_file_write(path, SAVE_SLOT_MAGIC, SAVE_SLOT_VERSION, &buffer);
 
 }

@@ -1,7 +1,9 @@
 #include "save.h"
 #include "engine_internal.h"
 #include "inventory.h"
+#include "loot.h"
 #include "run.h"
+#include "run_stats.h"
 #include "save_file.h"
 #include "save_slots.h"
 #include "tutorial.h"
@@ -57,6 +59,9 @@ static void capture_run(SaveRun *run) {
     run->seed = run_seed();
     run->general_count = inventory_count();
     for (uint32_t i = 0; i < run->general_count; i++) run->generals[i] = (uint8_t)inventory_type_at(i);
+    run->losses = run_stats_losses();
+    run->pending_loot = loot_has_pending() ? (uint8_t)(loot_pending_stage() + 1) : 0;
+    for (uint32_t i = 0; i < RUN_STAGE_COUNT; i++) run->picks[i] = (uint8_t)run_stats_pick(i);
 
 }
 
@@ -146,7 +151,12 @@ enum Scene save_open_slot(uint32_t id) {
     restore_inventory(&run);
     run_restore(true, run.stage, run.seed != 0 ? run.seed : run.created_at);
 
-    return run.stage >= RUN_STAGE_COUNT ? BATTLEPLAN : STAGE_MAP;
+    enum GeneralType picks[RUN_STAGE_COUNT];
+    for (uint32_t i = 0; i < RUN_STAGE_COUNT; i++) picks[i] = (enum GeneralType)run.picks[i];
+    run_stats_restore(run.losses, picks);
+    if (run.pending_loot > 0) loot_grant(run.pending_loot - 1u);
+
+    return run.stage >= RUN_STAGE_COUNT && !loot_has_pending() ? BATTLEPLAN : STAGE_MAP;
 
 }
 

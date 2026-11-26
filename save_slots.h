@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include "general_types.h"
 #include "inventory.h"
+#include "run.h"
 #include <stdint.h>
 
 typedef struct SaveRun {
@@ -16,6 +17,9 @@ typedef struct SaveRun {
     uint64_t seed;
     uint32_t general_count;
     uint8_t generals[INVENTORY_CAPACITY];
+    uint32_t losses;
+    uint8_t pending_loot;
+    uint8_t picks[RUN_STAGE_COUNT];
 
 } SaveRun;
 
