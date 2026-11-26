@@ -18,8 +18,14 @@ uint64_t run_seed(void);
 
 _Bool run_is_complete(void);
 
+_Bool run_is_over(void);
+
+void run_end(void);
+
 void run_record_result(enum EpisodeResult result);
 
 _Bool run_take_advanced(void);
+
+_Bool run_take_lost(void);
 
 #endif

@@ -2,6 +2,7 @@
 #include "inventory_panel.h"
 #include "loot_reveal.h"
 #include "run.h"
+#include "run_hearts.h"
 #include "run_summary.h"
 #include "scene_handler.h"
 #include "scenes.h"
@@ -74,6 +75,7 @@ void stage_map_init(void) {
     inventory_panel_reset();
     loot_reveal_reset();
     run_summary_reset();
+    run_hearts_reset();
 
 }
 
@@ -202,6 +204,7 @@ void stage_map_render(void) {
 
     char heading[32];
     if (tutorial_is_active()) snprintf(heading, sizeof(heading), "Training battle");
+    else if (run_is_over()) snprintf(heading, sizeof(heading), "Run lost");
     else if (run_is_complete()) snprintf(heading, sizeof(heading), "Run complete");
     else snprintf(heading, sizeof(heading), "Stage %u of %u", run_current_stage() + 1, RUN_STAGE_COUNT);
     ui_text(UI_FONT_HEADING, heading, center_x, 150, ui_color_accent, UI_ALIGN_CENTER);
@@ -212,6 +215,7 @@ void stage_map_render(void) {
     render_track();
     for (unsigned int stage = 0; stage < RUN_STAGE_COUNT; stage++) render_stage(stage);
 
+    if (!tutorial_is_active()) run_hearts_render(40, 40);
     ui_button_render(&back_button);
     inventory_panel_render();
     run_summary_render();

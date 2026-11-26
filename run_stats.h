@@ -4,6 +4,8 @@
 #include "general_types.h"
 #include "run.h"
 
+#define RUN_LIVES 5u
+
 void run_stats_reset(void);
 void run_stats_restore(unsigned int losses, const enum GeneralType *picks);
 
@@ -11,6 +13,7 @@ void run_stats_record_loss(void);
 void run_stats_record_pick(unsigned int stage, enum GeneralType type);
 
 unsigned int run_stats_losses(void);
+unsigned int run_stats_lives(void);
 enum GeneralType run_stats_pick(unsigned int stage);
 
 #endif

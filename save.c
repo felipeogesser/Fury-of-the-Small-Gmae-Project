@@ -168,6 +168,14 @@ enum Scene save_open_latest(void) {
 
 }
 
+void save_discard_current(void) {
+
+    if (is_save_disabled() || !session.has_current) return;
+    save_slots_delete(session.current.id);
+    session.has_current = false;
+
+}
+
 _Bool save_delete_slot(uint32_t id) {
 
     if (is_save_disabled() || !save_slots_delete(id)) return false;

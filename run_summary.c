@@ -50,13 +50,13 @@ static SDL_Rect summary_rect(void) {
 
 void run_summary_reset(void) {
 
-    summary.is_open = run_is_active() && run_is_complete();
+    summary.is_open = run_is_active() && (run_is_complete() || run_is_over());
 
     const SDL_Rect box = summary_rect();
     const int y = box.y + box.h - 40 - BUTTON_H;
     const int step = BUTTON_W + BUTTON_GAP;
-    const int center_x = box.x + box.w / 2;
-    summary.buttons[SUMMARY_CLOSE] = ui_button(center_x - step, y, BUTTON_W, BUTTON_H, "Close", true);
+    const int center_x = run_is_over() ? box.x + box.w / 2 - step / 2 : box.x + box.w / 2;
+    summary.buttons[SUMMARY_CLOSE] = ui_button(center_x - step, y, BUTTON_W, BUTTON_H, "Close", !run_is_over());
     summary.buttons[SUMMARY_MAIN_MENU] = ui_button(center_x, y, BUTTON_W, BUTTON_H, "Main menu", true);
     summary.buttons[SUMMARY_NEW_RUN] = ui_button(center_x + step, y, BUTTON_W, BUTTON_H, "New run", true);
 
@@ -72,6 +72,13 @@ _Bool run_summary_input(const SDL_Event *e) {
 
     if (!summary.is_open) return false;
 
+    if (e->type == SDL_KEYDOWN && e->key.keysym.sym == SDLK_ESCAPE && run_is_over()) {
+        summary.is_open = false;
+        run_end();
+        scene_switch(MAIN_MENU);
+        return true;
+    }
+
     if (e->type == SDL_KEYDOWN && e->key.keysym.sym == SDLK_ESCAPE) {
         summary.is_open = false;
         return true;
@@ -84,6 +91,7 @@ _Bool run_summary_input(const SDL_Event *e) {
 
     if (ui_button_event(&summary.buttons[SUMMARY_MAIN_MENU], e)) {
         summary.is_open = false;
+        if (run_is_over()) run_end();
         scene_switch(MAIN_MENU);
         return true;
     }
@@ -121,7 +129,7 @@ static int render_stats(int center_x, int y) {
 
     char values[STAT_COUNT][16];
     const char *labels[STAT_COUNT] = {"Stages won", "Battles fought", "Defeats", "Generals earned", "Army size"};
-    const unsigned int won = RUN_STAGE_COUNT;
+    const unsigned int won = run_is_over() ? run_current_stage() : RUN_STAGE_COUNT;
     snprintf(values[0], sizeof(values[0]), "%u / %u", won, RUN_STAGE_COUNT);
     snprintf(values[1], sizeof(values[1]), "%u", won + run_stats_losses());
     snprintf(values[2], sizeof(values[2]), "%u", run_stats_losses());
@@ -200,14 +208,16 @@ void run_summary_render(void) {
     const int center_x = box.x + box.w / 2;
     ui_fill((SDL_Rect){box.x + 6, box.y + 8, box.w, box.h}, (SDL_Color){0, 0, 0, 110});
     ui_panel(box);
-    ui_fill((SDL_Rect){box.x, box.y, box.w, 5}, ui_color_accent);
+    const _Bool is_defeat = run_is_over();
+    ui_fill((SDL_Rect){box.x, box.y, box.w, 5}, is_defeat ? ui_color_danger : ui_color_accent);
 
     int y = box.y + 36;
-    ui_text(UI_FONT_TITLE, "Victory", center_x, y, ui_color_accent, UI_ALIGN_CENTER);
+    ui_text(UI_FONT_TITLE, is_defeat ? "Defeat" : "Victory", center_x, y, is_defeat ? ui_color_danger : ui_color_accent, UI_ALIGN_CENTER);
     y += ui_font_height(UI_FONT_TITLE) + 6;
 
-    char subtitle[48];
-    snprintf(subtitle, sizeof(subtitle), "All %u stages conquered", RUN_STAGE_COUNT);
+    char subtitle[64];
+    if (is_defeat) snprintf(subtitle, sizeof(subtitle), "Out of lives. Your army fell at stage %u", run_current_stage() + 1);
+    else snprintf(subtitle, sizeof(subtitle), "All %u stages conquered", RUN_STAGE_COUNT);
     ui_text(UI_FONT_BODY, subtitle, center_x, y, ui_color_muted, UI_ALIGN_CENTER);
     y += ui_font_height(UI_FONT_BODY) + 34;
 
@@ -221,6 +231,7 @@ void run_summary_render(void) {
     y += ui_font_height(UI_FONT_BODY) + 14;
     render_army(center_x, y);
 
-    for (unsigned int i = 0; i < SUMMARY_BUTTON_COUNT; i++) ui_button_render(&summary.buttons[i]);
+    if (is_defeat) ui_text(UI_FONT_SMALL, "This run is over and its save was deleted", center_x, summary.buttons[SUMMARY_MAIN_MENU].rect.y - 40, ui_color_disabled, UI_ALIGN_CENTER);
+    for (unsigned int i = is_defeat ? SUMMARY_MAIN_MENU : SUMMARY_CLOSE; i < SUMMARY_BUTTON_COUNT; i++) ui_button_render(&summary.buttons[i]);
 
 }
